@@ -1,0 +1,11 @@
+{
+  "name": "portfolio-chat-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

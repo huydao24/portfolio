@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact | Dao Ngoc Huy</title>
+  <link rel="stylesheet" href="index.css" />
+  <link
+    rel="icon"
+    type="image"
+    href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Logo_PTIT_University.png/1200px-Logo_PTIT_University.png"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+</head>
+<body class="contact-page">
+  <header class="site-header">
+    <nav class="navbar" aria-label="Contact navigation">
+      <div class="taskbar">
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html#introduce">Introduce</a></li>
+          <li><a href="index.html#history">History</a></li>
+          <li><a href="index.html#work">Work</a></li>
+          <li><a href="contact.html" aria-current="page">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="socials" aria-label="Social links">
+        <a
+          href="https://www.facebook.com/huy.ngoc.26"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Facebook"
+        >
+          <i class="fa-brands fa-facebook-f"></i>
+        </a>
+        <a
+          href="https://www.instagram.com/daongochuy206/"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Instagram"
+        >
+          <i class="fa-brands fa-instagram"></i>
+        </a>
+        <a
+          href="https://www.youtube.com/watch?v=KBQfdFxKMmk"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="YouTube"
+        >
+          <i class="fa-brands fa-youtube"></i>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="contact-main">
+    <section class="contact-hero">
+      <div class="contact-copy">
+        <p class="section-label">Contact</p>
+        <h1>Lien he voi Dao Ngoc Huy</h1>
+        <p class="contact-lead">
+          Day la khu vuc tro chuyen giua client va chu web. Client gui tin nhan
+          tren web, Huy nhan qua Telegram, va co the reply ngay trong Telegram
+          de tin nhan dong bo nguoc lai vao doan hoi thoai nay.
+        </p>
+        <a class="back-link" href="index.html">Quay lai portfolio</a>
+      </div>
+
+      <div class="contact-form-card chat-card">
+        <div class="chat-header">
+          <div class="contact-card-head">
+            <span class="contact-icon telegram">
+              <i class="fa-brands fa-telegram"></i>
+            </span>
+            <div>
+              <h2>Chat voi chu web</h2>
+              <p>
+                Tin nhan tu web se duoc day qua Telegram. Chu web chi can reply
+                truc tiep trong Telegram de phan hoi lai cho client.
+              </p>
+            </div>
+          </div>
+          <span class="chat-badge">Conversation</span>
+        </div>
+
+        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+
+        <form id="telegramForm" class="contact-form">
+          <div class="chat-form-row">
+            <label class="sr-only" for="clientName">Ten client</label>
+            <input
+              type="text"
+              id="clientName"
+              name="clientName"
+              placeholder="Ten cua ban"
+              maxlength="40"
+            />
+          </div>
+
+          <label class="sr-only" for="teleInputContact">Tin nhan</label>
+          <textarea
+            id="teleInputContact"
+            name="message"
+            rows="4"
+            placeholder="Nhap noi dung ban muon trao doi voi Huy..."
+            required
+          ></textarea>
+
+          <div class="chat-actions">
+            <button class="contact-button" type="submit">Gui tin nhan</button>
+            <p id="teleStatus" class="contact-status" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="contact-grid" aria-label="Contact channels">
+      <article class="contact-card">
+        <div class="contact-card-head">
+          <span class="contact-icon facebook">
+            <i class="fa-brands fa-facebook-f"></i>
+          </span>
+          <div>
+            <h2>Facebook</h2>
+            <p>Kenh trao doi nhanh va truc tiep.</p>
+          </div>
+        </div>
+        <p class="contact-meta">facebook.com/huy.ngoc.26</p>
+        <a
+          class="contact-link"
+          href="https://www.facebook.com/huy.ngoc.26"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Mo Facebook
+        </a>
+      </article>
+
+      <article class="contact-card">
+        <div class="contact-card-head">
+          <span class="contact-icon instagram">
+            <i class="fa-brands fa-instagram"></i>
+          </span>
+          <div>
+            <h2>Instagram</h2>
+            <p>Xem hoat dong va gui tin nhan ca nhan.</p>
+          </div>
+        </div>
+        <p class="contact-meta">instagram.com/daongochuy206</p>
+        <a
+          class="contact-link"
+          href="https://www.instagram.com/daongochuy206/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Mo Instagram
+        </a>
+      </article>
+
+      <article class="contact-card">
+        <div class="contact-card-head">
+          <span class="contact-icon youtube">
+            <i class="fa-brands fa-youtube"></i>
+          </span>
+          <div>
+            <h2>YouTube</h2>
+            <p>Them mot kenh de theo doi noi dung cong khai.</p>
+          </div>
+        </div>
+        <p class="contact-meta">youtube.com</p>
+        <a
+          class="contact-link"
+          href="https://www.youtube.com/watch?v=KBQfdFxKMmk"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Mo YouTube
+        </a>
+      </article>
+    </section>
+  </main>
+
+  <script src="contact.js"></script>
+</body>
+</html>
