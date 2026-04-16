@@ -2,7 +2,6 @@ const express = require("express");
 const fs = require("fs");
 const fsp = require("fs/promises");
 const path = require("path");
-const fetch = require("node-fetch");
 
 const app = express();
 
@@ -15,38 +14,29 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID;
 
 if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_OWNER_CHAT_ID) {
-  throw new Error("Missing Telegram env variables");
+  console.error("Missing Telegram env variables");
 }
 
-/* ───────── In-memory store ───────── */
+/* ───────── Store ───────── */
 
 let store = {
   sessions: {},
   telegramMessageToSession: {},
 };
 
-/* ───────── Store helpers ───────── */
-
 async function loadStore() {
   try {
     if (fs.existsSync(STORE_PATH)) {
       const raw = await fsp.readFile(STORE_PATH, "utf8");
-      if (raw && raw.trim()) {
-        store = JSON.parse(raw);
-      }
+      if (raw.trim()) store = JSON.parse(raw);
     }
-  } catch (err) {
-    console.error("Load store error:", err.message);
+  } catch {
     store = { sessions: {}, telegramMessageToSession: {} };
   }
 }
 
 async function saveStore() {
-  try {
-    await fsp.writeFile(STORE_PATH, JSON.stringify(store, null, 2));
-  } catch (err) {
-    console.error("Save store error:", err.message);
-  }
+  await fsp.writeFile(STORE_PATH, JSON.stringify(store, null, 2));
 }
 
 function nowLabel() {
@@ -89,7 +79,7 @@ function addMessage(sessionId, msg) {
   return entry;
 }
 
-/* ───────── Telegram helpers ───────── */
+/* ───────── Telegram ───────── */
 
 async function telegram(method, payload) {
   const res = await fetch(
@@ -104,21 +94,17 @@ async function telegram(method, payload) {
 }
 
 async function sendToTelegram(sessionId, sender, text) {
-  const msg = `💬 Tin nhắn mới\nSession: ${sessionId}\nTên: ${
-    sender || "Khách"
-  }\n\n${text}`;
-
   const r = await telegram("sendMessage", {
     chat_id: TELEGRAM_OWNER_CHAT_ID,
-    text: msg,
+    text: `💬 ${sender || "Khách"}\n\n${text}`,
   });
 
-  if (r.ok && r.result?.message_id) {
+  if (r.ok) {
     store.telegramMessageToSession[r.result.message_id] = sessionId;
   }
 }
 
-/* ───────── Middleware ───────── */
+/* ───────── App ───────── */
 
 app.use(express.json());
 
@@ -127,52 +113,32 @@ app.use(async (req, res, next) => {
   next();
 });
 
-/* ───────── API ───────── */
+app.get("/api/health", (req, res) => res.json({ ok: true }));
 
-app.get("/api/health", (req, res) => {
-  res.json({ ok: true });
-});
-
-app.get("/api/conversations/:id", (req, res) => {
-  res.json(getSession(req.params.id));
-});
+app.get("/api/conversations/:id", (req, res) =>
+  res.json(getSession(req.params.id))
+);
 
 app.post("/api/conversations/:id/messages", async (req, res) => {
-  try {
-    const { text, senderName } = req.body;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ error: "Message required" });
-    }
+  const { text, senderName } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: "Message required" });
 
-    const msg = addMessage(req.params.id, {
-      role: "client",
-      sender: senderName || "Client",
-      text: text.trim(),
-    });
+  const msg = addMessage(req.params.id, {
+    role: "client",
+    sender: senderName || "Client",
+    text: text.trim(),
+  });
 
-    await sendToTelegram(req.params.id, senderName, text.trim());
-    await saveStore();
+  await sendToTelegram(req.params.id, senderName, text);
+  await saveStore();
 
-    res.json({ ok: true, message: msg });
-  } catch (err) {
-    console.error("Send message error:", err);
-    res.status(500).json({ error: "Internal error" });
-  }
+  res.json({ ok: true, message: msg });
 });
 
-/* ───────── Telegram Webhook ───────── */
-
 app.post("/api/telegram/webhook", async (req, res) => {
-  try {
-    const update = req.body;
-    if (!update || !update.message) {
-      return res.status(200).send("ok");
-    }
-
-    const m = update.message;
-    if (!m.reply_to_message || !m.text) {
-      return res.status(200).send("ok");
-    }
+  try {   
+    const m = req.body?.message;
+    if (!m?.reply_to_message || !m.text) return res.send("ok");
 
     const sessionId =
       store.telegramMessageToSession[m.reply_to_message.message_id];
@@ -185,22 +151,11 @@ app.post("/api/telegram/webhook", async (req, res) => {
       });
       await saveStore();
     }
-
-    res.status(200).send("ok");
-  } catch (err) {
-    console.error("Webhook error:", err);
-    res.status(200).send("ok"); // Telegram luôn cần 200
-  }
+  } catch {}
+  res.send("ok");
 });
-
-/* ───────── Static ───────── */
 
 app.use(express.static(STATIC_ROOT));
-
-app.use((req, res) => {
-  res.status(404).send("Not Found");
-});
-
-/* ───────── Export for Vercel ───────── */
+app.use((req, res) => res.status(404).send("Not Found"));
 
 module.exports = app;
