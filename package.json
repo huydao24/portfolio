@@ -6,7 +6,6 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@vercel/edge-config": "^1.4.3",
     "@vercel/kv": "^3.0.0",
     "express": "^5.2.1"
   }

@@ -47,5 +47,5 @@ async function addMessage(sessionId, msg) {
   await kv.set(`session:${sessionId}`, session);
   return entry;
 }
-
+module.exports = app;
 /* Các API xử lý tương tự, nhưng mỗi khi cần lấy `telegramMessageToSession` bạn truy xuất từ kv.get() */
