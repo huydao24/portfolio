@@ -5,7 +5,7 @@ const { kv } = require("@vercel/kv");
 const app = express();
 
 // Đã fix: Trỏ thẳng vào thư mục hiện tại vì index.js đã nằm cùng file HTML
-const STATIC_ROOT = path.join(__dirname, "api", "code");
+
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID;
@@ -135,10 +135,6 @@ app.post("/api/telegram/webhook", async (req, res) => {
   }
   res.send("ok");
 });
-
-/* ───────── Phục vụ file giao diện ───────── */
-app.use(express.static(STATIC_ROOT));
-app.use((req, res) => res.status(404).send("Not Found"));
 
 // BẮT BUỘC PHẢI CÓ DÒNG NÀY ĐỂ VERCEL CHẠY ĐƯỢC
 module.exports = app;
