@@ -5,7 +5,7 @@ const { kv } = require("@vercel/kv");
 const app = express();
 
 // Đã fix: Trỏ thẳng vào thư mục hiện tại vì index.js đã nằm cùng file HTML
-const STATIC_ROOT = __dirname;
+const STATIC_ROOT = path.join(__dirname, "api", "code");
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_OWNER_CHAT_ID = process.env.TELEGRAM_OWNER_CHAT_ID;
