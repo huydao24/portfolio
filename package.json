@@ -1,12 +1,28 @@
 {
-  "name": "portfolio-chat-bridge",
+  "name": "portfolio",
   "version": "1.0.0",
-  "private": true,
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "dev": "nodemon src/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huydao24/portfolio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/huydao24/portfolio/issues"
+  },
+  "homepage": "https://github.com/huydao24/portfolio#readme",
+  "description": "",
   "dependencies": {
-    "@vercel/kv": "^3.0.0",
-    "express": "^5.2.1"
+    "axios": "^1.15.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14",
+    "socket.io": "^4.8.3"
   }
 }

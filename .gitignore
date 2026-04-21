@@ -1,1 +1,2 @@
-data/chat-store.json
+/node_modules
+/dist

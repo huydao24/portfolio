@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đào Ngọc Huy — Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">DNH<span>.</span>dev</div>
+  <ul class="nav-links">
+    <li><a href="#about">Về tôi</a></li>
+    <li><a href="#skills">Kỹ năng</a></li>
+    <li><a href="#projects">Dự án</a></li>
+    <li><a href="#experience">Kinh nghiệm</a></li>
+    <li><a href="#contact">Liên hệ</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-glow"></div>
+  <div class="hero-bg-glow2"></div>
+  <div class="hero-left">
+    <div class="hero-tag">Sinh viên PTIT · Năm 2025</div>
+    <h1 class="hero-name">
+      <span class="line1">ĐÀO</span>
+      <span class="line2">NGỌC</span>
+      <span class="line3">HUY</span>
+    </h1>
+    <p class="hero-tagline">
+      Lập trình viên <em>đam mê</em> từ thuở nhỏ — đang định hình tương lai tại
+      <em>Học viện Bưu chính Viễn thông</em>. Kiến tạo những giải pháp kỹ thuật số có ý nghĩa.
+    </p>
+    <div class="hero-cta">
+      <a href="#projects" class="btn-primary">Xem dự án</a>
+      <a href="#contact" class="btn-ghost">Liên hệ ngay</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="code-card">
+      <div class="code-header">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <span class="code-filename">developer.ts</span>
+      </div>
+      <div class="code-body" id="codeDisplay">
+        <div><span class="ln">01</span><span class="kw">const</span> <span class="prop">dev</span> <span class="op">=</span> {</div>
+        <div><span class="ln">02</span>&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">"Đào Ngọc Huy"</span>,</div>
+        <div><span class="ln">03</span>&nbsp;&nbsp;<span class="prop">age</span>: <span class="num">20</span>,</div>
+        <div><span class="ln">04</span>&nbsp;&nbsp;<span class="prop">school</span>: <span class="str">"PTIT"</span>,</div>
+        <div><span class="ln">05</span>&nbsp;&nbsp;<span class="prop">passion</span>: <span class="str">"Lập trình"</span>,</div>
+        <div><span class="ln">06</span>&nbsp;&nbsp;<span class="prop">skills</span>: [</div>
+        <div><span class="ln">07</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"C/C++"</span>, <span class="str">"Python"</span>,</div>
+        <div><span class="ln">08</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"Web Dev"</span>, <span class="str">"AI/ML"</span></div>
+        <div><span class="ln">09</span>&nbsp;&nbsp;],</div>
+        <div><span class="ln">10</span>&nbsp;&nbsp;<span class="prop">goal</span>: <span class="str">"Build the future"</span>,</div>
+        <div><span class="ln">11</span>&nbsp;&nbsp;<span class="prop">status</span>: <span class="str" id="typedStatus">"<span class="typed-text"></span><span class="cursor-blink"></span>"</span></div>
+        <div><span class="ln">12</span>};</div>
+        <div style="margin-top:12px"><span class="ln">13</span></div>
+        <div><span class="ln">14</span><span class="cm">// Sẵn sàng cho cơ hội mới! 🚀</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">01 — Về tôi</div>
+  <h2 class="section-title reveal">Tôi là ai & <span>Tôi muốn gì</span></h2>
+  <div class="about-grid">
+    <div class="about-text">
+      <p class="reveal reveal-d1">
+        Xin chào! Tôi là <strong>Đào Ngọc Huy</strong>, sinh viên <strong>20 tuổi</strong> đang theo học tại
+        <em>Học viện Bưu chính Viễn thông (PTIT)</em> — một trong những trường hàng đầu về
+        công nghệ thông tin và viễn thông tại Việt Nam.
+      </p>
+      <p class="reveal reveal-d2">
+        Từ khi còn nhỏ, tôi đã bị cuốn hút bởi thế giới máy tính và lập trình. Niềm đam mê đó
+        không ngừng lớn mạnh và trở thành <em>động lực chính</em> dẫn dắt tôi đến với con đường
+        công nghệ ngày hôm nay.
+      </p>
+      <p class="reveal reveal-d3">
+        Tôi tin rằng <em>công nghệ là chìa khóa</em> để giải quyết những vấn đề thực tế — và
+        tôi đang từng bước học hỏi, xây dựng, và đóng góp cho cộng đồng lập trình Việt Nam.
+      </p>
+    </div>
+    <div class="about-stats">
+      <div class="stat-card reveal reveal-d1">
+        <div class="stat-num">20</div>
+        <div class="stat-label">Tuổi đời</div>
+      </div>
+      <div class="stat-card reveal reveal-d2">
+        <div class="stat-num">5+</div>
+        <div class="stat-label">Ngôn ngữ lập trình</div>
+      </div>
+      <div class="stat-card reveal reveal-d3">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">Niềm đam mê</div>
+      </div>
+      <div class="stat-card reveal reveal-d4">
+        <div class="stat-num">PTIT</div>
+        <div class="stat-label">Học viện BCVT</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-label">02 — Kỹ năng</div>
+  <h2 class="section-title reveal">Bộ công cụ <span>của tôi</span></h2>
+  <div class="skills-grid">
+    <div class="skill-group reveal reveal-d1">
+      <span class="skill-group-icon">⚙️</span>
+      <div class="skill-group-title">Ngôn ngữ lập trình</div>
+      <div class="skill-tags">
+        <span class="skill-tag">C / C++</span>
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">JavaScript</span>
+        <span class="skill-tag">Java</span>
+        <span class="skill-tag">TypeScript</span>
+      </div>
+    </div>
+    <div class="skill-group reveal reveal-d2">
+      <span class="skill-group-icon">🌐</span>
+      <div class="skill-group-title">Web Development</div>
+      <div class="skill-tags">
+        <span class="skill-tag green">HTML / CSS</span>
+        <span class="skill-tag green">React</span>
+        <span class="skill-tag green">Node.js</span>
+        <span class="skill-tag green">REST API</span>
+        <span class="skill-tag green">Git</span>
+      </div>
+    </div>
+    <div class="skill-group reveal reveal-d3">
+      <span class="skill-group-icon">🤖</span>
+      <div class="skill-group-title">AI / Data & Khác</div>
+      <div class="skill-tags">
+        <span class="skill-tag yellow">Machine Learning</span>
+        <span class="skill-tag yellow">Data Structures</span>
+        <span class="skill-tag yellow">Algorithms</span>
+        <span class="skill-tag yellow">Linux</span>
+        <span class="skill-tag yellow">SQL</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-label">03 — Dự án</div>
+  <h2 class="section-title reveal">Những gì tôi <span>đã xây dựng</span></h2>
+  <div class="projects-grid">
+
+    <div class="project-card featured reveal">
+      <div class="project-thumb">
+        <div class="thumb-pattern">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+        <span class="project-icon">🛒</span>
+        <div class="thumb-label">E-COMMERCE</div>
+      </div>
+      <div class="project-content">
+        <div class="project-tags">
+          <span class="project-tag">React</span>
+          <span class="project-tag">Node.js</span>
+          <span class="project-tag">MongoDB</span>
+          <span class="project-tag">Full-stack</span>
+        </div>
+        <h3 class="project-title">Nền tảng E-Commerce (Dự án môn học)</h3>
+        <p class="project-desc">Ứng dụng web thương mại điện tử đầy đủ tính năng: xác thực người dùng, giỏ hàng, thanh toán, quản lý sản phẩm và bảng điều khiển admin. Xây dựng với kiến trúc MERN Stack.</p>
+        <div class="project-links">
+          <a href="#" class="project-link">⬡ GitHub</a>
+          <a href="#" class="project-link">↗ Live Demo</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-card reveal reveal-d1">
+      <div class="project-thumb">
+        <div class="thumb-pattern">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1" fill="rgba(0,152,102,0.2)"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots)" />
+          </svg>
+        </div>
+        <span class="project-icon">🧠</span>
+      </div>
+      <div class="project-content">
+        <div class="project-tags">
+          <span class="project-tag">Python</span>
+          <span class="project-tag">ML</span>
+          <span class="project-tag">scikit-learn</span>
+        </div>
+        <h3 class="project-title">Phân loại email Spam bằng ML</h3>
+        <p class="project-desc">Mô hình máy học phân loại email spam/ham sử dụng Naive Bayes và TF-IDF. Đạt độ chính xác 97% trên tập kiểm tra với 5.000+ mẫu dữ liệu.</p>
+        <div class="project-links">
+          <a href="#" class="project-link">⬡ GitHub</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-card reveal reveal-d2">
+      <div class="project-thumb">
+        <div class="thumb-pattern">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="diag" width="16" height="16" patternUnits="userSpaceOnUse">
+                <path d="M-4,4 l8,-8 M0,16 l16,-16 M12,20 l8,-8" stroke="rgba(0,119,188,0.15)" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#diag)" />
+          </svg>
+        </div>
+        <span class="project-icon">📡</span>
+      </div>
+      <div class="project-content">
+        <div class="project-tags">
+          <span class="project-tag">C++</span>
+          <span class="project-tag">Socket</span>
+          <span class="project-tag">Networking</span>
+        </div>
+        <h3 class="project-title">Chat App với TCP/UDP Sockets</h3>
+        <p class="project-desc">Ứng dụng chat nhiều người dùng (client-server) viết bằng C++ thuần, hỗ trợ cả TCP và UDP, xử lý đồng thời nhiều kết nối với multi-threading.</p>
+        <div class="project-links">
+          <a href="#" class="project-link">⬡ GitHub</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- EXPERIENCE / EDUCATION -->
+<section id="experience">
+  <div class="section-label">04 — Kinh nghiệm</div>
+  <h2 class="section-title reveal">Hành trình <span>của tôi</span></h2>
+  <div class="timeline">
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">2023 — Hiện tại</div>
+      <div class="timeline-title">Sinh viên Công nghệ Thông tin</div>
+      <div class="timeline-org">Học viện Bưu chính Viễn thông (PTIT) · Hà Nội</div>
+      <div class="timeline-desc">Học các môn chuyên ngành: Cấu trúc dữ liệu & Giải thuật, Lập trình mạng, Hệ điều hành, Cơ sở dữ liệu, Trí tuệ nhân tạo. Tích cực tham gia các dự án nhóm và câu lạc bộ lập trình.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">2022 — 2023</div>
+      <div class="timeline-title">Tự học lập trình Web</div>
+      <div class="timeline-org">Self-taught · Online Platforms</div>
+      <div class="timeline-desc">Tự học HTML, CSS, JavaScript và xây dựng các project cá nhân đầu tiên. Hoàn thành các khóa học trên freeCodeCamp và The Odin Project.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">2020 — 2022</div>
+      <div class="timeline-title">Khởi đầu với C/C++</div>
+      <div class="timeline-org">Niềm đam mê từ thời trung học</div>
+      <div class="timeline-desc">Bắt đầu hành trình lập trình với ngôn ngữ C và C++. Tham gia các cuộc thi tin học tại trường và khu vực, xây dựng nền tảng tư duy thuật toán vững chắc.</div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-date">Từ nhỏ</div>
+      <div class="timeline-title">Niềm đam mê khởi nguồn 💡</div>
+      <div class="timeline-org">Tò mò & Khám phá</div>
+      <div class="timeline-desc">Từ khi còn bé, tôi đã luôn tò mò về cách máy tính hoạt động — đó là ngọn lửa dẫn đường cho toàn bộ hành trình này.</div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-inner">
+    <div class="section-label" style="justify-content:center">05 — Liên hệ</div>
+    <h2 class="section-title reveal" style="margin-bottom:12px">Hãy cùng <span>kết nối!</span></h2>
+    <p class="reveal" style="color:var(--text-muted); max-width:420px; margin:0 auto; line-height:1.7; font-size:0.95rem;">
+      Tôi luôn mở rộng cánh cửa với những cơ hội mới, dự án thú vị hay đơn giản là một cuộc trò chuyện về công nghệ. 👋
+    </p>
+    <a href="mailto:daonagochu@gmail.com" class="contact-email reveal">
+      dao.ngochu@example.com
+    </a>
+    <div class="social-links">
+      <a href="#" class="social-link reveal reveal-d1">⬡ GitHub</a>
+      <a href="#" class="social-link reveal reveal-d2">in LinkedIn</a>
+      <a href="#" class="social-link reveal reveal-d3">𝕏 Twitter</a>
+      <a href="#" class="social-link reveal reveal-d4">📘 Facebook</a>
+    </div>
+  </div>
+</section>
+<!-- Floating Chat Button -->
+<div id="chat-float-btn">
+  <svg width="32" height="32" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00b894"/><path d="M7 10h10M7 14h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+</div>
+
+<!-- Chat Popover/Dialog -->
+<div id="chat-popover" class="hidden">
+  <div class="chat-header">
+    <span>💬 Chat cộng đồng</span>
+    <button id="chat-close-btn">&times;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <form id="chat-form">
+    <input id="chat-input" type="text" placeholder="Nhập tin nhắn..." autocomplete="off" />
+    <button type="submit">Gửi</button>
+  </form>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2025 <span>Đào Ngọc Huy</span> — Built with passion</p>
+  <p>Học viện Bưu chính Viễn thông <span>·</span> Hà Nội, Việt Nam</p>
+</footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="./index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</body>
+</html>
