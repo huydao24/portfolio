@@ -104,7 +104,7 @@ window.addEventListener('scroll', () => {
   });
 });
 
-const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || 'https://portfolio-chat-api.onrender.com';
+const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || 'https://portfolio-1-yjvu.onrender.com';
 const CHAT_SESSION_KEY = 'portfolio-chat-session-id';
 
 const chatBtn = document.getElementById('chat-float-btn');
