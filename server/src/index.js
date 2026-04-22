@@ -11,15 +11,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, '../data');
 const DATA_FILE = path.join(DATA_DIR, 'chat-history.json');
 
-// Danh sách origin được phép truy cập (thêm domain Vercel của bạn)
-const ALLOWED_ORIGINS = [
-  'http://localhost:5500',
-  'http://127.0.0.1:5500',
-  'http://localhost:3000',
-  /\.vercel\.app$/,
-  // Thêm domain tùy chỉnh nếu có, ví dụ:
-  // 'https://your-custom-domain.com',
-];
+// Cho phép tất cả origin truy cập (public chat API)
+const ALLOWED_ORIGINS = '*';
 
 const PORT = Number(process.env.PORT || 3000);
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
@@ -35,14 +28,10 @@ const io = new Server(server, {
   cors: {
     origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST'],
-    credentials: true,
   },
 });
 
-app.use(cors({
-  origin: ALLOWED_ORIGINS,
-  credentials: true,
-}));
+app.use(cors());
 app.use(express.json());
 
 function createInitialState() {
