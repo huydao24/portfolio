@@ -1,17 +1,88 @@
-[
-  {
-    "user": "Guest-775398",
-    "text": "dsadsa",
-    "time": "23:44:38 21/4/2026"
+{
+  "sessions": {
+    "ad93b74a-b080-49f4-8f9b-3903f74eadaa": [
+      {
+        "id": "1776824799297-r4u0xl",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "visitor",
+        "user": "Ban",
+        "text": "egdfdgfgh",
+        "source": "web",
+        "time": "09:26 22/04/2026",
+        "createdAt": "2026-04-22T02:26:39.297Z"
+      },
+      {
+        "id": "1776824799402-j1rrvd",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "system",
+        "user": "He thong",
+        "text": "Telegram bot chua duoc cau hinh. Can TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID.",
+        "source": "server",
+        "time": "09:26 22/04/2026",
+        "createdAt": "2026-04-22T02:26:39.402Z"
+      },
+      {
+        "id": "1776824814317-4i6ny9",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "visitor",
+        "user": "Ban",
+        "text": "dsghdfg",
+        "source": "web",
+        "time": "09:26 22/04/2026",
+        "createdAt": "2026-04-22T02:26:54.317Z"
+      },
+      {
+        "id": "1776824814318-fsx7s0",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "system",
+        "user": "He thong",
+        "text": "Telegram bot chua duoc cau hinh. Can TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID.",
+        "source": "server",
+        "time": "09:26 22/04/2026",
+        "createdAt": "2026-04-22T02:26:54.318Z"
+      },
+      {
+        "id": "1776824836894-wdj5mt",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "visitor",
+        "user": "Ban",
+        "text": "sadsfdgfg",
+        "source": "web",
+        "time": "09:27 22/04/2026",
+        "createdAt": "2026-04-22T02:27:16.894Z"
+      },
+      {
+        "id": "1776824836896-n1z5fw",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "system",
+        "user": "He thong",
+        "text": "Telegram bot chua duoc cau hinh. Can TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID.",
+        "source": "server",
+        "time": "09:27 22/04/2026",
+        "createdAt": "2026-04-22T02:27:16.896Z"
+      },
+      {
+        "id": "1776824843128-my7vvz",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "visitor",
+        "user": "Ban",
+        "text": "huyddao",
+        "source": "web",
+        "time": "09:27 22/04/2026",
+        "createdAt": "2026-04-22T02:27:23.128Z"
+      },
+      {
+        "id": "1776824843131-3xedib",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "system",
+        "user": "He thong",
+        "text": "Telegram bot chua duoc cau hinh. Can TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID.",
+        "source": "server",
+        "time": "09:27 22/04/2026",
+        "createdAt": "2026-04-22T02:27:23.131Z"
+      }
+    ]
   },
-  {
-    "user": "Guest-486661",
-    "text": "dsads",
-    "time": "23:44:46 21/4/2026"
-  },
-  {
-    "user": "Guest-667642",
-    "text": "xin chào các bạn nhé mình tên là linh",
-    "time": "23:47:47 21/4/2026"
-  }
-]
+  "telegramMessageMap": {},
+  "lastUpdateId": 0
+}

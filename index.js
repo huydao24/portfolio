@@ -1,77 +1,112 @@
-
 const cursor = document.getElementById('cursor');
-  const ring   = document.getElementById('cursorRing');
-  let mx = 0, my = 0, rx = 0, ry = 0;
-  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-  function animCursor() {
-    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
-    rx += (mx - rx) * 0.15; ry += (my - ry) * 0.15;
-    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-    requestAnimationFrame(animCursor);
-  }
-  animCursor();
+const ring = document.getElementById('cursorRing');
+let mx = 0;
+let my = 0;
+let rx = 0;
+let ry = 0;
 
-  document.querySelectorAll('a, button, .project-card, .stat-card, .skill-group').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursor.style.transform = 'translate(-50%,-50%) scale(2)';
-      ring.style.width = '60px'; ring.style.height = '60px';
-      ring.style.opacity = '0.3';
-    });
-    el.addEventListener('mouseleave', () => {
-      cursor.style.transform = 'translate(-50%,-50%) scale(1)';
-      ring.style.width = '36px'; ring.style.height = '36px';
-      ring.style.opacity = '0.5';
-    });
+document.addEventListener('mousemove', e => {
+  mx = e.clientX;
+  my = e.clientY;
+});
+
+function animCursor() {
+  cursor.style.left = `${mx}px`;
+  cursor.style.top = `${my}px`;
+  rx += (mx - rx) * 0.15;
+  ry += (my - ry) * 0.15;
+  ring.style.left = `${rx}px`;
+  ring.style.top = `${ry}px`;
+  requestAnimationFrame(animCursor);
+}
+
+animCursor();
+
+document.querySelectorAll('a, button, .project-card, .stat-card, .skill-group').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(2)';
+    ring.style.width = '60px';
+    ring.style.height = '60px';
+    ring.style.opacity = '0.3';
   });
 
-  /* ── TYPING STATUS ── */
-  const statuses = [
-    'Học & Lập trình 📖',
-    'Tìm kiếm cơ hội mới 🚀',
-    'Đam mê sáng tạo 💡',
-    'Open for collaboration'
-  ];
-  let si = 0, ci = 0, deleting = false;
-  const typedEl = document.querySelector('.typed-text');
-  function typeEffect() {
-    const current = statuses[si];
-    if (!deleting) {
-      typedEl.textContent = current.substring(0, ci + 1);
-      ci++;
-      if (ci === current.length) { deleting = true; setTimeout(typeEffect, 1800); return; }
-    } else {
-      typedEl.textContent = current.substring(0, ci - 1);
-      ci--;
-      if (ci === 0) { deleting = false; si = (si + 1) % statuses.length; }
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+    ring.style.width = '36px';
+    ring.style.height = '36px';
+    ring.style.opacity = '0.5';
+  });
+});
+
+const statuses = [
+  'Hoc & Lap trinh',
+  'Tim kiem co hoi moi',
+  'Dam me sang tao',
+  'Open for collaboration',
+];
+
+let si = 0;
+let ci = 0;
+let deleting = false;
+const typedEl = document.querySelector('.typed-text');
+
+function typeEffect() {
+  const current = statuses[si];
+
+  if (!deleting) {
+    typedEl.textContent = current.substring(0, ci + 1);
+    ci += 1;
+    if (ci === current.length) {
+      deleting = true;
+      setTimeout(typeEffect, 1800);
+      return;
     }
-    setTimeout(typeEffect, deleting ? 50 : 90);
+  } else {
+    typedEl.textContent = current.substring(0, ci - 1);
+    ci -= 1;
+    if (ci === 0) {
+      deleting = false;
+      si = (si + 1) % statuses.length;
+    }
   }
-  setTimeout(typeEffect, 1200);
 
-  /* ── SCROLL REVEAL ── */
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('visible'); }
-    });
-  }, { threshold: 0.12 });
+  setTimeout(typeEffect, deleting ? 50 : 90);
+}
 
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
+setTimeout(typeEffect, 1200);
 
-  /* ── NAV ACTIVE ── */
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.nav-links a');
-  window.addEventListener('scroll', () => {
-    let current = '';
-    sections.forEach(s => {
-      if (window.scrollY >= s.offsetTop - 200) current = s.id;
-    });
-    navLinks.forEach(a => {
-      a.style.color = a.getAttribute('href') === '#' + current
-        ? 'var(--secondary)' : '';
-    });
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
   });
-// ==============================chat================================
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
+
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    if (window.scrollY >= section.offsetTop - 200) {
+      current = section.id;
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.style.color = link.getAttribute('href') === `#${current}`
+      ? 'var(--secondary)'
+      : '';
+  });
+});
+
+const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || 'https://portfolio-chat-api.onrender.com';
+const CHAT_SESSION_KEY = 'portfolio-chat-session-id';
+
 const chatBtn = document.getElementById('chat-float-btn');
 const chatPopover = document.getElementById('chat-popover');
 const chatCloseBtn = document.getElementById('chat-close-btn');
@@ -81,50 +116,170 @@ const chatInput = document.getElementById('chat-input');
 
 let socket = null;
 
-chatBtn.onclick = () => {
+function getChatSessionId() {
+  const existing = localStorage.getItem(CHAT_SESSION_KEY);
+  if (existing) {
+    return existing;
+  }
+
+  const generated = window.crypto?.randomUUID?.()
+    ? window.crypto.randomUUID()
+    : `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  localStorage.setItem(CHAT_SESSION_KEY, generated);
+  return generated;
+}
+
+const chatSessionId = getChatSessionId();
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[char]));
+}
+
+function appendChatMsg(message) {
+  if (!message?.text) {
+    return;
+  }
+
+  const bubble = document.createElement('div');
+  const bubbleType = message.role === 'visitor'
+    ? 'mine'
+    : message.role === 'system'
+      ? 'system'
+      : 'theirs';
+
+  bubble.className = `chat-bubble ${bubbleType}`;
+  bubble.innerHTML = `
+    <div class="chat-bubble-head">
+      <span class="chat-bubble-user">${escapeHtml(message.user || 'Chat')}</span>
+      <span class="chat-bubble-time">${escapeHtml(message.time || '')}</span>
+    </div>
+    <div class="chat-bubble-text">${escapeHtml(message.text)}</div>
+  `;
+
+  chatMessages.appendChild(bubble);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function renderChatHistory(messages = []) {
+  chatMessages.innerHTML = '';
+  messages.forEach(appendChatMsg);
+}
+
+function loadChatHistory() {
+  if (typeof axios === 'undefined') {
+    appendChatMsg({
+      role: 'system',
+      user: 'He thong',
+      text: 'Thu vien HTTP chua san sang.',
+      time: '',
+    });
+    return Promise.resolve();
+  }
+
+  return axios.get(`${CHAT_BACKEND_URL}/api/messages`, {
+    params: { sessionId: chatSessionId },
+  }).then(response => {
+    renderChatHistory(response.data);
+  }).catch(() => {
+    appendChatMsg({
+      role: 'system',
+      user: 'He thong',
+      text: 'Khong tai duoc lich su chat.',
+      time: '',
+    });
+  });
+}
+
+function initChatSocket() {
+  if (typeof io !== 'function') {
+    appendChatMsg({
+      role: 'system',
+      user: 'He thong',
+      text: 'Khong nap duoc ket noi realtime tu server.',
+      time: '',
+    });
+    return;
+  }
+
+  socket = io(CHAT_BACKEND_URL);
+
+  socket.on('connect', () => {
+    socket.emit('chat:join', { sessionId: chatSessionId });
+  });
+
+  socket.on('chat history', renderChatHistory);
+  socket.on('chat message', appendChatMsg);
+  socket.on('chat error', payload => {
+    appendChatMsg({
+      role: 'system',
+      user: 'He thong',
+      text: payload?.error || 'Ket noi chat gap loi.',
+      time: '',
+    });
+  });
+}
+
+function openChat() {
   chatPopover.classList.remove('hidden');
   chatInput.focus();
-  if (!socket) initChatSocket();
-};
+  loadChatHistory();
+
+  if (!socket) {
+    initChatSocket();
+  }
+}
+
+chatBtn.onclick = openChat;
 chatCloseBtn.onclick = () => {
   chatPopover.classList.add('hidden');
 };
 
-function appendChatMsg(msg) {
-  const div = document.createElement('div');
-  div.innerHTML = `<b style="color:#333">${msg.user}</b>: <span style="color:#000">${msg.text}</span> <span style="color:#aaa;font-size:0.85em;float:right">${msg.time}</span>`;
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function initChatSocket() {
-  socket = io();
-  socket.on('chat history', msgs => {
-    chatMessages.innerHTML = '';
-    msgs.forEach(appendChatMsg);
-  });
-  socket.on('chat message', appendChatMsg);
-}
-
-chatForm.onsubmit = e => {
+chatForm.onsubmit = async e => {
   e.preventDefault();
-  if (chatInput.value.trim()) {
-    axios.post('http://localhost:3000/api/messages', {
-      text: chatInput.value.trim()
-    }).then(res => {
-      chatInput.value = '';
+  if (typeof axios === 'undefined') {
+    appendChatMsg({
+      role: 'system',
+      user: 'He thong',
+      text: 'Thu vien HTTP chua san sang.',
+      time: '',
     });
+    return;
   }
-};
 
-chatBtn.onclick = () => {
-  chatPopover.classList.remove('hidden');
-  chatInput.focus();
-  // Lấy lịch sử chat bằng axios
-  axios.get('http://localhost:3000/api/messages')
-    .then(res => {
-      chatMessages.innerHTML = '';
-      res.data.forEach(appendChatMsg);
+  const text = chatInput.value.trim();
+  if (!text) {
+    return;
+  }
+
+  const submitButton = chatForm.querySelector('button[type="submit"]');
+  chatInput.disabled = true;
+  submitButton.disabled = true;
+
+  try {
+    await axios.post(`${CHAT_BACKEND_URL}/api/messages`, {
+      sessionId: chatSessionId,
+      text,
     });
-  if (!socket) initChatSocket();
+    chatInput.value = '';
+  } catch (error) {
+    if (!error.response) {
+      appendChatMsg({
+        role: 'system',
+        user: 'He thong',
+        text: 'Khong ket noi duoc server chat.',
+        time: '',
+      });
+    }
+  } finally {
+    chatInput.disabled = false;
+    submitButton.disabled = false;
+    chatInput.focus();
+  }
 };
