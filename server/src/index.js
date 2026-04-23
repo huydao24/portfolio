@@ -175,13 +175,7 @@ function cleanTelegramReplyText(text = '') {
 }
 
 function getTelegramSenderName(from) {
-  if (!from) {
-    return 'Telegram';
-  }
-
-  return from.username
-    ? `@${from.username}`
-    : [from.first_name, from.last_name].filter(Boolean).join(' ') || 'Telegram';
+  return 'Anh Huy';
 }
 
 async function sendTelegramMessage(message) {

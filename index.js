@@ -39,9 +39,9 @@ document.querySelectorAll('a, button, .project-card, .stat-card, .skill-group').
 });
 
 const statuses = [
-  'Hoc & Lap trinh',
-  'Tim kiem co hoi moi',
-  'Dam me sang tao',
+  'Học & Lập trình',
+  'Tìm kiếm cơ hội mới',
+  'Đam mê sáng tạo',
   'Open for collaboration',
 ];
 
