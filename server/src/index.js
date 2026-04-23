@@ -145,10 +145,7 @@ async function saveState() {
 
 function getTelegramReplyHint(sessionId) {
   return [
-    'Tin nhan moi tu portfolio',
-    `Session: ${sessionId}`,
-    '',
-    'Khach web:',
+    'Bạn bè ở xa gửi nè:',
     '',
   ].join('\n');
 }
