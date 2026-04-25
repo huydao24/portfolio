@@ -333,8 +333,11 @@
   </div>
   <div class="chat-messages" id="chat-messages"></div>
   <form id="chat-form">
-    <input id="chat-input" type="text" placeholder="Nhập tin nhắn..." autocomplete="off" />
-    <button type="submit">Gửi</button>
+    <div class="chat-form-fields">
+      <input id="chat-name-input" type="text" placeholder="Ten cua ban" autocomplete="name" maxlength="40" />
+      <input id="chat-input" type="text" placeholder="Nhap tin nhan..." autocomplete="off" />
+    </div>
+    <button type="submit">Gui</button>
   </form>
 </div>
 
@@ -347,7 +350,10 @@
 <script>
   // ⚡ Sau khi deploy backend lên Render, thay URL bên dưới bằng URL Render của bạn
   // Ví dụ: 'https://portfolio-chat-api.onrender.com'
-  window.CHAT_BACKEND_URL = 'https://portfolio-1-yjvu.onrender.com';
+  window.CHAT_BACKEND_URL =
+    window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      ? 'http://localhost:3000'
+      : 'https://portfolio-1-yjvu.onrender.com';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

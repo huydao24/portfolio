@@ -104,14 +104,21 @@ window.addEventListener('scroll', () => {
   });
 });
 
-const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || 'https://portfolio-1-yjvu.onrender.com';
+const DEFAULT_CHAT_BACKEND_URL =
+  window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:3000'
+    : 'https://portfolio-1-yjvu.onrender.com';
+
+const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || DEFAULT_CHAT_BACKEND_URL;
 const CHAT_SESSION_KEY = 'portfolio-chat-session-id';
+const CHAT_NAME_KEY = 'portfolio-chat-user-name';
 
 const chatBtn = document.getElementById('chat-float-btn');
 const chatPopover = document.getElementById('chat-popover');
 const chatCloseBtn = document.getElementById('chat-close-btn');
 const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
+const chatNameInput = document.getElementById('chat-name-input');
 const chatInput = document.getElementById('chat-input');
 
 let socket = null;
@@ -131,6 +138,30 @@ function getChatSessionId() {
 }
 
 const chatSessionId = getChatSessionId();
+
+function normalizeChatName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+}
+
+function getStoredChatName() {
+  return normalizeChatName(localStorage.getItem(CHAT_NAME_KEY));
+}
+
+function persistChatName() {
+  const normalizedName = normalizeChatName(chatNameInput?.value);
+
+  if (normalizedName) {
+    localStorage.setItem(CHAT_NAME_KEY, normalizedName);
+  } else {
+    localStorage.removeItem(CHAT_NAME_KEY);
+  }
+
+  if (chatNameInput) {
+    chatNameInput.value = normalizedName;
+  }
+
+  return normalizedName || 'Ban';
+}
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, char => ({
@@ -228,7 +259,15 @@ function initChatSocket() {
 
 function openChat() {
   chatPopover.classList.remove('hidden');
-  chatInput.focus();
+  if (chatNameInput) {
+    chatNameInput.value = getStoredChatName();
+  }
+
+  if (chatNameInput && !chatNameInput.value) {
+    chatNameInput.focus();
+  } else {
+    chatInput.focus();
+  }
   loadChatHistory();
 
   if (!socket) {
@@ -240,6 +279,12 @@ chatBtn.onclick = openChat;
 chatCloseBtn.onclick = () => {
   chatPopover.classList.add('hidden');
 };
+
+if (chatNameInput) {
+  chatNameInput.value = getStoredChatName();
+  chatNameInput.addEventListener('change', persistChatName);
+  chatNameInput.addEventListener('blur', persistChatName);
+}
 
 chatForm.onsubmit = async e => {
   e.preventDefault();
@@ -254,6 +299,7 @@ chatForm.onsubmit = async e => {
   }
 
   const text = chatInput.value.trim();
+  const user = persistChatName();
   if (!text) {
     return;
   }
@@ -265,6 +311,7 @@ chatForm.onsubmit = async e => {
   try {
     await axios.post(`${CHAT_BACKEND_URL}/api/messages`, {
       sessionId: chatSessionId,
+      user,
       text,
     });
     chatInput.value = '';

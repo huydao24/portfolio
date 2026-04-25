@@ -134,6 +134,10 @@ function getFallbackSessionIdFromState() {
   return sessionIds.length === 1 ? sessionIds[0] : null;
 }
 
+function normalizeDisplayName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+}
+
 function buildMessage({ sessionId, role, user, text, source }) {
   const createdAt = new Date();
   return {
@@ -176,15 +180,16 @@ async function saveState() {
   await fs.writeFile(DATA_FILE, JSON.stringify(state, null, 2), 'utf8');
 }
 
-function getTelegramReplyHint(sessionId) {
+function getTelegramReplyHint(user) {
+  const senderName = String(user || 'Ban').trim() || 'Ban';
   return [
-    'Bạn bè ở xa gửi nè:',
+    `B\u1ea1n ${senderName} g\u1eedi n\u00e8:`,
     '',
   ].join('\n');
 }
 
 function buildTelegramOutgoingText(message) {
-  return `${getTelegramReplyHint(message.sessionId)}${message.text}`;
+  return `${getTelegramReplyHint(message.user)}${message.text}`;
 }
 
 function resolveSessionIdFromTelegramMessage(telegramMessage) {
@@ -328,6 +333,7 @@ app.get('/api/messages', async (req, res) => {
 app.post('/api/messages', async (req, res) => {
   const text = String(req.body?.text || '').trim();
   const sessionId = String(req.body?.sessionId || '').trim();
+  const user = normalizeDisplayName(req.body?.user) || 'Ban';
 
   if (!sessionId) {
     return res.status(400).json({ error: 'Missing sessionId' });
@@ -340,7 +346,7 @@ app.post('/api/messages', async (req, res) => {
   const message = buildMessage({
     sessionId,
     role: 'visitor',
-    user: 'Ban',
+    user,
     text,
     source: 'web',
   });
