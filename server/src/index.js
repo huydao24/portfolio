@@ -39,11 +39,14 @@ function createInitialState() {
     sessions: {},
     telegramMessageMap: {},
     lastUpdateId: 0,
+    activeTelegramSessionId: null,
+    activeTelegramSessionUpdatedAt: null,
   };
 }
 
 let state = createInitialState();
 let telegramPolling = false;
+const ACTIVE_TELEGRAM_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function formatTime(date = new Date()) {
   return new Intl.DateTimeFormat('vi-VN', {
@@ -62,6 +65,8 @@ function normalizeState(parsed) {
       sessions: {},
       telegramMessageMap: {},
       lastUpdateId: 0,
+      activeTelegramSessionId: null,
+      activeTelegramSessionUpdatedAt: null,
     };
   }
 
@@ -72,6 +77,12 @@ function normalizeState(parsed) {
         ? parsed.telegramMessageMap
         : {},
     lastUpdateId: Number.isInteger(parsed?.lastUpdateId) ? parsed.lastUpdateId : 0,
+    activeTelegramSessionId:
+      typeof parsed?.activeTelegramSessionId === 'string' ? parsed.activeTelegramSessionId : null,
+    activeTelegramSessionUpdatedAt:
+      typeof parsed?.activeTelegramSessionUpdatedAt === 'string'
+        ? parsed.activeTelegramSessionUpdatedAt
+        : null,
   };
 }
 
@@ -106,6 +117,23 @@ function trimTelegramMap() {
   state.telegramMessageMap = Object.fromEntries(trimmed);
 }
 
+function setActiveTelegramSession(sessionId, updatedAt = new Date()) {
+  state.activeTelegramSessionId = sessionId;
+  state.activeTelegramSessionUpdatedAt = new Date(updatedAt).toISOString();
+}
+
+function getFallbackSessionIdFromState() {
+  if (state.activeTelegramSessionId) {
+    const updatedAt = new Date(state.activeTelegramSessionUpdatedAt || 0).getTime();
+    if (updatedAt && Date.now() - updatedAt <= ACTIVE_TELEGRAM_SESSION_TTL_MS) {
+      return state.activeTelegramSessionId;
+    }
+  }
+
+  const sessionIds = Object.keys(state.sessions);
+  return sessionIds.length === 1 ? sessionIds[0] : null;
+}
+
 function buildMessage({ sessionId, role, user, text, source }) {
   const createdAt = new Date();
   return {
@@ -124,6 +152,11 @@ function saveMessage(message) {
   const sessionMessages = getSessionMessages(message.sessionId);
   sessionMessages.push(message);
   trimSessionMessages(message.sessionId);
+
+  if (message.source === 'web' || message.source === 'telegram') {
+    setActiveTelegramSession(message.sessionId, message.createdAt);
+  }
+
   io.to(message.sessionId).emit('chat message', message);
 }
 
@@ -151,7 +184,7 @@ function getTelegramReplyHint(sessionId) {
 }
 
 function buildTelegramOutgoingText(message) {
-  return `${getTelegramReplyHint(message.sessionId)}${message.text}\n\nReply truc tiep vao tin nhan nay de tra loi dung hoi thoai.`;
+  return `${getTelegramReplyHint(message.sessionId)}${message.text}`;
 }
 
 function resolveSessionIdFromTelegramMessage(telegramMessage) {
@@ -164,7 +197,11 @@ function resolveSessionIdFromTelegramMessage(telegramMessage) {
   }
 
   const sessionMatch = telegramMessage.text?.match(/Session:\s*([a-zA-Z0-9-]+)/i);
-  return sessionMatch?.[1] || null;
+  if (sessionMatch?.[1]) {
+    return sessionMatch[1];
+  }
+
+  return getFallbackSessionIdFromState();
 }
 
 function cleanTelegramReplyText(text = '') {
@@ -213,6 +250,13 @@ async function handleTelegramUpdate(update) {
 
   if (TELEGRAM_CHAT_ID && String(telegramMessage.chat?.id) !== String(TELEGRAM_CHAT_ID)) {
     return;
+  }
+
+  if (TELEGRAM_THREAD_ID) {
+    const messageThreadId = Number(telegramMessage.message_thread_id || 0);
+    if (messageThreadId !== Number(TELEGRAM_THREAD_ID)) {
+      return;
+    }
   }
 
   const sessionId = resolveSessionIdFromTelegramMessage(telegramMessage);
