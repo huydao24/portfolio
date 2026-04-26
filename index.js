@@ -275,7 +275,13 @@ function openChat() {
   }
 }
 
-chatBtn.onclick = openChat;
+chatBtn.onclick = () => {
+  if (chatPopover.classList.contains('hidden')) {
+    openChat();
+  } else {
+    chatPopover.classList.add('hidden');
+  }
+};
 chatCloseBtn.onclick = () => {
   chatPopover.classList.add('hidden');
 };
