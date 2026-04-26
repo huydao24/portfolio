@@ -757,3 +757,25 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* --- CONTACT AVATAR --- */
+.contact-image-wrapper {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.contact-avatar {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid var(--surface3);
+  box-shadow: var(--glow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contact-avatar:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: var(--glow-green);
+}
