@@ -13,7 +13,10 @@
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
 
-<!-- NAV -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 1: NAV (Thanh điều hướng)                         -->
+<!-- Chứa Logo và các thẻ <a> để nhảy nhanh tới các phần khác. -->
+<!-- ========================================================= -->
 <nav>
   <div class="nav-logo">DNH<span>.</span>dev</div>
   <ul class="nav-links">
@@ -25,7 +28,10 @@
   </ul>
 </nav>
 
-<!-- HERO -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 2: HERO (Màn hình chính/Đập vào mắt đầu tiên)     -->
+<!-- Hiển thị Lời chào, Tên, Chức danh và một thẻ Code minh họa-->
+<!-- ========================================================= -->
 <section id="hero">
   <div class="hero-bg-glow"></div>
   <div class="hero-bg-glow2"></div>
@@ -73,7 +79,10 @@
 
 <div class="divider"></div>
 
-<!-- ABOUT -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 3: ABOUT (Về tôi)                                 -->
+<!-- Chứa đoạn văn giới thiệu chi tiết và các con số thống kê. -->
+<!-- ========================================================= -->
 <section id="about">
   <div class="section-label">01 — Về tôi</div>
   <h2 class="section-title reveal">Tôi là ai & <span>Tôi muốn gì</span></h2>
@@ -117,7 +126,10 @@
 
 <div class="divider"></div>
 
-<!-- SKILLS -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 4: SKILLS (Kỹ năng chuyên môn)                    -->
+<!-- Liệt kê các công nghệ, ngôn ngữ lập trình đang sử dụng.   -->
+<!-- ========================================================= -->
 <section id="skills">
   <div class="section-label">02 — Kỹ năng</div>
   <h2 class="section-title reveal">Bộ công cụ <span>của tôi</span></h2>
@@ -160,7 +172,10 @@
 
 <div class="divider"></div>
 
-<!-- PROJECTS -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 5: PROJECTS (Các dự án nổi bật)                   -->
+<!-- Trình bày các sản phẩm/dự án đã làm dưới dạng Thẻ (Card). -->
+<!-- ========================================================= -->
 <section id="projects">
   <div class="section-label">03 — Dự án</div>
   <h2 class="section-title reveal">Những gì tôi <span>đã xây dựng</span></h2>
@@ -258,7 +273,10 @@
 
 <div class="divider"></div>
 
-<!-- EXPERIENCE / EDUCATION -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 6: EXPERIENCE & EDUCATION (Kinh nghiệm & Học vấn) -->
+<!-- Trình bày lộ trình phát triển dưới dạng Dòng thời gian.   -->
+<!-- ========================================================= -->
 <section id="experience">
   <div class="section-label">04 — Kinh nghiệm</div>
   <h2 class="section-title reveal">Hành trình <span>của tôi</span></h2>
@@ -301,7 +319,10 @@
 
 <div class="divider"></div>
 
-<!-- CONTACT -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 7: CONTACT (Liên hệ)                              -->
+<!-- Chứa Email và các link mạng xã hội (GitHub, LinkedIn...). -->
+<!-- ========================================================= -->
 <section id="contact">
   <div class="contact-inner">
     <div class="section-label" style="justify-content:center">05 — Liên hệ</div>
@@ -320,7 +341,10 @@
     </div>
   </div>
 </section>
-<!-- Floating Chat Button -->
+<!-- ========================================================= -->
+<!-- KHU VỰC 8: CHAT APP (Giao diện bong bóng Chat realtime)   -->
+<!-- Nút tròn nổi ở góc dưới và cửa sổ Chat Popover.           -->
+<!-- ========================================================= -->
 <div id="chat-float-btn">
   <svg width="32" height="32" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00b894"/><path d="M7 10h10M7 14h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
 </div>
@@ -357,6 +381,9 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- Tải file xử lý chức năng Chat -->
+<script src="./chat.js"></script>
+<!-- Tải file xử lý Giao diện, Hiệu ứng (UI/UX) -->
 <script src="./index.js"></script>
 </body>
 </html>
