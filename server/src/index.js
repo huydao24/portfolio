@@ -1,3 +1,4 @@
+import 'dotenv/config';  // Load .env file trước tất cả mọi thứ khác
 import express from 'express';
 import cors from 'cors';
 import http from 'http';
@@ -6,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import axios from 'axios';
+import { registerUser, loginUser, requireAuth } from './auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, '../data');
@@ -381,14 +383,58 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ============================================================
+// AUTH ROUTES
+// ============================================================
+
+/**
+ * POST /api/auth/register
+ * Body: { name, email, password }
+ */
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { user, token } = await registerUser(req.body);
+    return res.status(201).json({ message: 'Đăng ký thành công!', user, token });
+  } catch (err) {
+    const status = err.statusCode || 500;
+    return res.status(status).json({ error: err.message || 'Lỗi server.' });
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Body: { email, password }
+ */
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { user, token } = await loginUser(req.body);
+    return res.status(200).json({ message: 'Đăng nhập thành công!', user, token });
+  } catch (err) {
+    const status = err.statusCode || 500;
+    return res.status(status).json({ error: err.message || 'Lỗi server.' });
+  }
+});
+
+/**
+ * GET /api/auth/verify
+ * Header: Authorization: Bearer <token>
+ * Verify token còn hợp lệ không.
+ */
+app.get('/api/auth/verify', requireAuth, (req, res) => {
+  return res.json({ valid: true, user: req.user });
+});
+
 app.get('/', (req, res) => {
   res.json({
     service: 'Portfolio Chat API',
     status: 'running',
     docs: {
-      'GET /api/messages': 'Lấy tin nhắn theo sessionId',
-      'POST /api/messages': 'Gửi tin nhắn mới',
-      'GET /api/health': 'Kiểm tra trạng thái server',
+      'GET /api/messages':       'Lấy tin nhắn theo sessionId',
+      'POST /api/messages':      'Gửi tin nhắn mới',
+      'GET /api/health':         'Kiểm tra trạng thái server',
+      'POST /api/auth/register': 'Đăng ký tài khoản mới',
+      'POST /api/auth/login':    'Đăng nhập',
+      'GET /api/auth/verify':    'Verify JWT token',
     },
   });
 });

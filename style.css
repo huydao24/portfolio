@@ -779,3 +779,305 @@
   transform: translateY(-5px) scale(1.05);
   box-shadow: var(--glow-green);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   AUTH OVERLAY — Protected Route Gate
+   ══════════════════════════════════════════════════════════════ */
+
+/* Lớp phủ toàn màn hình — che toàn bộ Portfolio */
+#auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0,119,188,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(0,152,102,0.12) 0%, transparent 60%),
+    rgba(8, 12, 16, 0.97);
+  backdrop-filter: blur(8px);
+  padding: 24px;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Trạng thái ẩn — chạy animation trước khi xóa khỏi DOM */
+#auth-overlay.auth-overlay--hidden {
+  opacity: 0;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+
+/* Card kính (Glassmorphism) chứa form */
+.auth-glass {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-radius: 12px;
+  padding: 40px 36px;
+  box-shadow:
+    0 0 0 1px rgba(0, 212, 255, 0.06),
+    0 32px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(0, 119, 188, 0.12);
+  animation: authCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Brand / Logo ── */
+.auth-brand {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.auth-brand-logo {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--secondary);
+  text-transform: uppercase;
+}
+.auth-brand-dot { color: var(--accent); }
+.auth-brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* ── Tabs ── */
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.auth-tab {
+  background: transparent;
+  border: none;
+  padding: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.auth-tab.active {
+  background: rgba(0, 119, 188, 0.2);
+  color: var(--secondary);
+  border-bottom: 2px solid var(--secondary);
+}
+.auth-tab:not(.active):hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+/* ── Form ── */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: opacity 0.2s;
+}
+.auth-form.hidden { display: none; }
+
+/* ── Field group ── */
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth-field label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.auth-field label small {
+  font-size: 0.68rem;
+  color: rgba(139, 148, 158, 0.6);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Input chung */
+.auth-field input {
+  width: 100%;
+  background: rgba(22, 27, 34, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.15);
+  border-radius: 4px;
+  padding: 11px 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.auth-field input::placeholder { color: var(--text-muted); opacity: 0.5; }
+.auth-field input:focus {
+  border-color: rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.08);
+}
+
+/* Password wrapper với nút hiện/ẩn */
+.auth-password-wrap {
+  position: relative;
+}
+.auth-password-wrap input { padding-right: 44px; }
+.auth-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.auth-eye-btn:hover { color: var(--secondary); }
+.auth-eye-btn svg { width: 16px; height: 16px; }
+
+/* Error messages */
+.auth-field-error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--danger);
+  min-height: 14px;
+  letter-spacing: 0.02em;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+.shake { animation: shake 0.3s ease; }
+
+/* Server error banner */
+.auth-server-error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--danger);
+  background: rgba(255, 59, 59, 0.08);
+  border: 1px solid rgba(255, 59, 59, 0.2);
+  border-radius: 4px;
+  padding: 10px 14px;
+  display: none;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+.auth-server-error:not(:empty) { display: block; }
+
+/* ── Submit Button ── */
+.auth-submit-btn {
+  width: 100%;
+  padding: 13px;
+  margin-top: 4px;
+  background: linear-gradient(135deg, var(--primary), rgba(0, 119, 188, 0.7));
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 4px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.auth-submit-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.auth-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--glow);
+}
+.auth-submit-btn:hover:not(:disabled)::before { opacity: 1; }
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner bên trong button */
+.btn-spinner {
+  display: flex;
+  align-items: center;
+}
+.spin-icon {
+  width: 16px;
+  height: 16px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Success message ── */
+.auth-success {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: rgba(0, 152, 102, 0.08);
+  border: 1px solid rgba(0, 152, 102, 0.25);
+  border-radius: 4px;
+  padding: 12px 16px;
+  text-align: center;
+  margin-top: 8px;
+  animation: fadeSlideUp 0.4s ease both;
+  letter-spacing: 0.04em;
+}
+
+/* ── Nav Logout Button ── */
+.nav-logout-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid rgba(255, 59, 59, 0.25);
+  border-radius: 3px;
+  padding: 5px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.nav-logout-btn:hover {
+  color: var(--danger);
+  border-color: rgba(255, 59, 59, 0.5);
+  background: rgba(255, 59, 59, 0.06);
+}
+
+/* ── Responsive ── */
+@media (max-width: 500px) {
+  .auth-glass {
+    padding: 28px 20px;
+  }
+  .auth-brand-logo { font-size: 1.3rem; }
+}
