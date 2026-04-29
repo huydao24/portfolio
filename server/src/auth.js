@@ -13,6 +13,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -152,7 +153,7 @@ export async function registerUser({ name, email, password }) {
   );
 
   // ── 7. Trả về thông tin user (KHÔNG kèm passwordHash) ──────────────────
-  const { passwordHash: _removed, ...safeUser } = newUser;
+  const { passwordHash: _removed, resetToken: _rt, resetTokenExpires: _rte, ...safeUser } = newUser;
   return { user: safeUser, token };
 }
 
@@ -197,8 +198,116 @@ export async function loginUser({ email, password }) {
   );
 
   // ── 5. Trả về thông tin user (KHÔNG kèm passwordHash) ──────────────────
-  const { passwordHash: _removed, ...safeUser } = user;
+  const { passwordHash: _removed, resetToken: _rt, resetTokenExpires: _rte, ...safeUser } = user;
   return { user: safeUser, token };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FORGOT PASSWORD — Yêu cầu đặt lại mật khẩu
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Tạo mã reset 6 chữ số và lưu vào user record.
+ * Mã có hiệu lực 15 phút.
+ *
+ * @param {{ email: string }} body
+ * @returns {{ message: string, resetCode: string }} — resetCode trả về để gửi qua kênh khác (Telegram/admin)
+ * @throws {Error} nếu email không hợp lệ hoặc không tồn tại
+ */
+export async function requestPasswordReset({ email }) {
+  const cleanEmail = sanitize(email, 200).toLowerCase();
+
+  if (!isValidEmail(cleanEmail)) {
+    throw Object.assign(new Error('Email không hợp lệ.'), { statusCode: 400 });
+  }
+
+  const users = await readUsers();
+  const userIndex = users.findIndex(u => u.email === cleanEmail);
+
+  if (userIndex === -1) {
+    // Trả về thông báo chung để tránh user enumeration
+    // (không để lộ email nào tồn tại trong hệ thống)
+    throw Object.assign(
+      new Error('Nếu email tồn tại, mã đặt lại sẽ được gửi.'),
+      { statusCode: 200 } // Dùng 200 để không lộ thông tin
+    );
+  }
+
+  // Tạo mã reset 6 chữ số
+  const resetCode = String(crypto.randomInt(100000, 999999));
+  const resetExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 phút
+
+  // Lưu mã vào user record
+  users[userIndex].resetToken = resetCode;
+  users[userIndex].resetTokenExpires = resetExpires;
+  await writeUsers(users);
+
+  return {
+    message: 'Mã đặt lại mật khẩu đã được tạo. Vui lòng kiểm tra kênh thông báo.',
+    resetCode, // Server sẽ gửi mã này qua Telegram cho admin
+    userName: users[userIndex].name,
+    userEmail: cleanEmail,
+  };
+}
+
+/**
+ * Đặt lại mật khẩu bằng mã reset.
+ *
+ * @param {{ email, resetCode, newPassword }} body
+ * @returns {{ message: string }}
+ * @throws {Error} nếu mã không đúng, hết hạn, hoặc mật khẩu không hợp lệ
+ */
+export async function resetPassword({ email, resetCode, newPassword }) {
+  const cleanEmail    = sanitize(email, 200).toLowerCase();
+  const cleanCode     = sanitize(resetCode, 10);
+  const cleanPassword = sanitize(newPassword, 200);
+
+  if (!isValidEmail(cleanEmail)) {
+    throw Object.assign(new Error('Email không hợp lệ.'), { statusCode: 400 });
+  }
+  if (!cleanCode) {
+    throw Object.assign(new Error('Mã xác nhận không được để trống.'), { statusCode: 400 });
+  }
+  if (cleanPassword.length < 6) {
+    throw Object.assign(new Error('Mật khẩu mới phải có ít nhất 6 ký tự.'), { statusCode: 400 });
+  }
+  if (cleanPassword.length > 128) {
+    throw Object.assign(new Error('Mật khẩu quá dài (tối đa 128 ký tự).'), { statusCode: 400 });
+  }
+
+  const users = await readUsers();
+  const userIndex = users.findIndex(u => u.email === cleanEmail);
+
+  if (userIndex === -1) {
+    throw Object.assign(new Error('Mã xác nhận không chính xác.'), { statusCode: 400 });
+  }
+
+  const user = users[userIndex];
+
+  // Kiểm tra mã reset
+  if (!user.resetToken || user.resetToken !== cleanCode) {
+    throw Object.assign(new Error('Mã xác nhận không chính xác.'), { statusCode: 400 });
+  }
+
+  // Kiểm tra hết hạn
+  if (!user.resetTokenExpires || new Date(user.resetTokenExpires) < new Date()) {
+    // Xóa mã đã hết hạn
+    delete users[userIndex].resetToken;
+    delete users[userIndex].resetTokenExpires;
+    await writeUsers(users);
+    throw Object.assign(new Error('Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới.'), { statusCode: 400 });
+  }
+
+  // Hash mật khẩu mới
+  const newHash = await bcrypt.hash(cleanPassword, BCRYPT_SALT_ROUNDS);
+
+  // Cập nhật mật khẩu và xóa mã reset
+  users[userIndex].passwordHash = newHash;
+  delete users[userIndex].resetToken;
+  delete users[userIndex].resetTokenExpires;
+  await writeUsers(users);
+
+  return { message: 'Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập với mật khẩu mới.' };
 }
 
 // ════════════════════════════════════════════════════════════════════════════

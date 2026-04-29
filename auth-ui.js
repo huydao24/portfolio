@@ -77,6 +77,9 @@ function createAuthOverlay() {
             <svg viewBox="0 0 24 24" class="spin-icon"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg>
           </span>
         </button>
+        <div class="auth-forgot-link-wrap">
+          <button type="button" id="forgot-password-link" class="auth-forgot-link">Quên mật khẩu?</button>
+        </div>
       </form>
 
       <!-- ── FORM ĐĂNG KÝ ──────────────────────────────────────── -->
@@ -122,6 +125,82 @@ function createAuthOverlay() {
 
       <!-- Thông báo thành công -->
       <div class="auth-success" id="auth-success" hidden></div>
+
+      <!-- ── FORM QUÊN MẬT KHẨU ────────────────────────────── -->
+      <div id="forgot-password-section" class="auth-form hidden">
+        <!-- Bước 1: Nhập email -->
+        <form id="forgot-step1-form" class="auth-forgot-step" novalidate>
+          <div class="auth-forgot-header">
+            <button type="button" id="forgot-back-btn" class="auth-back-btn" title="Quay lại đăng nhập">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <div>
+              <h3 class="auth-forgot-title">Quên mật khẩu</h3>
+              <p class="auth-forgot-desc">Nhập email để nhận mã đặt lại mật khẩu qua hộp thư</p>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="forgot-email">Email</label>
+            <input id="forgot-email" type="email" placeholder="ban@email.com" autocomplete="email" required />
+            <span class="auth-field-error" id="forgot-email-err"></span>
+          </div>
+          <div class="auth-server-error" id="forgot-server-err"></div>
+          <button type="submit" class="auth-submit-btn" id="forgot-submit">
+            <span class="btn-text">Gửi mã xác nhận</span>
+            <span class="btn-spinner" hidden>
+              <svg viewBox="0 0 24 24" class="spin-icon"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg>
+            </span>
+          </button>
+        </form>
+
+        <!-- Bước 2: Nhập mã + Mật khẩu mới -->
+        <form id="forgot-step2-form" class="auth-forgot-step hidden" novalidate>
+          <div class="auth-forgot-header">
+            <button type="button" id="forgot-back-step1-btn" class="auth-back-btn" title="Quay lại nhập email">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <div>
+              <h3 class="auth-forgot-title">Nhập mã xác nhận</h3>
+              <p class="auth-forgot-desc">Mã 6 số đã được gửi đến email của bạn. Kiểm tra hộp thư (và Spam).</p>
+            </div>
+          </div>
+          <div class="auth-field">
+            <label for="reset-code">Mã xác nhận (6 số)</label>
+            <input id="reset-code" type="text" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required />
+            <span class="auth-field-error" id="reset-code-err"></span>
+          </div>
+          <div class="auth-field">
+            <label for="reset-new-password">Mật khẩu mới <small>(ít nhất 6 ký tự)</small></label>
+            <div class="auth-password-wrap">
+              <input id="reset-new-password" type="password" placeholder="••••••••" autocomplete="new-password" required />
+              <button type="button" class="auth-eye-btn" data-target="reset-new-password" aria-label="Hiện mật khẩu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <span class="auth-field-error" id="reset-new-password-err"></span>
+          </div>
+          <div class="auth-field">
+            <label for="reset-confirm-password">Xác nhận mật khẩu mới</label>
+            <div class="auth-password-wrap">
+              <input id="reset-confirm-password" type="password" placeholder="••••••••" autocomplete="new-password" required />
+              <button type="button" class="auth-eye-btn" data-target="reset-confirm-password" aria-label="Hiện mật khẩu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <span class="auth-field-error" id="reset-confirm-password-err"></span>
+          </div>
+          <div class="auth-server-error" id="reset-server-err"></div>
+          <button type="submit" class="auth-submit-btn" id="reset-submit">
+            <span class="btn-text">Đặt lại mật khẩu</span>
+            <span class="btn-spinner" hidden>
+              <svg viewBox="0 0 24 24" class="spin-icon"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg>
+            </span>
+          </button>
+        </form>
+
+        <!-- Thông báo thành công khi reset xong -->
+        <div class="auth-success" id="reset-success" hidden></div>
+      </div>
 
     </div><!-- .auth-glass -->
   `;
@@ -334,6 +413,34 @@ async function apiVerifyToken(token) {
   return data;
 }
 
+/**
+ * Gọi API quên mật khẩu — gửi email để nhận mã reset.
+ */
+async function apiForgotPassword(email) {
+  const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Yêu cầu thất bại.');
+  return data;
+}
+
+/**
+ * Gọi API đặt lại mật khẩu bằng mã xác nhận.
+ */
+async function apiResetPassword(email, resetCode, newPassword) {
+  const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ email: email.trim().toLowerCase(), resetCode, newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Đặt lại mật khẩu thất bại.');
+  return data;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // EVENT HANDLERS
 // ════════════════════════════════════════════════════════════════════════════
@@ -396,6 +503,139 @@ function showSuccessMessage(msg) {
   el.hidden = false;
   // Ẩn tất cả form khi đang hiện success
   document.querySelectorAll('.auth-form').forEach(f => f.style.opacity = '0.4');
+}
+
+// ── Biến lưu email đang reset ─────────────────────────────────────────────
+let _forgotEmail = '';
+
+/**
+ * Hiện section Quên mật khẩu, ẩn Login/Register.
+ */
+function showForgotPassword() {
+  // Ẩn tabs, login form, register form
+  document.querySelector('.auth-tabs').classList.add('hidden');
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('auth-success').hidden = true;
+  document.querySelectorAll('.auth-form').forEach(f => f.style.opacity = '');
+
+  // Hiện forgot section + step 1
+  const section = document.getElementById('forgot-password-section');
+  section.classList.remove('hidden');
+  document.getElementById('forgot-step1-form').classList.remove('hidden');
+  document.getElementById('forgot-step2-form').classList.add('hidden');
+  document.getElementById('reset-success').hidden = true;
+
+  // Clear errors
+  clearErrors(document.getElementById('forgot-step1-form'));
+  clearErrors(document.getElementById('forgot-step2-form'));
+}
+
+/**
+ * Quay lại giao diện Login từ Forgot Password.
+ */
+function backToLogin() {
+  // Ẩn forgot section
+  document.getElementById('forgot-password-section').classList.add('hidden');
+
+  // Hiện lại tabs + login form
+  document.querySelector('.auth-tabs').classList.remove('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('auth-success').hidden = true;
+  document.querySelectorAll('.auth-form').forEach(f => f.style.opacity = '');
+
+  // Reset tab states
+  document.getElementById('tab-login').classList.add('active');
+  document.getElementById('tab-login').setAttribute('aria-selected', 'true');
+  document.getElementById('tab-register').classList.remove('active');
+  document.getElementById('tab-register').setAttribute('aria-selected', 'false');
+}
+
+/**
+ * Xử lý Step 1: Gửi email để nhận mã reset.
+ */
+async function handleForgotStep1(e) {
+  e.preventDefault();
+  const form = document.getElementById('forgot-step1-form');
+  clearErrors(form);
+
+  const email = document.getElementById('forgot-email').value;
+  if (!email.trim()) {
+    showFieldError('forgot-email-err', 'Email không được để trống.');
+    return;
+  }
+  if (!validateEmail(email)) {
+    showFieldError('forgot-email-err', 'Email không đúng định dạng.');
+    return;
+  }
+
+  setLoading(form, true);
+  try {
+    const data = await apiForgotPassword(email);
+    // Lưu email để dùng ở step 2
+    _forgotEmail = email.trim().toLowerCase();
+    // Chuyển sang step 2
+    document.getElementById('forgot-step1-form').classList.add('hidden');
+    document.getElementById('forgot-step2-form').classList.remove('hidden');
+  } catch (err) {
+    showServerError('forgot-server-err', err.message);
+  } finally {
+    setLoading(form, false);
+  }
+}
+
+/**
+ * Xử lý Step 2: Nhập mã + mật khẩu mới.
+ */
+async function handleForgotStep2(e) {
+  e.preventDefault();
+  const form = document.getElementById('forgot-step2-form');
+  clearErrors(form);
+
+  const code        = document.getElementById('reset-code').value.trim();
+  const newPassword = document.getElementById('reset-new-password').value;
+  const confirmPwd  = document.getElementById('reset-confirm-password').value;
+  let valid = true;
+
+  if (!code) {
+    showFieldError('reset-code-err', 'Mã xác nhận không được để trống.'); valid = false;
+  } else if (!/^\d{6}$/.test(code)) {
+    showFieldError('reset-code-err', 'Mã xác nhận phải là 6 chữ số.'); valid = false;
+  }
+
+  if (!newPassword) {
+    showFieldError('reset-new-password-err', 'Mật khẩu mới không được để trống.'); valid = false;
+  } else if (newPassword.length < 6) {
+    showFieldError('reset-new-password-err', 'Mật khẩu phải có ít nhất 6 ký tự.'); valid = false;
+  }
+
+  if (!confirmPwd) {
+    showFieldError('reset-confirm-password-err', 'Vui lòng xác nhận mật khẩu.'); valid = false;
+  } else if (newPassword && confirmPwd !== newPassword) {
+    showFieldError('reset-confirm-password-err', 'Mật khẩu xác nhận không khớp.'); valid = false;
+  }
+
+  if (!valid) return;
+
+  setLoading(form, true);
+  try {
+    const data = await apiResetPassword(_forgotEmail, code, newPassword);
+    // Hiện thông báo thành công
+    document.getElementById('forgot-step2-form').classList.add('hidden');
+    const successEl = document.getElementById('reset-success');
+    successEl.textContent = data.message || 'Mật khẩu đã được đặt lại thành công! 🎉';
+    successEl.hidden = false;
+    // Tự động quay lại Login sau 2.5 giây
+    setTimeout(() => {
+      backToLogin();
+      successEl.hidden = true;
+    }, 2500);
+  } catch (err) {
+    showServerError('reset-server-err', err.message);
+  } finally {
+    setLoading(form, false);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -497,6 +737,17 @@ function initAuth() {
   // 3. Gắn sự kiện submit form
   document.getElementById('login-form').addEventListener('submit', handleLoginSubmit);
   document.getElementById('register-form').addEventListener('submit', handleRegisterSubmit);
+
+  // 3b. Gắn sự kiện Forgot Password
+  document.getElementById('forgot-password-link').addEventListener('click', showForgotPassword);
+  document.getElementById('forgot-back-btn').addEventListener('click', backToLogin);
+  document.getElementById('forgot-back-step1-btn').addEventListener('click', () => {
+    document.getElementById('forgot-step2-form').classList.add('hidden');
+    document.getElementById('forgot-step1-form').classList.remove('hidden');
+    clearErrors(document.getElementById('forgot-step2-form'));
+  });
+  document.getElementById('forgot-step1-form').addEventListener('submit', handleForgotStep1);
+  document.getElementById('forgot-step2-form').addEventListener('submit', handleForgotStep2);
 
   // 4. Gắn sự kiện chuyển tab
   setupTabSwitching();

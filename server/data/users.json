@@ -4,6 +4,8 @@
     "name": "Huy Đào Ngọc",
     "email": "daohuy1701@gmail.com",
     "passwordHash": "$2a$12$ghhlNK/gK70Om6rW7Oik4uh4RSXGpgfvKExWpupgGY8FgSyciMzU.",
-    "createdAt": "2026-04-29T16:33:55.982Z"
+    "createdAt": "2026-04-29T16:33:55.982Z",
+    "resetToken": "616679",
+    "resetTokenExpires": "2026-04-29T17:28:24.913Z"
   }
 ]

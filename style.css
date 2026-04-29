@@ -1074,6 +1074,95 @@
   background: rgba(255, 59, 59, 0.06);
 }
 
+/* ── Forgot Password Link ── */
+.auth-forgot-link-wrap {
+  text-align: center;
+  margin-top: 8px;
+}
+.auth-forgot-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+  padding: 4px 8px;
+  position: relative;
+}
+.auth-forgot-link::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 8px;
+  right: 8px;
+  height: 1px;
+  background: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.auth-forgot-link:hover {
+  color: var(--secondary);
+}
+.auth-forgot-link:hover::after {
+  opacity: 0.5;
+  background: var(--secondary);
+}
+
+/* ── Forgot Password Form Section ── */
+.auth-forgot-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-forgot-step.hidden { display: none; }
+
+.auth-forgot-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+.auth-back-btn {
+  flex-shrink: 0;
+  background: rgba(22, 27, 34, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  margin-top: 2px;
+}
+.auth-back-btn:hover {
+  color: var(--secondary);
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 119, 188, 0.1);
+}
+.auth-forgot-title {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+.auth-forgot-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Tabs hidden state ── */
+.auth-tabs.hidden { display: none; }
+
 /* ── Responsive ── */
 @media (max-width: 500px) {
   .auth-glass {
