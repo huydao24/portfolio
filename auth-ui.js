@@ -210,27 +210,26 @@ function createAuthOverlay() {
 }
 
 /**
- * Tạo nút Đăng xuất và thêm vào Nav bar.
+ * Tạo nút Đăng xuất và thêm vào Nav bar (Dùng chung cho Desktop & Mobile).
  */
 function createLogoutButton() {
-  const nav = document.querySelector('nav .nav-links');
-  if (!nav) return;
+  const container = document.getElementById('logout-container');
+  if (!container) return;
 
-  const li = document.createElement('li');
-  li.id = 'logout-nav-item';
-  li.innerHTML = `
-    <button id="logout-btn" class="nav-logout-btn" title="Đăng xuất">
+  container.innerHTML = `
+    <button class="nav-logout-btn btn-logout-action" title="Đăng xuất">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
-      Đăng xuất
+      <span>Đăng xuất</span>
     </button>
   `;
-  nav.appendChild(li);
 
-  document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  // Gắn sự kiện cho nút logout
+  const btn = container.querySelector('.btn-logout-action');
+  if (btn) btn.addEventListener('click', handleLogout);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -264,16 +263,17 @@ function showPortfolio() {
     setTimeout(() => overlay.remove(), 500);
   }
   // Hiện logout button
-  const logoutItem = document.getElementById('logout-nav-item');
-  if (logoutItem) logoutItem.style.display = '';
+  const container = document.getElementById('logout-container');
+  if (container) container.style.display = '';
 }
 
 /** Hiện overlay → chặn Portfolio */
 function showAuthOverlay() {
   const overlay = document.getElementById('auth-overlay');
   if (overlay) overlay.classList.remove('auth-overlay--hidden');
-  const logoutItem = document.getElementById('logout-nav-item');
-  if (logoutItem) logoutItem.style.display = 'none';
+  // Ẩn logout button
+  const container = document.getElementById('logout-container');
+  if (container) container.style.display = 'none';
 }
 
 function setLoading(form, loading) {
@@ -731,8 +731,8 @@ function initAuth() {
   // 2. Chèn nút Logout vào Nav
   createLogoutButton();
   // Ẩn logout button mặc định (sẽ hiện sau khi verify thành công)
-  const logoutItem = document.getElementById('logout-nav-item');
-  if (logoutItem) logoutItem.style.display = 'none';
+  const container = document.getElementById('logout-container');
+  if (container) container.style.display = 'none';
 
   // 3. Gắn sự kiện submit form
   document.getElementById('login-form').addEventListener('submit', handleLoginSubmit);

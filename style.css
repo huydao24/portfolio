@@ -555,20 +555,135 @@
   .typed-text { color: var(--secondary); }
 
   /* ── MOBILE ── */
+  @media (max-width: 992px) {
+    #hero { grid-template-columns: 1fr; gap: 40px; padding-top: 120px; }
+    .hero-right { order: -1; max-width: 500px; margin: 0 auto; }
+    .hero-left { text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .hero-cta { justify-content: center; }
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .skills-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
   @media (max-width: 768px) {
-    nav { padding: 16px 24px; }
+    nav { padding: 16px 24px; background: rgba(8,12,16,0.98); }
     .nav-links { display: none; }
-    #hero { grid-template-columns: 1fr; padding: 100px 24px 60px; }
-    .hero-right { display: none; }
-    section { padding: 70px 24px; }
-    .about-grid { grid-template-columns: 1fr; gap: 48px; }
+    .nav-mobile-toggle { display: flex; }
+    
+    .hero-name { font-size: clamp(2.5rem, 10vw, 4rem); }
+    .hero-tagline { margin: 20px auto 32px; }
+    
+    section { padding: 60px 24px; }
+    .section-title { font-size: clamp(1.8rem, 8vw, 2.5rem); margin-bottom: 40px; }
+    
     .skills-grid { grid-template-columns: 1fr; }
     .projects-grid { grid-template-columns: 1fr; }
     .project-card.featured { grid-column: span 1; }
+    .project-card.featured .project-thumb { height: 200px; }
+    
     footer { flex-direction: column; gap: 12px; padding: 24px; text-align: center; }
-    .social-links { flex-wrap: wrap; }
+    .social-links { flex-wrap: wrap; justify-content: center; }
+    
     #chat-popover { right: 16px; bottom: 80px; width: calc(100vw - 32px); height: 60vh; }
     #chat-float-btn { right: 20px; bottom: 20px; width: 48px; height: 48px; }
+  }
+
+  /* --- NAV ACTIONS --- */
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* --- NAV MOBILE TOGGLE --- */
+  .nav-mobile-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 10px;
+  }
+  .nav-mobile-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--secondary);
+    transition: 0.3s;
+  }
+
+  /* --- MOBILE MENU --- */
+  .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8,12,16,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .mobile-menu-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .mobile-menu-content {
+    width: 80%;
+    max-width: 320px;
+    height: 100%;
+    background: var(--surface2);
+    border-left: 1px solid var(--border);
+    padding: 30px 24px;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-menu-overlay.active .mobile-menu-content {
+    transform: translateX(0);
+  }
+  .mobile-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 50px;
+  }
+  .mobile-menu-close {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 2.5rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .mobile-nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  .mobile-nav-links a {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 1.5rem;
+    color: var(--text);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .mobile-nav-links a:hover {
+    color: var(--secondary);
+  }
+  .mobile-logout-wrap {
+    margin-top: auto;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+  }
+  .mobile-logout-wrap .nav-logout-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 0.9rem;
   }
 
   /* chat */
@@ -1054,24 +1169,37 @@
 /* ── Nav Logout Button ── */
 .nav-logout-btn {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
-  background: none;
-  border: 1px solid rgba(255, 59, 59, 0.25);
-  border-radius: 3px;
-  padding: 5px 12px;
+  background: rgba(255, 59, 59, 0.05);
+  border: 1px solid rgba(255, 59, 59, 0.2);
+  border-radius: 4px;
+  padding: 6px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 .nav-logout-btn:hover {
-  color: var(--danger);
-  border-color: rgba(255, 59, 59, 0.5);
-  background: rgba(255, 59, 59, 0.06);
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+  box-shadow: 0 0 15px rgba(255, 59, 59, 0.3);
+}
+.nav-logout-btn svg {
+  transition: transform 0.2s;
+}
+.nav-logout-btn:hover svg {
+  transform: translateX(2px);
+}
+
+@media (max-width: 500px) {
+  .nav-logout-btn span { display: none; }
+  .nav-logout-btn { padding: 8px; }
 }
 
 /* ── Forgot Password Link ── */

@@ -104,6 +104,29 @@ window.addEventListener('scroll', () => {
   });
 });
 
+// --- MOBILE MENU LOGIC ---
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+const mobileMenuClose = document.getElementById('mobile-menu-close');
+const mobileMenu = document.getElementById('mobile-menu');
+const mobileLinks = document.querySelectorAll('.mobile-nav-links a');
+
+function toggleMobileMenu() {
+  if (mobileMenu) {
+    mobileMenu.classList.toggle('active');
+    document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+  }
+}
+
+if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+if (mobileMenuClose) mobileMenuClose.addEventListener('click', toggleMobileMenu);
+
+mobileLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    mobileMenu.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+});
+
 const DEFAULT_CHAT_BACKEND_URL =
   window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
     ? 'http://localhost:3000'
