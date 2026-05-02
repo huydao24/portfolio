@@ -80,9 +80,21 @@
         "source": "server",
         "time": "09:27 22/04/2026",
         "createdAt": "2026-04-22T02:27:23.131Z"
+      },
+      {
+        "id": "1777644858028-z7jydx",
+        "sessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+        "role": "visitor",
+        "user": "fchhbj",
+        "text": "sdfghj",
+        "source": "web",
+        "time": "21:14 01/05/2026",
+        "createdAt": "2026-05-01T14:14:18.028Z"
       }
     ]
   },
   "telegramMessageMap": {},
-  "lastUpdateId": 0
+  "lastUpdateId": 0,
+  "activeTelegramSessionId": "ad93b74a-b080-49f4-8f9b-3903f74eadaa",
+  "activeTelegramSessionUpdatedAt": "2026-05-01T14:14:18.028Z"
 }

@@ -18,11 +18,20 @@ const DATA_FILE = path.join(DATA_DIR, 'chat-history.json');
 const ALLOWED_ORIGINS = '*';
 
 const PORT = Number(process.env.PORT || 3000);
+
+// Bot dành cho Chat
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID?.trim();
 const TELEGRAM_THREAD_ID = process.env.TELEGRAM_THREAD_ID?.trim();
 const TELEGRAM_API_URL = TELEGRAM_BOT_TOKEN
   ? `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`
+  : null;
+
+// Bot dành cho Auth (Mã xác thực, Noti đăng ký)
+const TELEGRAM_AUTH_BOT_TOKEN = process.env.TELEGRAM_AUTH_BOT_TOKEN?.trim();
+const TELEGRAM_AUTH_CHAT_ID = process.env.TELEGRAM_AUTH_CHAT_ID?.trim();
+const TELEGRAM_AUTH_API_URL = TELEGRAM_AUTH_BOT_TOKEN
+  ? `https://api.telegram.org/bot${TELEGRAM_AUTH_BOT_TOKEN}`
   : null;
 
 const app = express();
@@ -397,7 +406,8 @@ app.post('/api/messages', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
-    telegramConfigured: Boolean(TELEGRAM_API_URL && TELEGRAM_CHAT_ID),
+    chatBotConfigured: Boolean(TELEGRAM_API_URL && TELEGRAM_CHAT_ID),
+    authBotConfigured: Boolean(TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID),
     port: PORT,
   });
 });
@@ -413,6 +423,27 @@ app.get('/api/health', (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { user, token } = await registerUser(req.body);
+
+    // Thông báo cho admin về tài khoản mới qua Auth Bot
+    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
+      const text = [
+        `🆕 TÀI KHOẢN MỚI ĐƯỢC TẠO`,
+        `━━━━━━━━━━━━━━━━━━━`,
+        `👤 Tên: ${user.name}`,
+        `📧 Email: ${user.email}`,
+        `📅 Thời gian: ${formatTime()}`,
+      ].join('\n');
+
+      try {
+        await axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+          chat_id: TELEGRAM_AUTH_CHAT_ID,
+          text: text
+        }, { timeout: 10000 });
+      } catch (tgErr) {
+        console.error('[telegram-auth] Failed to notify registration:', tgErr.message);
+      }
+    }
+
     return res.status(201).json({ message: 'Đăng ký thành công!', user, token });
   } catch (err) {
     const status = err.statusCode || 500;
@@ -500,27 +531,27 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       return res.status(500).json({ error: 'Chức năng gửi email chưa được cấu hình.' });
     }
 
-    // Thông báo admin qua Telegram (tùy chọn)
-    if (TELEGRAM_API_URL && TELEGRAM_CHAT_ID && result.resetCode) {
+    // Thông báo mã reset qua Telegram cho admin/user qua Auth Bot
+    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID && result.resetCode) {
       const telegramText = [
         `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU`,
         `━━━━━━━━━━━━━━━━━━━`,
         `👤 ${result.userName} (${result.userEmail})`,
-        `📧 Mã reset đã gửi qua email`,
+        `🔑 Mã xác thực: ${result.resetCode}`,
         `⏰ Hết hạn sau 15 phút`,
       ].join('\n');
 
-      const payload = { chat_id: TELEGRAM_CHAT_ID, text: telegramText };
-      if (TELEGRAM_THREAD_ID) payload.message_thread_id = Number(TELEGRAM_THREAD_ID);
-
       try {
-        await axios.post(`${TELEGRAM_API_URL}/sendMessage`, payload, { timeout: 10000 });
+        await axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+          chat_id: TELEGRAM_AUTH_CHAT_ID,
+          text: telegramText
+        }, { timeout: 10000 });
       } catch (tgErr) {
-        console.error('[telegram] Failed to notify admin:', tgErr.message);
+        console.error('[telegram-auth] Failed to send reset code:', tgErr.message);
       }
     }
 
-    return res.json({ message: 'Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.' });
+    return res.json({ message: 'Mã xác nhận đã được gửi. Vui lòng kiểm tra email hoặc Telegram của bạn.' });
   } catch (err) {
     const status = err.statusCode || 500;
     if (status === 200) {
