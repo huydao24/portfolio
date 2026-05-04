@@ -41,12 +41,22 @@ const BCRYPT_SALT_ROUNDS = 12;
 async function readUsers() {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
-    const raw = await fs.readFile(USERS_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    // File chưa tồn tại hoặc JSON không hợp lệ → trả về mảng rỗng
-    return [];
+    try {
+      const raw = await fs.readFile(USERS_FILE, 'utf8');
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return [];
+      }
+      console.error('[auth] Lỗi khi đọc file users.json:', err);
+      throw err; // Ném lỗi để tránh ghi đè dữ liệu cũ bằng mảng rỗng
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.error('[auth] Lỗi hệ thống khi truy cập users.json:', err);
+    }
+    throw err;
   }
 }
 

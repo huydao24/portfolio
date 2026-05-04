@@ -5,14 +5,16 @@
     "email": "daohuy1701@gmail.com",
     "passwordHash": "$2a$12$ghhlNK/gK70Om6rW7Oik4uh4RSXGpgfvKExWpupgGY8FgSyciMzU.",
     "createdAt": "2026-04-29T16:33:55.982Z",
-    "resetToken": "865758",
-    "resetTokenExpires": "2026-05-02T03:09:52.570Z"
+    "resetToken": "699159",
+    "resetTokenExpires": "2026-05-04T10:31:21.782Z"
   },
   {
     "id": "2fc7ebd8-53d8-4d8b-8b22-a781c643459a",
     "name": "dc sbj",
     "email": "dbscg@gmail.com",
     "passwordHash": "$2a$12$yVxg8deJgkk6bmkaMVxpDu5hCvbpCxPp.2uqVHhaqCNEE7jEHNU7m",
-    "createdAt": "2026-05-01T14:15:05.734Z"
+    "createdAt": "2026-05-01T14:15:05.734Z",
+    "resetToken": "397820",
+    "resetTokenExpires": "2026-05-04T10:33:59.796Z"
   }
 ]
