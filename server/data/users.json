@@ -9,12 +9,12 @@
     "resetTokenExpires": "2026-05-04T10:31:21.782Z"
   },
   {
-    "id": "2fc7ebd8-53d8-4d8b-8b22-a781c643459a",
-    "name": "dc sbj",
-    "email": "dbscg@gmail.com",
-    "passwordHash": "$2a$12$yVxg8deJgkk6bmkaMVxpDu5hCvbpCxPp.2uqVHhaqCNEE7jEHNU7m",
-    "createdAt": "2026-05-01T14:15:05.734Z",
-    "resetToken": "397820",
-    "resetTokenExpires": "2026-05-04T10:33:59.796Z"
+    "id": "b90bf956-4609-4253-8de0-8cf7af83ef8b",
+    "name": "vu7580485@gmail.com",
+    "email": "vu7580485@gmail.com",
+    "passwordHash": "$2a$12$4m36SlB4.6I/7oDpVALnPuTO3CqLMZCl40yF9pyhmZzmL9pbQ.FUK",
+    "createdAt": "2026-05-05T05:27:21.894Z",
+    "resetToken": "468037",
+    "resetTokenExpires": "2026-05-05T05:55:26.264Z"
   }
 ]

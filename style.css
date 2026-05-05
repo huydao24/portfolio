@@ -1291,10 +1291,48 @@
 /* ── Tabs hidden state ── */
 .auth-tabs.hidden { display: none; }
 
-/* ── Responsive ── */
+/* ── Reset code input with resend button ── */
+.auth-reset-code-wrap {
+  display: flex;
+  gap: 8px;
+}
+.auth-reset-code-wrap input {
+  flex: 1;
+}
+.auth-resend-btn {
+  flex-shrink: 0;
+  background: rgba(22, 27, 34, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.auth-resend-btn:hover {
+  color: var(--secondary);
+  border-color: rgba(0, 212, 255, 0.4);
+  background: rgba(0, 119, 188, 0.1);
+}
+.auth-resend-btn svg {
+  transition: transform 0.3s;
+}
+.auth-resend-btn:hover svg {
+  transform: rotate(45deg);
+}
+.auth-resend-btn span {
+  white-space: nowrap;
+}
+
 @media (max-width: 500px) {
-  .auth-glass {
-    padding: 28px 20px;
-  }
-  .auth-brand-logo { font-size: 1.3rem; }
+  .auth-resend-btn span { display: none; }
+  .auth-resend-btn { padding: 8px; }
 }

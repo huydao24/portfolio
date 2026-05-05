@@ -166,7 +166,13 @@ function createAuthOverlay() {
           </div>
           <div class="auth-field">
             <label for="reset-code">Mã xác nhận (6 số)</label>
-            <input id="reset-code" type="text" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required />
+            <div class="auth-reset-code-wrap">
+              <input id="reset-code" type="text" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required />
+              <button type="button" id="resend-otp-btn" class="auth-resend-btn" title="Gửi lại mã">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <span>Gửi lại</span>
+              </button>
+            </div>
             <span class="auth-field-error" id="reset-code-err"></span>
           </div>
           <div class="auth-field">
@@ -512,6 +518,13 @@ let _forgotEmail = '';
  * Hiện section Quên mật khẩu, ẩn Login/Register.
  */
 function showForgotPassword() {
+  // Lấy email từ form login sang (nếu có) để người dùng không phải nhập lại
+  const loginEmail = document.getElementById('login-email').value;
+  const forgotEmailInput = document.getElementById('forgot-email');
+  if (loginEmail && forgotEmailInput) {
+    forgotEmailInput.value = loginEmail;
+  }
+
   // Ẩn tabs, login form, register form
   document.querySelector('.auth-tabs').classList.add('hidden');
   document.getElementById('login-form').classList.add('hidden');
@@ -556,7 +569,7 @@ function backToLogin() {
  * Xử lý Step 1: Gửi email để nhận mã reset.
  */
 async function handleForgotStep1(e) {
-  e.preventDefault();
+  if (e) e.preventDefault();
   const form = document.getElementById('forgot-step1-form');
   clearErrors(form);
 
@@ -575,6 +588,13 @@ async function handleForgotStep1(e) {
     const data = await apiForgotPassword(email);
     // Lưu email để dùng ở step 2
     _forgotEmail = email.trim().toLowerCase();
+
+    // Thông báo cho người dùng
+    const desc = document.querySelector('#forgot-step2-form .auth-forgot-desc');
+    if (desc) {
+      desc.innerHTML = `Mã 6 số đã được gửi đến <strong>${_forgotEmail}</strong>. Kiểm tra hộp thư (và Spam).`;
+    }
+
     // Chuyển sang step 2
     document.getElementById('forgot-step1-form').classList.add('hidden');
     document.getElementById('forgot-step2-form').classList.remove('hidden');
@@ -748,6 +768,12 @@ function initAuth() {
   });
   document.getElementById('forgot-step1-form').addEventListener('submit', handleForgotStep1);
   document.getElementById('forgot-step2-form').addEventListener('submit', handleForgotStep2);
+
+  // Nút gửi lại mã OTP
+  const resendBtn = document.getElementById('resend-otp-btn');
+  if (resendBtn) {
+    resendBtn.addEventListener('click', () => handleForgotStep1());
+  }
 
   // 4. Gắn sự kiện chuyển tab
   setupTabSwitching();
