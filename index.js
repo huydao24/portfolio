@@ -164,6 +164,7 @@ const chatAudioRecBtn = document.getElementById('chat-audio-rec-btn');
 const chatAudioPreview = document.getElementById('chat-audio-preview');
 const audioPreviewEl = document.getElementById('audio-preview-el');
 const chatNotiBadge = document.getElementById('chat-noti-badge');
+const enableNotiBtn = document.getElementById('enable-noti-btn');
 const NOTI_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
 const notiAudio = new Audio(NOTI_SOUND_URL);
 
@@ -344,19 +345,23 @@ function initChatSocket() {
 
       // Browser notification
       if ('Notification' in window && Notification.permission === 'granted') {
-        const noti = new Notification('Huy đã phản hồi', {
+        const notificationOptions = {
           body: message.text || 'Bạn nhận được một tệp đính kèm',
-          icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png', // Dùng icon đẹp hơn
+          icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png',
           badge: 'https://cdn-icons-png.flaticon.com/512/134/134914.png',
-          tag: 'chat-notification', // Tránh trùng lặp nhiều thông báo
-          renotify: true
-        });
-
-        noti.onclick = () => {
-          window.focus();
-          openChat();
-          noti.close();
+          tag: 'chat-notification',
+          renotify: true,
+          data: { url: window.location.href }
         };
+
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('Huy đã phản hồi', notificationOptions);
+          });
+        } else {
+          // Fallback cho trình duyệt cũ hoặc không phải PWA
+          new Notification('Huy đã phản hồi', notificationOptions);
+        }
       }
     }
   });
@@ -389,6 +394,13 @@ function initChatSocket() {
 function openChat() {
   chatPopover.classList.remove('hidden');
   if (chatNotiBadge) chatNotiBadge.style.display = 'none';
+  
+  // Check notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    if (enableNotiBtn) enableNotiBtn.style.display = 'block';
+  } else {
+    if (enableNotiBtn) enableNotiBtn.style.display = 'none';
+  }
   
   if (chatNameInput) {
     chatNameInput.value = getStoredChatName();
@@ -726,6 +738,22 @@ if ('serviceWorker' in navigator) {
       console.log('ServiceWorker registration failed: ', err);
     });
   });
+}
+
+// Request Notification Permission
+if (enableNotiBtn) {
+  enableNotiBtn.onclick = async () => {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      enableNotiBtn.style.display = 'none';
+      new Notification('Đã bật thông báo!', {
+        body: 'Bạn sẽ nhận được thông báo khi Huy phản hồi.',
+        icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png'
+      });
+    } else {
+      alert('Bạn cần cho phép thông báo trong cài đặt trình duyệt/điện thoại.');
+    }
+  };
 }
 
 // Request Notification Permission on first click anywhere

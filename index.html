@@ -10,6 +10,11 @@
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0077bc">
+<!-- iOS support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DNH.dev">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/134/134914.png">
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
@@ -384,7 +389,10 @@
 <div id="chat-popover" class="hidden">
   <div class="chat-header">
     <span>💬 Chat với Huy</span>
-    <button id="chat-close-btn">&times;</button>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button id="enable-noti-btn" title="Bật thông báo" style="background:none; border:1px solid rgba(255,255,255,0.5); color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer; display:none;">Bật thông báo</button>
+      <button id="chat-close-btn">&times;</button>
+    </div>
   </div>
   <div class="chat-messages" id="chat-messages"></div>
   <form id="chat-form">
