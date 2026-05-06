@@ -223,7 +223,9 @@ function getTelegramReplyHint(user) {
 }
 
 function buildTelegramOutgoingText(message) {
-  return `${getTelegramReplyHint(message.user)}${message.text}`;
+  return `${getTelegramReplyHint(message.user)}${message.text || ''}
+
+🔑 Session: ${message.sessionId}`;
 }
 
 function resolveSessionIdFromTelegramMessage(telegramMessage) {
@@ -886,7 +888,17 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // RỜI KHỎI TẤT CẢ phòng cũ trước khi vào phòng mới
+    // Đảm bảo mỗi socket chỉ ở trong 1 phòng chat duy nhất, tránh nhận nhầm tin nhắn
+    for (const room of socket.rooms) {
+      if (room !== socket.id) {
+        socket.leave(room);
+      }
+    }
+
     socket.join(normalizedSessionId);
+    socket.data.sessionId = normalizedSessionId;
+    console.log(`[Socket] ${socket.id} joined room: ${normalizedSessionId}`);
     socket.emit('chat history', getSessionMessages(normalizedSessionId));
   });
 

@@ -393,6 +393,7 @@ function initChatSocket() {
 
 function openChat() {
   // Cập nhật lại sessionId trước khi mở (đề phòng trường hợp vừa login/logout)
+  const oldSessionId = chatSessionId;
   chatSessionId = getChatSessionId();
 
   chatPopover.classList.remove('hidden');
@@ -407,21 +408,40 @@ function openChat() {
   }
   loadChatHistory();
 
+  // Nếu sessionId thay đổi (vd: vừa login/logout), ngắt socket cũ hoàn toàn
+  if (oldSessionId !== chatSessionId && socket) {
+    socket.disconnect();
+    socket = null;
+  }
+
   if (!socket) {
     initChatSocket();
   } else if (socket.connected) {
-    // Nếu socket đã kết nối nhưng sessionId thay đổi, ta join lại room mới
     socket.emit('chat:join', { sessionId: chatSessionId });
   }
 }
 
 /**
  * Cung cấp hàm toàn cục để auth-ui.js gọi sau khi login thành công
+ * Ngắt socket cũ hoàn toàn và tạo kết nối mới với sessionId mới
  */
 window.refreshChatSession = function() {
+  const oldSessionId = chatSessionId;
   chatSessionId = getChatSessionId();
-  if (socket && socket.connected) {
+
+  // Nếu sessionId thay đổi, phải ngắt socket cũ để tránh nhận tin nhắn chéo
+  if (oldSessionId !== chatSessionId && socket) {
+    socket.disconnect();
+    socket = null;
+  }
+
+  if (!socket && !chatPopover.classList.contains('hidden')) {
+    initChatSocket();
+  } else if (socket && socket.connected) {
     socket.emit('chat:join', { sessionId: chatSessionId });
+  }
+
+  if (!chatPopover.classList.contains('hidden')) {
     loadChatHistory();
   }
 };
