@@ -438,32 +438,6 @@
         "createdAt": "2026-05-06T13:30:52.346Z"
       },
       {
-        "id": "1778074263280-06c14l",
-        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
-        "role": "visitor",
-        "user": "sadsa",
-        "text": "há'",
-        "image": null,
-        "video": null,
-        "audio": null,
-        "source": "web",
-        "time": "20:31 06/05/2026",
-        "createdAt": "2026-05-06T13:31:03.280Z"
-      },
-      {
-        "id": "1778074272095-x5vedc",
-        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
-        "role": "visitor",
-        "user": "tuấn",
-        "text": "ds",
-        "image": null,
-        "video": null,
-        "audio": null,
-        "source": "web",
-        "time": "20:31 06/05/2026",
-        "createdAt": "2026-05-06T13:31:12.095Z"
-      },
-      {
         "id": "1778074994071-ns2xm0",
         "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
         "role": "telegram",
@@ -566,6 +540,74 @@
         "source": "telegram",
         "time": "21:57 06/05/2026",
         "createdAt": "2026-05-06T14:57:57.632Z"
+      },
+      {
+        "id": "1778080258772-5d3tmw",
+        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+        "role": "telegram",
+        "user": "Anh Huy",
+        "text": "Vdb",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "telegram",
+        "time": "22:10 06/05/2026",
+        "createdAt": "2026-05-06T15:10:58.772Z"
+      },
+      {
+        "id": "1778080532663-ucif1q",
+        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+        "role": "telegram",
+        "user": "Anh Huy",
+        "text": "Gì",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "telegram",
+        "time": "22:15 06/05/2026",
+        "createdAt": "2026-05-06T15:15:32.663Z"
+      },
+      {
+        "id": "1778080878175-kwools",
+        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+        "role": "visitor",
+        "user": "tuấn",
+        "text": "dfgfhgjh",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "web",
+        "time": "22:21 06/05/2026",
+        "createdAt": "2026-05-06T15:21:18.175Z",
+        "telegramMessageId": 403
+      },
+      {
+        "id": "1778080974062-tnbr28",
+        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+        "role": "visitor",
+        "user": "tuấn",
+        "text": "sdfgh",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "web",
+        "time": "22:22 06/05/2026",
+        "createdAt": "2026-05-06T15:22:54.062Z",
+        "telegramMessageId": 405
+      },
+      {
+        "id": "1778081093396-pzezod",
+        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+        "role": "visitor",
+        "user": "tuấn",
+        "text": "fgfhj",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "web",
+        "time": "22:24 06/05/2026",
+        "createdAt": "2026-05-06T15:24:53.396Z",
+        "telegramMessageId": 406
       }
     ]
   },
@@ -725,9 +767,57 @@
     "394": {
       "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
       "createdAt": "2026-05-06T14:57:57.633Z"
+    },
+    "395": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:04:15.180Z"
+    },
+    "396": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:04:32.187Z"
+    },
+    "397": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:09:34.298Z"
+    },
+    "398": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:10:26.728Z"
+    },
+    "399": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:10:58.772Z"
+    },
+    "400": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:15:28.830Z"
+    },
+    "401": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:15:32.663Z"
+    },
+    "402": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:17:28.663Z"
+    },
+    "403": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:21:18.621Z"
+    },
+    "405": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:22:54.486Z"
+    },
+    "406": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:24:54.236Z"
+    },
+    "407": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:25:12.534Z"
     }
   },
-  "lastUpdateId": 147186922,
+  "lastUpdateId": 147186924,
   "activeTelegramSessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
-  "activeTelegramSessionUpdatedAt": "2026-05-06T14:57:57.632Z"
+  "activeTelegramSessionUpdatedAt": "2026-05-06T15:25:11.699Z"
 }

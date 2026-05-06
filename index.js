@@ -262,7 +262,7 @@ function appendChatMsg(message) {
     <div class="chat-bubble-head">
       <span class="chat-bubble-user">${escapeHtml(message.user || 'Chat')}</span>
       <span class="chat-bubble-time">${escapeHtml(message.time || '')}</span>
-      ${bubbleType === 'mine' ? `
+      ${(bubbleType === 'mine' || message.role === 'telegram') ? `
         <div class="chat-bubble-actions">
           <button class="chat-action-btn edit" onclick="handleEditMessage('${message.id}')" title="Sửa">✎</button>
           <button class="chat-action-btn delete" onclick="handleDeleteMessage('${message.id}')" title="Thu hồi">🗑</button>

@@ -262,11 +262,11 @@ async function sendTelegramMessage(message) {
       const mimeMatch = message.image.match(/^data:([^;]+);base64,/);
       const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
       const extension = mimeType.split('/')[1] || 'jpg';
-      
+
       const base64Data = message.image.split(',')[1];
       const buffer = Buffer.from(base64Data, 'base64');
       const blob = new Blob([buffer], { type: mimeType });
-      
+
       const formData = new FormData();
       formData.append('chat_id', TELEGRAM_CHAT_ID);
       formData.append('caption', buildTelegramOutgoingText(message));
@@ -277,9 +277,10 @@ async function sendTelegramMessage(message) {
       }
 
       const response = await axios.post(`${TELEGRAM_API_URL}/sendPhoto`, formData);
-      
+
       const telegramMessageId = response.data?.result?.message_id;
       if (telegramMessageId) {
+        message.telegramMessageId = telegramMessageId;
         state.telegramMessageMap[String(telegramMessageId)] = {
           sessionId: message.sessionId,
           createdAt: new Date().toISOString(),
@@ -298,16 +299,16 @@ async function sendTelegramMessage(message) {
       const mimeMatch = message.video.match(/^data:([^;]+);base64,/);
       let mimeType = mimeMatch ? mimeMatch[1] : 'video/mp4';
       let extension = mimeType.split('/')[1] || 'mp4';
-      
+
       // Chuẩn hóa cho iOS / QuickTime
       if (mimeType === 'video/quicktime' || extension === 'quicktime') {
         extension = 'mov';
       }
-      
+
       const base64Data = message.video.split(',')[1];
       const buffer = Buffer.from(base64Data, 'base64');
       const blob = new Blob([buffer], { type: mimeType });
-      
+
       const formData = new FormData();
       formData.append('chat_id', TELEGRAM_CHAT_ID);
       formData.append('caption', buildTelegramOutgoingText(message));
@@ -318,9 +319,10 @@ async function sendTelegramMessage(message) {
       }
 
       const response = await axios.post(`${TELEGRAM_API_URL}/sendVideo`, formData);
-      
+
       const telegramMessageId = response.data?.result?.message_id;
       if (telegramMessageId) {
+        message.telegramMessageId = telegramMessageId;
         state.telegramMessageMap[String(telegramMessageId)] = {
           sessionId: message.sessionId,
           createdAt: new Date().toISOString(),
@@ -359,6 +361,7 @@ async function sendTelegramMessage(message) {
 
       const telegramMessageId = response.data?.result?.message_id;
       if (telegramMessageId) {
+        message.telegramMessageId = telegramMessageId;
         state.telegramMessageMap[String(telegramMessageId)] = {
           sessionId: message.sessionId,
           createdAt: new Date().toISOString(),
@@ -373,7 +376,7 @@ async function sendTelegramMessage(message) {
 
   const payload = {
     chat_id: TELEGRAM_CHAT_ID,
-    text: buildTelegramOutgoingText(message),
+    text: buildTelegramOutgoingText(message)
   };
 
   if (TELEGRAM_THREAD_ID) {
@@ -386,6 +389,7 @@ async function sendTelegramMessage(message) {
 
   const telegramMessageId = response.data?.result?.message_id;
   if (telegramMessageId) {
+    message.telegramMessageId = telegramMessageId; // Lưu ID vào chính đối tượng tin nhắn
     state.telegramMessageMap[String(telegramMessageId)] = {
       sessionId: message.sessionId,
       createdAt: new Date().toISOString(),
@@ -397,12 +401,80 @@ async function sendTelegramMessage(message) {
 async function handleTelegramUpdate(update) {
   state.lastUpdateId = update.update_id;
 
-  const telegramMessage = update.message;
+  // Xử lý khi nhấn nút "Xóa trên Web" (Callback Query)
+  if (update.callback_query) {
+    const callbackData = update.callback_query.data;
+    if (callbackData.startsWith('del:')) {
+      const messageId = callbackData.split(':')[1];
+      let found = false;
+
+      // Tìm và xóa tin nhắn trong tất cả sessions
+      for (const sessionId in state.sessions) {
+        const messages = state.sessions[sessionId];
+        const index = messages.findIndex(m => m.id === messageId);
+        if (index !== -1) {
+          messages.splice(index, 1);
+          io.to(sessionId).emit('chat:message_deleted', { messageId });
+          found = true;
+          break;
+        }
+      }
+
+      if (found) {
+        await saveState();
+        // Xóa tin nhắn bên Telegram luôn
+        try {
+          await axios.post(`${TELEGRAM_API_URL}/deleteMessage`, {
+            chat_id: update.callback_query.message.chat.id,
+            message_id: update.callback_query.message.message_id
+          });
+        } catch (err) { }
+      }
+
+      // Trả lời callback query để mất icon loading trên nút
+      await axios.post(`${TELEGRAM_API_URL}/answerCallbackQuery`, {
+        callback_query_id: update.callback_query.id,
+        text: found ? 'Đã xóa trên Web' : 'Không tìm thấy tin nhắn'
+      });
+    }
+    return;
+  }
+
+  // Hỗ trợ cả tin nhắn mới (message) và tin nhắn được sửa (edited_message)
+  const telegramMessage = update.message || update.edited_message;
   if (!telegramMessage) {
     return;
   }
 
+  const isEdit = Boolean(update.edited_message);
+  const telegramMessageId = String(telegramMessage.message_id);
   const text = telegramMessage.text || telegramMessage.caption || '';
+
+  // Nếu là tin nhắn được sửa từ Telegram
+  if (isEdit) {
+    const match = state.telegramMessageMap[telegramMessageId];
+    if (match?.sessionId) {
+      const messages = getSessionMessages(match.sessionId);
+      const msg = messages.find(m => m.telegramMessageId === Number(telegramMessageId) || m.telegramMessageId === telegramMessageId);
+
+      if (msg) {
+        const cleanedText = cleanTelegramReplyText(text);
+        msg.text = cleanedText;
+        msg.isEdited = true;
+
+        // Thông báo cho client qua Socket.io
+        io.to(match.sessionId).emit('chat:message_edited', {
+          messageId: msg.id,
+          text: cleanedText
+        });
+
+        await saveState();
+        console.log(`[telegram] Sync edit from Telegram for message ${telegramMessageId}`);
+      }
+    }
+    return;
+  }
+
   let image = null;
   let video = null;
 
@@ -487,7 +559,7 @@ async function handleTelegramUpdate(update) {
   }
 
   const cleanedText = cleanTelegramReplyText(text);
-  
+
   const replyMessage = buildMessage({
     sessionId,
     role: 'telegram',
@@ -499,7 +571,28 @@ async function handleTelegramUpdate(update) {
     source: 'telegram',
   });
 
+  // Lưu ID Telegram để có thể xóa/sửa sau này từ phía Web
+  replyMessage.telegramMessageId = telegramMessage.message_id;
+
   saveMessage(replyMessage);
+
+  // Gửi một tin nhắn xác nhận có nút Xóa để Admin quản lý tin nhắn mình vừa nhắn
+  try {
+    await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
+      chat_id: TELEGRAM_CHAT_ID,
+      text: `✅ Đã gửi phản hồi lên Web.`,
+      reply_to_message_id: telegramMessage.message_id,
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🗑 Xóa phản hồi này trên Web', callback_data: `del:${replyMessage.id}` }]
+        ]
+      },
+      ...(TELEGRAM_THREAD_ID ? { message_thread_id: Number(TELEGRAM_THREAD_ID) } : {})
+    });
+  } catch (err) {
+    console.error('[telegram] Failed to send delete button for admin message:', err.message);
+  }
+
   state.telegramMessageMap[String(telegramMessage.message_id)] = {
     sessionId,
     createdAt: new Date().toISOString(),
@@ -773,14 +866,14 @@ app.get('/', (req, res) => {
     service: 'Portfolio Chat API',
     status: 'running',
     docs: {
-      'GET /api/messages':           'Lấy tin nhắn theo sessionId',
-      'POST /api/messages':          'Gửi tin nhắn mới',
-      'GET /api/health':             'Kiểm tra trạng thái server',
-      'POST /api/auth/register':     'Đăng ký tài khoản mới',
-      'POST /api/auth/login':        'Đăng nhập',
-      'GET /api/auth/verify':        'Verify JWT token',
+      'GET /api/messages': 'Lấy tin nhắn theo sessionId',
+      'POST /api/messages': 'Gửi tin nhắn mới',
+      'GET /api/health': 'Kiểm tra trạng thái server',
+      'POST /api/auth/register': 'Đăng ký tài khoản mới',
+      'POST /api/auth/login': 'Đăng nhập',
+      'GET /api/auth/verify': 'Verify JWT token',
       'POST /api/auth/forgot-password': 'Yêu cầu mã đặt lại mật khẩu',
-      'POST /api/auth/reset-password':  'Đặt lại mật khẩu bằng mã xác nhận',
+      'POST /api/auth/reset-password': 'Đặt lại mật khẩu bằng mã xác nhận',
     },
   });
 });
@@ -801,6 +894,21 @@ io.on('connection', (socket) => {
     const messages = getSessionMessages(sessionId);
     const index = messages.findIndex(m => m.id === messageId);
     if (index !== -1) {
+      const msgToDelete = messages[index];
+
+      // Nếu tin nhắn có ID Telegram, thực hiện xóa trên Telegram
+      if (msgToDelete.telegramMessageId && TELEGRAM_API_URL && TELEGRAM_CHAT_ID) {
+        try {
+          await axios.post(`${TELEGRAM_API_URL}/deleteMessage`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            message_id: msgToDelete.telegramMessageId
+          });
+          console.log(`[telegram] Deleted message ${msgToDelete.telegramMessageId}`);
+        } catch (err) {
+          console.error('[telegram] Failed to delete message:', err.response?.data || err.message);
+        }
+      }
+
       messages.splice(index, 1);
       io.to(sessionId).emit('chat:message_deleted', { messageId });
       await saveState();
@@ -813,6 +921,27 @@ io.on('connection', (socket) => {
     if (msg) {
       msg.text = text;
       msg.isEdited = true;
+
+      // Đồng bộ sửa tin nhắn sang Telegram
+      if (msg.telegramMessageId && TELEGRAM_API_URL && TELEGRAM_CHAT_ID) {
+        try {
+          const newText = buildTelegramOutgoingText(msg);
+          const isMedia = msg.image || msg.video || msg.audio;
+          const method = isMedia ? 'editMessageCaption' : 'editMessageText';
+
+          const payload = {
+            chat_id: TELEGRAM_CHAT_ID,
+            message_id: msg.telegramMessageId,
+            [isMedia ? 'caption' : 'text']: newText
+          };
+
+          await axios.post(`${TELEGRAM_API_URL}/${method}`, payload);
+          console.log(`[telegram] Edited message ${msg.telegramMessageId}`);
+        } catch (err) {
+          console.error('[telegram] Failed to edit message:', err.response?.data || err.message);
+        }
+      }
+
       io.to(sessionId).emit('chat:message_edited', { messageId, text });
       await saveState();
     }
