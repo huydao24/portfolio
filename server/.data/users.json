@@ -1,0 +1,20 @@
+[
+  {
+    "id": "2a279cff-d38c-4302-ae28-541dd086d963",
+    "name": "Huy Đào Ngọc",
+    "email": "daohuy1701@gmail.com",
+    "passwordHash": "$2a$12$ghhlNK/gK70Om6rW7Oik4uh4RSXGpgfvKExWpupgGY8FgSyciMzU.",
+    "createdAt": "2026-04-29T16:33:55.982Z",
+    "resetToken": "699159",
+    "resetTokenExpires": "2026-05-04T10:31:21.782Z"
+  },
+  {
+    "id": "b90bf956-4609-4253-8de0-8cf7af83ef8b",
+    "name": "vu7580485@gmail.com",
+    "email": "vu7580485@gmail.com",
+    "passwordHash": "$2a$12$4m36SlB4.6I/7oDpVALnPuTO3CqLMZCl40yF9pyhmZzmL9pbQ.FUK",
+    "createdAt": "2026-05-05T05:27:21.894Z",
+    "resetToken": "468037",
+    "resetTokenExpires": "2026-05-05T05:55:26.264Z"
+  }
+]
