@@ -815,9 +815,13 @@
     "407": {
       "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
       "createdAt": "2026-05-06T15:25:12.534Z"
+    },
+    "409": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T15:40:46.991Z"
     }
   },
   "lastUpdateId": 147186924,
   "activeTelegramSessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
-  "activeTelegramSessionUpdatedAt": "2026-05-06T15:25:11.699Z"
+  "activeTelegramSessionUpdatedAt": "2026-05-06T15:40:46.139Z"
 }
