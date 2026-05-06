@@ -553,6 +553,19 @@
         "source": "telegram",
         "time": "21:45 06/05/2026",
         "createdAt": "2026-05-06T14:45:53.647Z"
+      },
+      {
+        "id": "1778079477632-bd0ldk",
+        "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+        "role": "telegram",
+        "user": "Anh Huy",
+        "text": "Hdhchc",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "telegram",
+        "time": "21:57 06/05/2026",
+        "createdAt": "2026-05-06T14:57:57.632Z"
       }
     ]
   },
@@ -708,9 +721,13 @@
     "392": {
       "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
       "createdAt": "2026-05-06T14:45:53.647Z"
+    },
+    "394": {
+      "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
+      "createdAt": "2026-05-06T14:57:57.633Z"
     }
   },
-  "lastUpdateId": 147186921,
+  "lastUpdateId": 147186922,
   "activeTelegramSessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
-  "activeTelegramSessionUpdatedAt": "2026-05-06T14:45:53.647Z"
+  "activeTelegramSessionUpdatedAt": "2026-05-06T14:57:57.632Z"
 }

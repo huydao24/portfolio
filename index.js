@@ -1,31 +1,38 @@
+// --- KHỞI TẠO BIẾN CHO CON TRỎ CHUỘT TÙY CHỈNH ---
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursorRing');
-let mx = 0;
-let my = 0;
-let rx = 0;
-let ry = 0;
+let mx = 0; // Tọa độ X mục tiêu
+let my = 0; // Tọa độ Y mục tiêu
+let rx = 0; // Tọa độ X hiện tại của vòng tròn (để tạo hiệu ứng trễ)
+let ry = 0; // Tọa độ Y hiện tại của vòng tròn (để tạo hiệu ứng trễ)
 
-// Only initialize custom cursor on desktop (precise pointer)
+// Chỉ kích hoạt con trỏ tùy chỉnh trên Desktop (thiết bị có chuột)
 const isDesktop = window.matchMedia('(pointer: fine)').matches;
 
 if (isDesktop) {
+  // Cập nhật tọa độ chuột khi di chuyển
   document.addEventListener('mousemove', e => {
     mx = e.clientX;
     my = e.clientY;
   });
 
+  // Hàm tạo hoạt ảnh mượt mà cho con trỏ và vòng tròn bao quanh
   function animCursor() {
     cursor.style.left = `${mx}px`;
     cursor.style.top = `${my}px`;
+    
+    // Hiệu ứng "đuổi theo" (vòng tròn di chuyển trễ hơn con trỏ)
     rx += (mx - rx) * 0.15;
     ry += (my - ry) * 0.15;
     ring.style.left = `${rx}px`;
     ring.style.top = `${ry}px`;
+    
     requestAnimationFrame(animCursor);
   }
 
   animCursor();
 
+  // Hiệu ứng phóng to con trỏ khi di chuột vào các phần tử tương tác
   document.querySelectorAll('a, button, .project-card, .stat-card, .skill-group').forEach(el => {
     el.addEventListener('mouseenter', () => {
       cursor.style.transform = 'translate(-50%,-50%) scale(2)';
@@ -47,6 +54,7 @@ if (isDesktop) {
   if (ring) ring.style.display = 'none';
 }
 
+// --- HIỆU ỨNG ĐÁNH CHỮ (TYPING EFFECT) TRÊN HERO SECTION ---
 const statuses = [
   'Học & Lập trình',
   'Tìm kiếm cơ hội mới',
@@ -54,9 +62,9 @@ const statuses = [
   'Open for collaboration',
 ];
 
-let si = 0;
-let ci = 0;
-let deleting = false;
+let si = 0; // Chỉ số của câu hiện tại trong mảng statuses
+let ci = 0; // Chỉ số của chữ cái hiện tại đang được đánh ra
+let deleting = false; // Trạng thái đang xóa chữ
 const typedEl = document.querySelector('.typed-text');
 
 function typeEffect() {
@@ -84,6 +92,7 @@ function typeEffect() {
 
 setTimeout(typeEffect, 1200);
 
+// --- HIỆU ỨNG XUẤT HIỆN KHI CUỘN TRANG (SCROLL REVEAL) ---
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -98,6 +107,7 @@ document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-links a');
 
+// --- TỰ ĐỘNG ĐỔI MÀU LINK NAVBAR KHI CUỘN ĐẾN SECTION TƯƠNG ỨNG ---
 window.addEventListener('scroll', () => {
   let current = '';
   sections.forEach(section => {
@@ -136,15 +146,17 @@ mobileLinks.forEach(link => {
   });
 });
 
+// --- CẤU HÌNH VÀ KHỞI TẠO HỆ THỐNG CHAT ---
 const DEFAULT_CHAT_BACKEND_URL =
   window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
     ? 'http://localhost:3000'
     : 'https://portfolio-1-yjvu.onrender.com';
 
 const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || DEFAULT_CHAT_BACKEND_URL;
-const CHAT_SESSION_KEY = 'portfolio-chat-session-id';
-const CHAT_NAME_KEY = 'portfolio-chat-user-name';
+const CHAT_SESSION_KEY = 'portfolio-chat-session-id'; // Key lưu ID phiên chat vào LocalStorage
+const CHAT_NAME_KEY = 'portfolio-chat-user-name';     // Key lưu tên người dùng vào LocalStorage
 
+// Lấy các phần tử DOM liên quan đến Chat
 const chatBtn = document.getElementById('chat-float-btn');
 const chatPopover = document.getElementById('chat-popover');
 const chatCloseBtn = document.getElementById('chat-close-btn');
@@ -175,6 +187,10 @@ let selectedAudioBase64 = null;
 
 let socket = null;
 
+/**
+ * Quản lý Session ID (Định danh người dùng chat)
+ * Nếu chưa có thì tạo mới bằng randomUUID hoặc timestamp
+ */
 function getChatSessionId() {
   const existing = localStorage.getItem(CHAT_SESSION_KEY);
   if (existing) {
@@ -225,6 +241,10 @@ function escapeHtml(value) {
   }[char]));
 }
 
+/**
+ * Hàm thêm một bong bóng tin nhắn vào giao diện chat
+ * @param {Object} message - Đối tượng tin nhắn từ server
+ */
 function appendChatMsg(message) {
   if (!message?.text && !message?.image && !message?.video && !message?.audio) {
     return;
@@ -304,6 +324,9 @@ function loadChatHistory() {
   });
 }
 
+/**
+ * Khởi tạo kết nối Realtime bằng Socket.io
+ */
 function initChatSocket() {
   if (typeof io !== 'function') {
     appendChatMsg({
@@ -384,6 +407,9 @@ if (chatNameInput) {
   chatNameInput.addEventListener('blur', persistChatName);
 }
 
+/**
+ * Nén ảnh trước khi gửi để giảm dung lượng (Dùng Canvas)
+ */
 async function compressImage(file, maxWidth = 1280, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -536,6 +562,7 @@ if (removeImageBtn) {
 }
 
 // Recording Logic
+// --- LOGIC GHI ÂM (VOICE MESSAGE) ---
 let mediaRecorder = null;
 let audioChunks = [];
 
@@ -591,6 +618,7 @@ if (chatAudioRecBtn) {
 
 
 
+// --- XỬ LÝ GỬI TIN NHẮN (SUBMIT FORM) ---
 chatForm.onsubmit = async e => {
   e.preventDefault();
   if (typeof axios === 'undefined') {
