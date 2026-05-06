@@ -464,6 +464,12 @@ async function handleLoginSubmit(e) {
   try {
     const { user, token } = await apiLogin(email, password);
     saveAuthData(token, user);
+    
+    // Cập nhật lại session chat theo ID user mới đăng nhập
+    if (typeof window.refreshChatSession === 'function') {
+      window.refreshChatSession();
+    }
+
     showSuccessMessage(`Chào mừng trở lại, ${user.name}! 🎉`);
     setTimeout(showPortfolio, 1200);
   } catch (err) {
@@ -487,6 +493,12 @@ async function handleRegisterSubmit(e) {
   try {
     const { user, token } = await apiRegister(name, email, password);
     saveAuthData(token, user);
+    
+    // Cập nhật lại session chat theo ID user mới đăng nhập
+    if (typeof window.refreshChatSession === 'function') {
+      window.refreshChatSession();
+    }
+
     showSuccessMessage(`Đăng ký thành công! Chào ${user.name} 🚀`);
     setTimeout(showPortfolio, 1400);
   } catch (err) {

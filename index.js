@@ -189,9 +189,24 @@ let socket = null;
 
 /**
  * Quản lý Session ID (Định danh người dùng chat)
- * Nếu chưa có thì tạo mới bằng randomUUID hoặc timestamp
+ * Ưu tiên dùng ID của tài khoản đã đăng nhập để phân tách tin nhắn giữa các user.
+ * Nếu chưa đăng nhập thì dùng randomUUID lưu vào LocalStorage.
  */
 function getChatSessionId() {
+  // 1. Kiểm tra nếu đã đăng nhập thì dùng ID của User
+  const authUserJson = localStorage.getItem('portfolio-auth-user');
+  if (authUserJson) {
+    try {
+      const user = JSON.parse(authUserJson);
+      if (user && user.id) {
+        return `user-${user.id}`;
+      }
+    } catch (e) {
+      console.error('[chat] Error parsing auth user:', e);
+    }
+  }
+
+  // 2. Nếu là khách (guest) thì dùng ID ngẫu nhiên lưu trong LocalStorage
   const existing = localStorage.getItem(CHAT_SESSION_KEY);
   if (existing) {
     return existing;
@@ -205,7 +220,8 @@ function getChatSessionId() {
   return generated;
 }
 
-const chatSessionId = getChatSessionId();
+// Lấy sessionId hiện tại (có thể thay đổi khi login/logout)
+let chatSessionId = getChatSessionId();
 
 function normalizeChatName(value) {
   return String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
@@ -310,6 +326,9 @@ function loadChatHistory() {
     return Promise.resolve();
   }
 
+  // Luôn lấy sessionId mới nhất trước khi tải lịch sử
+  chatSessionId = getChatSessionId();
+
   return axios.get(`${CHAT_BACKEND_URL}/api/messages`, {
     params: { sessionId: chatSessionId },
   }).then(response => {
@@ -373,6 +392,9 @@ function initChatSocket() {
 }
 
 function openChat() {
+  // Cập nhật lại sessionId trước khi mở (đề phòng trường hợp vừa login/logout)
+  chatSessionId = getChatSessionId();
+
   chatPopover.classList.remove('hidden');
   if (chatNameInput) {
     chatNameInput.value = getStoredChatName();
@@ -387,8 +409,22 @@ function openChat() {
 
   if (!socket) {
     initChatSocket();
+  } else if (socket.connected) {
+    // Nếu socket đã kết nối nhưng sessionId thay đổi, ta join lại room mới
+    socket.emit('chat:join', { sessionId: chatSessionId });
   }
 }
+
+/**
+ * Cung cấp hàm toàn cục để auth-ui.js gọi sau khi login thành công
+ */
+window.refreshChatSession = function() {
+  chatSessionId = getChatSessionId();
+  if (socket && socket.connected) {
+    socket.emit('chat:join', { sessionId: chatSessionId });
+    loadChatHistory();
+  }
+};
 
 chatBtn.onclick = () => {
   if (chatPopover.classList.contains('hidden')) {
