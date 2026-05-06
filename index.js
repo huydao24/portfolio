@@ -163,10 +163,6 @@ const chatImageLabel = document.getElementById('chat-image-label');
 const chatAudioRecBtn = document.getElementById('chat-audio-rec-btn');
 const chatAudioPreview = document.getElementById('chat-audio-preview');
 const audioPreviewEl = document.getElementById('audio-preview-el');
-const chatNotiBadge = document.getElementById('chat-noti-badge');
-const enableNotiBtn = document.getElementById('enable-noti-btn');
-const NOTI_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3';
-const notiAudio = new Audio(NOTI_SOUND_URL);
 
 if (!isDesktop && chatImageInput) {
   chatImageInput.setAttribute('accept', 'image/*,video/*');
@@ -326,45 +322,7 @@ function initChatSocket() {
   });
 
   socket.on('chat history', renderChatHistory);
-  socket.on('chat message', message => {
-    appendChatMsg(message);
-    
-    // Only notify if message is from Telegram/System and chat is closed or tab is inactive
-    const isFromOthers = message.role === 'telegram' || message.role === 'system';
-    const isChatHidden = chatPopover.classList.contains('hidden');
-    const isTabInactive = document.visibilityState !== 'visible';
-
-    if (isFromOthers && (isChatHidden || isTabInactive)) {
-      if (chatNotiBadge) chatNotiBadge.style.display = 'block';
-      notiAudio.play().catch(() => {}); // Browser might block autoplay without user interaction
-      
-      // Vibrate on mobile
-      if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200]); // Vibrate pattern: 200ms on, 100ms off, 200ms on
-      }
-
-      // Browser notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const notificationOptions = {
-          body: message.text || 'Bạn nhận được một tệp đính kèm',
-          icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png',
-          badge: 'https://cdn-icons-png.flaticon.com/512/134/134914.png',
-          tag: 'chat-notification',
-          renotify: true,
-          data: { url: window.location.href }
-        };
-
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification('Huy đã phản hồi', notificationOptions);
-          });
-        } else {
-          // Fallback cho trình duyệt cũ hoặc không phải PWA
-          new Notification('Huy đã phản hồi', notificationOptions);
-        }
-      }
-    }
-  });
+  socket.on('chat message', appendChatMsg);
   socket.on('chat:message_deleted', ({ messageId }) => {
     const el = document.querySelector(`.chat-bubble[data-id="${messageId}"]`);
     if (el) {
@@ -393,15 +351,6 @@ function initChatSocket() {
 
 function openChat() {
   chatPopover.classList.remove('hidden');
-  if (chatNotiBadge) chatNotiBadge.style.display = 'none';
-  
-  // Check notification permission
-  if ('Notification' in window && Notification.permission === 'default') {
-    if (enableNotiBtn) enableNotiBtn.style.display = 'block';
-  } else {
-    if (enableNotiBtn) enableNotiBtn.style.display = 'none';
-  }
-  
   if (chatNameInput) {
     chatNameInput.value = getStoredChatName();
   }
@@ -730,35 +679,3 @@ window.handleEditMessage = function(messageId) {
     });
   }
 };
-
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => {
-      console.log('ServiceWorker registration failed: ', err);
-    });
-  });
-}
-
-// Request Notification Permission
-if (enableNotiBtn) {
-  enableNotiBtn.onclick = async () => {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      enableNotiBtn.style.display = 'none';
-      new Notification('Đã bật thông báo!', {
-        body: 'Bạn sẽ nhận được thông báo khi Huy phản hồi.',
-        icon: 'https://cdn-icons-png.flaticon.com/512/134/134914.png'
-      });
-    } else {
-      alert('Bạn cần cho phép thông báo trong cài đặt trình duyệt/điện thoại.');
-    }
-  };
-}
-
-// Request Notification Permission on first click anywhere
-document.addEventListener('click', () => {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-}, { once: true });

@@ -736,26 +736,6 @@
   border-color: rgba(0,212,255,0.4);
 }
 
-/* Notification Badge */
-#chat-noti-badge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 14px;
-  height: 14px;
-  background: var(--danger);
-  border: 2px solid var(--surface2);
-  border-radius: 50%;
-  display: none; /* Hidden by default */
-  z-index: 10;
-  animation: bounceBadge 0.5s ease infinite alternate;
-}
-
-@keyframes bounceBadge {
-  from { transform: scale(1); box-shadow: 0 0 0px var(--danger); }
-  to { transform: scale(1.2); box-shadow: 0 0 10px var(--danger); }
-}
-
 #chat-float-btn svg circle {
   fill: var(--accent);
 }
