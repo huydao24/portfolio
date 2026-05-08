@@ -281,7 +281,7 @@ function appendChatMsg(message) {
       <div class="chat-bubble-actions">
         ${bubbleType !== 'system' ? `
           <div class="reaction-picker-container">
-            <button class="chat-action-btn react" onclick="toggleReactionPicker('${message.id}')" title="Cảm xúc">😀</button>
+            <button class="chat-action-btn react" title="Cảm xúc">😀</button>
             <div class="reaction-picker" id="picker-${message.id}">
               <span onclick="sendReaction('${message.id}', '👍')">👍</span>
               <span onclick="sendReaction('${message.id}', '❤️')">❤️</span>
@@ -797,28 +797,8 @@ window.renderReactionsHtml = function(messageId, reactions) {
     `).join('');
 };
 
-window.toggleReactionPicker = function(messageId) {
-  const picker = document.getElementById(`picker-${messageId}`);
-  if (picker) {
-    // Hide all other pickers first
-    document.querySelectorAll('.reaction-picker').forEach(p => {
-      if (p.id !== picker.id) p.classList.remove('show');
-    });
-    picker.classList.toggle('show');
-  }
-};
-
 window.sendReaction = function(messageId, emoji) {
   if (socket && socket.connected) {
     socket.emit('chat:reaction', { sessionId: chatSessionId, messageId, emoji });
   }
-  const picker = document.getElementById(`picker-${messageId}`);
-  if (picker) picker.classList.remove('show');
 };
-
-// Đóng reaction picker khi click ra ngoài
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.reaction-picker-container')) {
-    document.querySelectorAll('.reaction-picker.show').forEach(p => p.classList.remove('show'));
-  }
-});
