@@ -618,22 +618,7 @@ async function handleTelegramUpdate(update) {
 
   saveMessage(replyMessage);
 
-  // Gửi một tin nhắn xác nhận có nút Xóa để Admin quản lý tin nhắn mình vừa nhắn
-  try {
-    await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: `✅ Đã gửi phản hồi lên Web.`,
-      reply_to_message_id: telegramMessage.message_id,
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🗑 Xóa phản hồi này trên Web', callback_data: `del:${replyMessage.id}` }]
-        ]
-      },
-      ...(TELEGRAM_THREAD_ID ? { message_thread_id: Number(TELEGRAM_THREAD_ID) } : {})
-    });
-  } catch (err) {
-    console.error('[telegram] Failed to send delete button for admin message:', err.message);
-  }
+
 
   state.telegramMessageMap[String(telegramMessage.message_id)] = {
     sessionId,
