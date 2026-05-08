@@ -455,17 +455,19 @@ async function handleTelegramUpdate(update) {
       );
 
       if (msg) {
-        if (!msg.reactions) msg.reactions = {};
+        if (!msg.telegramReactions) msg.telegramReactions = [];
 
-        // Reset toàn bộ cảm xúc trên Web theo đúng những gì Telegram đang có
-        msg.reactions = {};
-        
+        // Reset cảm xúc của Admin (Telegram)
         const newReactions = reaction.new_reaction || [];
-        newReactions.forEach(r => {
-          const emoji = r.emoji;
-          if (emoji) {
-            msg.reactions[emoji] = (msg.reactions[emoji] || 0) + 1;
-          }
+        msg.telegramReactions = newReactions.map(r => r.emoji).filter(Boolean);
+
+        // Tính tổng hợp lại cảm xúc từ Web và Telegram
+        msg.reactions = {};
+        if (msg.webReaction) {
+          msg.reactions[msg.webReaction] = 1;
+        }
+        msg.telegramReactions.forEach(e => {
+          msg.reactions[e] = (msg.reactions[e] || 0) + 1;
         });
 
         io.to(match.sessionId).emit('chat:reaction', {
@@ -1002,19 +1004,28 @@ io.on('connection', (socket) => {
     const messages = getSessionMessages(sessionId);
     const msg = messages.find(m => m.id === messageId);
     if (msg) {
-      if (!msg.reactions) msg.reactions = {};
+      if (!msg.telegramReactions) msg.telegramReactions = [];
       
-      // Toggle reaction
-      if (msg.reactions[emoji]) {
-        delete msg.reactions[emoji];
+      // Bot Telegram (Web) chỉ được phép có 1 cảm xúc trên 1 tin nhắn
+      if (msg.webReaction === emoji) {
+        msg.webReaction = null; // Toggle tắt
       } else {
-        msg.reactions[emoji] = 1;
+        msg.webReaction = emoji; // Ghi đè cảm xúc cũ
       }
+
+      // Tính tổng hợp lại cảm xúc
+      msg.reactions = {};
+      if (msg.webReaction) {
+        msg.reactions[msg.webReaction] = 1;
+      }
+      msg.telegramReactions.forEach(e => {
+        msg.reactions[e] = (msg.reactions[e] || 0) + 1;
+      });
 
       // Đồng bộ sang Telegram
       if (msg.telegramMessageId && TELEGRAM_API_URL && TELEGRAM_CHAT_ID) {
         try {
-          const reactionPayload = msg.reactions[emoji] ? [{ type: "emoji", emoji }] : [];
+          const reactionPayload = msg.webReaction ? [{ type: "emoji", emoji: msg.webReaction }] : [];
           
           await axios.post(`${TELEGRAM_API_URL}/setMessageReaction`, {
             chat_id: TELEGRAM_CHAT_ID,
