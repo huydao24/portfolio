@@ -442,6 +442,52 @@ async function handleTelegramUpdate(update) {
     return;
   }
 
+  // Handle reaction updates from Telegram
+  if (update.message_reaction) {
+    const reaction = update.message_reaction;
+    const telegramMessageId = String(reaction.message_id);
+    const match = state.telegramMessageMap[telegramMessageId];
+
+    if (match?.sessionId) {
+      const messages = getSessionMessages(match.sessionId);
+      const msg = messages.find(
+        m => String(m.telegramMessageId) === telegramMessageId
+      );
+
+      if (msg) {
+        if (!msg.reactions) msg.reactions = {};
+
+        // Xóa reaction cũ của user này
+        const oldReactions = reaction.old_reaction || [];
+        oldReactions.forEach(r => {
+          const emoji = r.emoji;
+          if (emoji && msg.reactions[emoji]) {
+            msg.reactions[emoji] = Math.max(0, msg.reactions[emoji] - 1);
+            if (msg.reactions[emoji] === 0) delete msg.reactions[emoji];
+          }
+        });
+
+        // Thêm reaction mới
+        const newReactions = reaction.new_reaction || [];
+        newReactions.forEach(r => {
+          const emoji = r.emoji;
+          if (emoji) {
+            msg.reactions[emoji] = (msg.reactions[emoji] || 0) + 1;
+          }
+        });
+
+        io.to(match.sessionId).emit('chat:reaction', {
+          messageId: msg.id,
+          reactions: msg.reactions,
+        });
+
+        await saveState();
+        console.log(`[telegram] Reaction updated for message ${telegramMessageId}:`, msg.reactions);
+      }
+    }
+    return;
+  }
+
   // Hỗ trợ cả tin nhắn mới (message) và tin nhắn được sửa (edited_message)
   const telegramMessage = update.message || update.edited_message;
   if (!telegramMessage) {
@@ -955,6 +1001,41 @@ io.on('connection', (socket) => {
       }
 
       io.to(sessionId).emit('chat:message_edited', { messageId, text });
+      await saveState();
+    }
+  });
+
+  socket.on('chat:reaction', async ({ sessionId, messageId, emoji }) => {
+    const messages = getSessionMessages(sessionId);
+    const msg = messages.find(m => m.id === messageId);
+    if (msg) {
+      if (!msg.reactions) msg.reactions = {};
+      
+      // Toggle reaction
+      if (msg.reactions[emoji]) {
+        delete msg.reactions[emoji];
+      } else {
+        msg.reactions[emoji] = 1;
+      }
+
+      // Đồng bộ sang Telegram
+      if (msg.telegramMessageId && TELEGRAM_API_URL && TELEGRAM_CHAT_ID) {
+        try {
+          const reactionPayload = msg.reactions[emoji] ? [{ type: "emoji", emoji }] : [];
+          
+          await axios.post(`${TELEGRAM_API_URL}/setMessageReaction`, {
+            chat_id: TELEGRAM_CHAT_ID,
+            message_id: msg.telegramMessageId,
+            reaction: reactionPayload,
+            is_big: false
+          });
+          console.log(`[telegram] Synced reaction ${emoji} for message ${msg.telegramMessageId}`);
+        } catch (err) {
+          console.error('[telegram] Failed to sync reaction:', err.response?.data || err.message);
+        }
+      }
+
+      io.to(sessionId).emit('chat:reaction', { messageId, reactions: msg.reactions });
       await saveState();
     }
   });
