@@ -457,17 +457,9 @@ async function handleTelegramUpdate(update) {
       if (msg) {
         if (!msg.reactions) msg.reactions = {};
 
-        // Xóa reaction cũ của user này
-        const oldReactions = reaction.old_reaction || [];
-        oldReactions.forEach(r => {
-          const emoji = r.emoji;
-          if (emoji && msg.reactions[emoji]) {
-            msg.reactions[emoji] = Math.max(0, msg.reactions[emoji] - 1);
-            if (msg.reactions[emoji] === 0) delete msg.reactions[emoji];
-          }
-        });
-
-        // Thêm reaction mới
+        // Reset toàn bộ cảm xúc trên Web theo đúng những gì Telegram đang có
+        msg.reactions = {};
+        
         const newReactions = reaction.new_reaction || [];
         newReactions.forEach(r => {
           const emoji = r.emoji;
