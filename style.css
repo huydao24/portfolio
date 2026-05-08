@@ -1522,15 +1522,14 @@
 .reaction-picker {
   display: none;
   position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 100%;
+  right: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 4px 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  margin-bottom: 8px;
+  margin-top: 8px;
   z-index: 100;
   gap: 4px;
   white-space: normal;
@@ -1539,6 +1538,7 @@
   justify-content: center;
 }
 
+.reaction-picker-container:hover .reaction-picker,
 .reaction-picker.show {
   display: flex;
   flex-wrap: wrap;
