@@ -721,6 +721,51 @@
         "createdAt": "2026-05-06T17:06:37.435Z",
         "telegramMessageId": 457
       }
+    ],
+    "2d27c19e-4286-43b3-a2ec-d4242b4f77b0": [
+      {
+        "id": "1778259905203-m0z19v",
+        "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+        "role": "telegram",
+        "user": "Anh Huy",
+        "text": "Bsbss",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "telegram",
+        "time": "00:05 09/05/2026",
+        "createdAt": "2026-05-08T17:05:05.203Z",
+        "telegramMessageId": 632
+      },
+      {
+        "id": "1778259913155-wih2xs",
+        "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+        "role": "visitor",
+        "user": "long",
+        "text": "ghjk",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "web",
+        "time": "00:05 09/05/2026",
+        "createdAt": "2026-05-08T17:05:13.155Z",
+        "telegramMessageId": 635,
+        "reactions": {}
+      },
+      {
+        "id": "1778260125918-1rzm87",
+        "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+        "role": "telegram",
+        "user": "Anh Huy",
+        "text": "Hdhhs",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "telegram",
+        "time": "00:08 09/05/2026",
+        "createdAt": "2026-05-08T17:08:45.918Z",
+        "telegramMessageId": 636
+      }
     ]
   },
   "telegramMessageMap": {
@@ -975,9 +1020,25 @@
     "457": {
       "sessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
       "createdAt": "2026-05-06T17:06:37.844Z"
+    },
+    "631": {
+      "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+      "createdAt": "2026-05-08T17:03:46.186Z"
+    },
+    "632": {
+      "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+      "createdAt": "2026-05-08T17:05:05.594Z"
+    },
+    "635": {
+      "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+      "createdAt": "2026-05-08T17:05:14.103Z"
+    },
+    "636": {
+      "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+      "createdAt": "2026-05-08T17:08:46.320Z"
     }
   },
-  "lastUpdateId": 147186936,
-  "activeTelegramSessionId": "641b08ff-981d-41f5-8699-7f3895778bb7",
-  "activeTelegramSessionUpdatedAt": "2026-05-06T17:06:37.435Z"
+  "lastUpdateId": 147187010,
+  "activeTelegramSessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+  "activeTelegramSessionUpdatedAt": "2026-05-08T17:08:45.918Z"
 }

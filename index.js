@@ -278,12 +278,25 @@ function appendChatMsg(message) {
     <div class="chat-bubble-head">
       <span class="chat-bubble-user">${escapeHtml(message.user || 'Chat')}</span>
       <span class="chat-bubble-time">${escapeHtml(message.time || '')}</span>
-      ${(bubbleType === 'mine' || message.role === 'telegram') ? `
-        <div class="chat-bubble-actions">
+      <div class="chat-bubble-actions">
+        ${bubbleType !== 'system' ? `
+          <div class="reaction-picker-container">
+            <button class="chat-action-btn react" onclick="toggleReactionPicker('${message.id}')" title="Cảm xúc">😀</button>
+            <div class="reaction-picker" id="picker-${message.id}">
+              <span onclick="sendReaction('${message.id}', '👍')">👍</span>
+              <span onclick="sendReaction('${message.id}', '❤️')">❤️</span>
+              <span onclick="sendReaction('${message.id}', '🔥')">🔥</span>
+              <span onclick="sendReaction('${message.id}', '😂')">😂</span>
+              <span onclick="sendReaction('${message.id}', '😢')">😢</span>
+              <span onclick="sendReaction('${message.id}', '🙏')">🙏</span>
+            </div>
+          </div>
+        ` : ''}
+        ${(bubbleType === 'mine' || message.role === 'telegram') ? `
           <button class="chat-action-btn edit" onclick="handleEditMessage('${message.id}')" title="Sửa">✎</button>
           <button class="chat-action-btn delete" onclick="handleDeleteMessage('${message.id}')" title="Thu hồi">🗑</button>
-        </div>
-      ` : ''}
+        ` : ''}
+      </div>
     </div>
     ${message.image ? `<img src="${message.image}" class="chat-bubble-image" onclick="window.open(this.src, '_blank')" />` : ''}
     ${message.video ? `
@@ -303,6 +316,9 @@ function appendChatMsg(message) {
         ${message.isEdited ? '<span class="edited-tag">(đã sửa)</span>' : ''}
       </div>
     ` : ''}
+    <div class="chat-bubble-reactions" id="reactions-${message.id}">
+      ${renderReactionsHtml(message.id, message.reactions)}
+    </div>
   `;
   bubble.setAttribute('data-id', message.id);
 
@@ -379,6 +395,12 @@ function initChatSocket() {
       if (textEl) {
         textEl.innerHTML = `${escapeHtml(text)} <span class="edited-tag">(đã sửa)</span>`;
       }
+    }
+  });
+  socket.on('chat:reaction', ({ messageId, reactions }) => {
+    const container = document.getElementById(`reactions-${messageId}`);
+    if (container) {
+      container.innerHTML = renderReactionsHtml(messageId, reactions);
     }
   });
   socket.on('chat error', payload => {
@@ -763,3 +785,40 @@ window.handleEditMessage = function(messageId) {
     });
   }
 };
+
+window.renderReactionsHtml = function(messageId, reactions) {
+  if (!reactions) return '';
+  return Object.entries(reactions)
+    .filter(([_, count]) => count > 0)
+    .map(([emoji, count]) => `
+      <span class="reaction-badge" onclick="sendReaction('${messageId}', '${emoji}')">
+        ${emoji} <span class="reaction-count">${count}</span>
+      </span>
+    `).join('');
+};
+
+window.toggleReactionPicker = function(messageId) {
+  const picker = document.getElementById(`picker-${messageId}`);
+  if (picker) {
+    // Hide all other pickers first
+    document.querySelectorAll('.reaction-picker').forEach(p => {
+      if (p.id !== picker.id) p.classList.remove('show');
+    });
+    picker.classList.toggle('show');
+  }
+};
+
+window.sendReaction = function(messageId, emoji) {
+  if (socket && socket.connected) {
+    socket.emit('chat:reaction', { sessionId: chatSessionId, messageId, emoji });
+  }
+  const picker = document.getElementById(`picker-${messageId}`);
+  if (picker) picker.classList.remove('show');
+};
+
+// Đóng reaction picker khi click ra ngoài
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.reaction-picker-container')) {
+    document.querySelectorAll('.reaction-picker.show').forEach(p => p.classList.remove('show'));
+  }
+});
