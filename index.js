@@ -286,7 +286,7 @@ function appendChatMsg(message) {
               <span onclick="sendReaction('${message.id}', '👍')">👍</span>
               <span onclick="sendReaction('${message.id}', '❤️')">❤️</span>
               <span onclick="sendReaction('${message.id}', '🔥')">🔥</span>
-              <span onclick="sendReaction('${message.id}', '😂')">😂</span>
+              <span onclick="sendReaction('${message.id}', '🤣')">🤣</span>
               <span onclick="sendReaction('${message.id}', '😢')">😢</span>
               <span onclick="sendReaction('${message.id}', '🙏')">🙏</span>
             </div>
