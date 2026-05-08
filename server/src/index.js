@@ -659,7 +659,7 @@ async function pollTelegramUpdates() {
       params: {
         offset: state.lastUpdateId + 1,
         timeout: 20,
-        allowed_updates: ["message", "edited_message", "message_reaction", "callback_query"]
+        allowed_updates: JSON.stringify(["message", "edited_message", "message_reaction", "callback_query"])
       },
       timeout: 25000,
     });
