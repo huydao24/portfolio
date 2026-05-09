@@ -801,4 +801,22 @@ window.sendReaction = function(messageId, emoji) {
   if (socket && socket.connected) {
     socket.emit('chat:reaction', { sessionId: chatSessionId, messageId, emoji });
   }
+
+  // Ẩn thanh chọn cảm xúc trên mobile sau khi click (xóa trạng thái hover dính)
+  const picker = document.getElementById(`picker-${messageId}`);
+  if (picker) {
+    const container = picker.closest('.reaction-picker-container');
+    picker.style.display = 'none';
+    if (container) {
+      container.style.pointerEvents = 'none';
+    }
+    
+    // Khôi phục lại trạng thái ban đầu sau một khoảng thời gian ngắn
+    setTimeout(() => {
+      picker.style.display = '';
+      if (container) {
+        container.style.pointerEvents = '';
+      }
+    }, 300);
+  }
 };
