@@ -765,6 +765,40 @@
         "time": "00:08 09/05/2026",
         "createdAt": "2026-05-08T17:08:45.918Z",
         "telegramMessageId": 636
+      },
+      {
+        "id": "1778343216749-8jsyuf",
+        "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+        "role": "visitor",
+        "user": "long",
+        "text": "edsfg",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "web",
+        "time": "23:13 09/05/2026",
+        "createdAt": "2026-05-09T16:13:36.749Z",
+        "telegramMessageId": 697,
+        "telegramReactions": [
+          "🥰"
+        ],
+        "reactions": {
+          "🥰": 1
+        }
+      },
+      {
+        "id": "1778343306108-p6ko9t",
+        "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+        "role": "telegram",
+        "user": "Anh Huy",
+        "text": "Gdhs",
+        "image": null,
+        "video": null,
+        "audio": null,
+        "source": "telegram",
+        "time": "23:15 09/05/2026",
+        "createdAt": "2026-05-09T16:15:06.108Z",
+        "telegramMessageId": 700
       }
     ]
   },
@@ -1036,9 +1070,17 @@
     "636": {
       "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
       "createdAt": "2026-05-08T17:08:46.320Z"
+    },
+    "697": {
+      "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+      "createdAt": "2026-05-09T16:13:37.654Z"
+    },
+    "700": {
+      "sessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
+      "createdAt": "2026-05-09T16:15:06.109Z"
     }
   },
-  "lastUpdateId": 147187010,
+  "lastUpdateId": 147187062,
   "activeTelegramSessionId": "2d27c19e-4286-43b3-a2ec-d4242b4f77b0",
-  "activeTelegramSessionUpdatedAt": "2026-05-08T17:08:45.918Z"
+  "activeTelegramSessionUpdatedAt": "2026-05-09T16:15:06.108Z"
 }

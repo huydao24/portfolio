@@ -806,17 +806,11 @@ window.sendReaction = function(messageId, emoji) {
   const picker = document.getElementById(`picker-${messageId}`);
   if (picker) {
     const container = picker.closest('.reaction-picker-container');
-    picker.style.display = 'none';
     if (container) {
-      container.style.pointerEvents = 'none';
+      // Bằng cách clone và replace element, trình duyệt mobile sẽ xóa hoàn toàn 
+      // trạng thái :hover (sticky hover) đang dính trên container cũ.
+      const clone = container.cloneNode(true);
+      container.parentNode.replaceChild(clone, container);
     }
-    
-    // Khôi phục lại trạng thái ban đầu sau một khoảng thời gian ngắn
-    setTimeout(() => {
-      picker.style.display = '';
-      if (container) {
-        container.style.pointerEvents = '';
-      }
-    }, 300);
   }
 };
