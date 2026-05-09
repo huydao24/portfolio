@@ -1028,6 +1028,43 @@ io.on('connection', (socket) => {
       await saveState();
     }
   });
+  socket.on('admin:join', () => {
+    socket.join('admins');
+    console.log(`[Socket] Admin ${socket.id} joined admins room`);
+  });
+
+  // WebRTC & Video Call Signaling
+  socket.on('call:request', ({ sessionId }) => {
+    console.log(`[VideoCall] Request from ${sessionId}`);
+    socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
+  });
+
+  socket.on('call:accept', ({ sessionId }) => {
+    console.log(`[VideoCall] Admin ${socket.id} accepted call from ${sessionId}`);
+    socket.to(sessionId).emit('call:accepted', { adminId: socket.id });
+  });
+
+  socket.on('call:reject', ({ sessionId }) => {
+    socket.to(sessionId).emit('call:rejected');
+  });
+
+  socket.on('call:end', ({ targetId }) => {
+    // targetId có thể là sessionId (nếu admin cúp) hoặc adminId (nếu guest cúp)
+    // Nếu không biết đích xác, có thể gửi cho cả 2 phía bằng cách gửi cho targetId
+    if (targetId) {
+      socket.to(targetId).emit('call:ended');
+    } else {
+      // Broadcast to both admins and the session if targetId isn't specified
+      socket.broadcast.emit('call:ended');
+    }
+  });
+
+  socket.on('webrtc:signal', ({ targetId, signal }) => {
+    // Chuyển tiếp signal (offer, answer, ice-candidate) tới đích
+    // targetId = sessionId (nếu gửi từ Admin -> Guest)
+    // targetId = adminId (nếu gửi từ Guest -> Admin) hoặc gửi vào room 'admins'
+    socket.to(targetId).emit('webrtc:signal', { senderId: socket.id, signal });
+  });
 });
 
 loadState().then(() => {

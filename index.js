@@ -411,6 +411,10 @@ function initChatSocket() {
       time: '',
     });
   });
+
+  if (typeof attachWebRTCSocketEvents === 'function') {
+    attachWebRTCSocketEvents();
+  }
 }
 
 function openChat() {
@@ -814,3 +818,130 @@ window.sendReaction = function(messageId, emoji) {
     }
   }
 };
+
+// --- VIDEO CALL LOGIC FOR GUEST ---
+const videoCallBtn = document.getElementById('chat-video-call-btn');
+const videoCallOverlay = document.getElementById('video-call-overlay');
+const videoCallStatus = document.getElementById('video-call-status');
+const guestLocalVideo = document.getElementById('guest-local-video');
+const guestRemoteVideo = document.getElementById('guest-remote-video');
+const guestEndCallBtn = document.getElementById('guest-end-call-btn');
+
+let guestPeerConnection;
+let guestLocalStream;
+let callAdminId = null;
+
+const rtcConfig = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
+  ]
+};
+
+async function startVideoCall() {
+  if (!socket || !socket.connected) {
+    alert('Chưa kết nối với máy chủ chat.');
+    return;
+  }
+  
+  try {
+    guestLocalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    guestLocalVideo.srcObject = guestLocalStream;
+    
+    videoCallOverlay.style.display = 'flex';
+    videoCallStatus.innerText = 'Đang gọi cho Huy...';
+    guestEndCallBtn.innerText = 'Hủy cuộc gọi';
+    
+    // Yêu cầu gọi điện
+    socket.emit('call:request', { sessionId: chatSessionId });
+  } catch (err) {
+    alert('Không thể truy cập Camera/Micro: ' + err.message);
+  }
+}
+
+function endVideoCall() {
+  if (guestPeerConnection) {
+    guestPeerConnection.close();
+    guestPeerConnection = null;
+  }
+  if (guestLocalStream) {
+    guestLocalStream.getTracks().forEach(t => t.stop());
+    guestLocalStream = null;
+  }
+  
+  if (callAdminId) {
+    socket.emit('call:end', { targetId: callAdminId });
+  } else {
+    // Trường hợp huỷ trước khi có admin bắt máy
+    if (socket) socket.emit('call:end', { targetId: chatSessionId });
+  }
+  
+  callAdminId = null;
+  videoCallOverlay.style.display = 'none';
+  guestRemoteVideo.srcObject = null;
+  guestLocalVideo.srcObject = null;
+}
+
+if (videoCallBtn) {
+  videoCallBtn.addEventListener('click', startVideoCall);
+}
+if (guestEndCallBtn) {
+  guestEndCallBtn.addEventListener('click', endVideoCall);
+}
+
+function attachWebRTCSocketEvents() {
+  socket.on('call:accepted', async ({ adminId }) => {
+    callAdminId = adminId;
+    videoCallStatus.innerText = 'Đã kết nối!';
+    guestEndCallBtn.innerText = 'Kết thúc cuộc gọi';
+    
+    guestPeerConnection = new RTCPeerConnection(rtcConfig);
+    
+    guestLocalStream.getTracks().forEach(track => {
+      guestPeerConnection.addTrack(track, guestLocalStream);
+    });
+
+    guestPeerConnection.ontrack = (event) => {
+      guestRemoteVideo.srcObject = event.streams[0];
+    };
+
+    guestPeerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit('webrtc:signal', { targetId: callAdminId, signal: event.candidate });
+      }
+    };
+
+    try {
+      const offer = await guestPeerConnection.createOffer();
+      await guestPeerConnection.setLocalDescription(offer);
+      socket.emit('webrtc:signal', { targetId: callAdminId, signal: guestPeerConnection.localDescription });
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  socket.on('call:rejected', () => {
+    alert('Cuộc gọi bị từ chối hoặc Admin đang bận.');
+    endVideoCall();
+  });
+
+  socket.on('call:ended', () => {
+    alert('Cuộc gọi đã kết thúc.');
+    endVideoCall();
+  });
+
+  socket.on('webrtc:signal', async ({ senderId, signal }) => {
+    if (senderId !== callAdminId) return;
+    if (!guestPeerConnection) return;
+    
+    if (signal.type === 'answer') {
+      await guestPeerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+    } else if (signal.candidate) {
+      try {
+        await guestPeerConnection.addIceCandidate(new RTCIceCandidate(signal));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  });
+}
