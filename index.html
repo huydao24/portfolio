@@ -1,469 +1,533 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Portfolio của Đào Ngọc Huy — Sinh viên CNTT tại Học viện Bưu chính Viễn thông (PTIT). Đam mê lập trình, Web Dev, AI/ML.">
-<title>Đào Ngọc Huy — Portfolio</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Portfolio của Đào Ngọc Huy — Sinh viên CNTT tại Học viện Bưu chính Viễn thông (PTIT). Đam mê lập trình, Web Dev, AI/ML.">
+  <title>Đào Ngọc Huy — Portfolio</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursorRing"></div>
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
 
-<!-- ========================================================= -->
-<!-- KHU VỰC 1: NAV (Thanh điều hướng)                         -->
-<!-- Chứa Logo và các thẻ <a> để nhảy nhanh tới các phần khác. -->
-<!-- ========================================================= -->
-<nav>
-  <div class="nav-logo">DNH<span>.</span>dev</div>
-  <ul class="nav-links">
-    <li><a href="#about">Về tôi</a></li>
-    <li><a href="#skills">Kỹ năng</a></li>
-    <li><a href="#projects">Dự án</a></li>
-    <li><a href="#experience">Kinh nghiệm</a></li>
-    <li><a href="#contact">Liên hệ</a></li>
-  </ul>
-  <div class="nav-actions">
-    <div id="logout-container"></div>
-    <div class="nav-mobile-toggle" id="mobile-menu-btn">
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
-  </div>
-</nav>
-
-<div class="mobile-menu-overlay" id="mobile-menu">
-  <div class="mobile-menu-content">
-    <div class="mobile-menu-header">
-      <div class="nav-logo">DNH<span>.</span>dev</div>
-      <button class="mobile-menu-close" id="mobile-menu-close">&times;</button>
-    </div>
-    <ul class="mobile-nav-links">
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 1: NAV (Thanh điều hướng)                         -->
+  <!-- Chứa Logo và các thẻ <a> để nhảy nhanh tới các phần khác. -->
+  <!-- ========================================================= -->
+  <nav>
+    <div class="nav-logo">DNH<span>.</span>dev</div>
+    <ul class="nav-links">
       <li><a href="#about">Về tôi</a></li>
       <li><a href="#skills">Kỹ năng</a></li>
       <li><a href="#projects">Dự án</a></li>
       <li><a href="#experience">Kinh nghiệm</a></li>
       <li><a href="#contact">Liên hệ</a></li>
     </ul>
-    <div id="mobile-logout-container" class="mobile-logout-wrap"></div>
-  </div>
-</div>
-
-<!-- ========================================================= -->
-<!-- KHU VỰC 2: HERO (Màn hình chính/Đập vào mắt đầu tiên)     -->
-<!-- Hiển thị Lời chào, Tên, Chức danh và một thẻ Code minh họa-->
-<!-- ========================================================= -->
-<section id="hero">
-  <div class="hero-bg-glow"></div>
-  <div class="hero-bg-glow2"></div>
-  <div class="hero-left">
-    <div class="hero-tag">Sinh viên PTIT · Năm 2025</div>
-    <h1 class="hero-name">
-      <span class="line1">ĐÀO</span>
-      <span class="line2">NGỌC</span>
-      <span class="line3">HUY</span>
-    </h1>
-    <p class="hero-tagline">
-      Lập trình viên <em>đam mê</em> từ thuở nhỏ — đang định hình tương lai tại
-      <em>Học viện Bưu chính Viễn thông</em>. Kiến tạo những giải pháp kỹ thuật số có ý nghĩa.
-    </p>
-    <div class="hero-cta">
-      <a href="#projects" class="btn-primary">Xem dự án</a>
-      <a href="#contact" class="btn-ghost">Liên hệ ngay</a>
-    </div>
-  </div>
-  <div class="hero-right">
-    <div class="code-card">
-      <div class="code-header">
-        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <span class="code-filename">developer.ts</span>
-      </div>
-      <div class="code-body" id="codeDisplay">
-        <div><span class="ln">01</span><span class="kw">const</span> <span class="prop">dev</span> <span class="op">=</span> {</div>
-        <div><span class="ln">02</span>&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">"Đào Ngọc Huy"</span>,</div>
-        <div><span class="ln">03</span>&nbsp;&nbsp;<span class="prop">age</span>: <span class="num">20</span>,</div>
-        <div><span class="ln">04</span>&nbsp;&nbsp;<span class="prop">school</span>: <span class="str">"PTIT"</span>,</div>
-        <div><span class="ln">05</span>&nbsp;&nbsp;<span class="prop">passion</span>: <span class="str">"Lập trình"</span>,</div>
-        <div><span class="ln">06</span>&nbsp;&nbsp;<span class="prop">skills</span>: [</div>
-        <div><span class="ln">07</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"C/C++"</span>, <span class="str">"Python"</span>,</div>
-        <div><span class="ln">08</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"Web Dev"</span>, <span class="str">"AI/ML"</span></div>
-        <div><span class="ln">09</span>&nbsp;&nbsp;],</div>
-        <div><span class="ln">10</span>&nbsp;&nbsp;<span class="prop">goal</span>: <span class="str">"Build the future"</span>,</div>
-        <div><span class="ln">11</span>&nbsp;&nbsp;<span class="prop">status</span>: <span class="str" id="typedStatus">"<span class="typed-text"></span><span class="cursor-blink"></span>"</span></div>
-        <div><span class="ln">12</span>};</div>
-        <div style="margin-top:12px"><span class="ln">13</span></div>
-        <div><span class="ln">14</span><span class="cm">// Sẵn sàng cho cơ hội mới! 🚀</span></div>
+    <div class="nav-actions">
+      <div id="logout-container"></div>
+      <div class="nav-mobile-toggle" id="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
     </div>
+  </nav>
+
+  <div class="mobile-menu-overlay" id="mobile-menu">
+    <div class="mobile-menu-content">
+      <div class="mobile-menu-header">
+        <div class="nav-logo">DNH<span>.</span>dev</div>
+        <button class="mobile-menu-close" id="mobile-menu-close">&times;</button>
+      </div>
+      <ul class="mobile-nav-links">
+        <li><a href="#about">Về tôi</a></li>
+        <li><a href="#skills">Kỹ năng</a></li>
+        <li><a href="#projects">Dự án</a></li>
+        <li><a href="#experience">Kinh nghiệm</a></li>
+        <li><a href="#contact">Liên hệ</a></li>
+      </ul>
+      <div id="mobile-logout-container" class="mobile-logout-wrap"></div>
+    </div>
   </div>
-</section>
 
-<div class="divider"></div>
-
-<!-- ========================================================= -->
-<!-- KHU VỰC 3: ABOUT (Về tôi)                                 -->
-<!-- Chứa đoạn văn giới thiệu chi tiết và các con số thống kê. -->
-<!-- ========================================================= -->
-<section id="about">
-  <div class="section-label">01 — Về tôi</div>
-  <h2 class="section-title reveal">Tôi là ai & <span>Tôi muốn gì</span></h2>
-  <div class="about-grid">
-    <div class="about-text">
-      <p class="reveal reveal-d1">
-        Xin chào! Tôi là <strong>Đào Ngọc Huy</strong>, sinh viên <strong>20 tuổi</strong> đang theo học tại
-        <em>Học viện Bưu chính Viễn thông (PTIT)</em> — một trong những trường hàng đầu về
-        công nghệ thông tin và viễn thông tại Việt Nam.
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 2: HERO (Màn hình chính/Đập vào mắt đầu tiên)     -->
+  <!-- Hiển thị Lời chào, Tên, Chức danh và một thẻ Code minh họa-->
+  <!-- ========================================================= -->
+  <section id="hero">
+    <div class="hero-bg-glow"></div>
+    <div class="hero-bg-glow2"></div>
+    <div class="hero-left">
+      <div class="hero-tag">Sinh viên PTIT · Năm 2025</div>
+      <h1 class="hero-name">
+        <span class="line1">ĐÀO</span>
+        <span class="line2">NGỌC</span>
+        <span class="line3">HUY</span>
+      </h1>
+      <p class="hero-tagline">
+        Lập trình viên <em>đam mê</em> từ thuở nhỏ — đang định hình tương lai tại
+        <em>Học viện Bưu chính Viễn thông</em>. Kiến tạo những giải pháp kỹ thuật số có ý nghĩa.
       </p>
-      <p class="reveal reveal-d2">
-        Từ khi còn nhỏ, tôi đã bị cuốn hút bởi thế giới máy tính và lập trình. Niềm đam mê đó
-        không ngừng lớn mạnh và trở thành <em>động lực chính</em> dẫn dắt tôi đến với con đường
-        công nghệ ngày hôm nay.
-      </p>
-      <p class="reveal reveal-d3">
-        Tôi tin rằng <em>công nghệ là chìa khóa</em> để giải quyết những vấn đề thực tế — và
-        tôi đang từng bước học hỏi, xây dựng, và đóng góp cho cộng đồng lập trình Việt Nam.
-      </p>
-    </div>
-    <div class="about-stats">
-      <div class="stat-card reveal reveal-d1">
-        <div class="stat-num">20</div>
-        <div class="stat-label">Tuổi đời</div>
-      </div>
-      <div class="stat-card reveal reveal-d2">
-        <div class="stat-num">5+</div>
-        <div class="stat-label">Ngôn ngữ lập trình</div>
-      </div>
-      <div class="stat-card reveal reveal-d3">
-        <div class="stat-num">∞</div>
-        <div class="stat-label">Niềm đam mê</div>
-      </div>
-      <div class="stat-card reveal reveal-d4">
-        <div class="stat-num">PTIT</div>
-        <div class="stat-label">Học viện BCVT</div>
+      <div class="hero-cta">
+        <a href="#projects" class="btn-primary">Xem dự án</a>
+        <a href="#contact" class="btn-ghost">Liên hệ ngay</a>
       </div>
     </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ========================================================= -->
-<!-- KHU VỰC 4: SKILLS (Kỹ năng chuyên môn)                    -->
-<!-- Liệt kê các công nghệ, ngôn ngữ lập trình đang sử dụng.   -->
-<!-- ========================================================= -->
-<section id="skills">
-  <div class="section-label">02 — Kỹ năng</div>
-  <h2 class="section-title reveal">Bộ công cụ <span>của tôi</span></h2>
-  <div class="skills-grid">
-    <div class="skill-group reveal reveal-d1">
-      <span class="skill-group-icon">⚙️</span>
-      <div class="skill-group-title">Ngôn ngữ lập trình</div>
-      <div class="skill-tags">
-        <span class="skill-tag">C / C++</span>
-        <span class="skill-tag">Python</span>
-        <span class="skill-tag">JavaScript</span>
-        <span class="skill-tag">Java</span>
-        <span class="skill-tag">TypeScript</span>
-      </div>
-    </div>
-    <div class="skill-group reveal reveal-d2">
-      <span class="skill-group-icon">🌐</span>
-      <div class="skill-group-title">Web Development</div>
-      <div class="skill-tags">
-        <span class="skill-tag green">HTML / CSS</span>
-        <span class="skill-tag green">React</span>
-        <span class="skill-tag green">Node.js</span>
-        <span class="skill-tag green">REST API</span>
-        <span class="skill-tag green">Git</span>
-      </div>
-    </div>
-    <div class="skill-group reveal reveal-d3">
-      <span class="skill-group-icon">🤖</span>
-      <div class="skill-group-title">AI / Data & Khác</div>
-      <div class="skill-tags">
-        <span class="skill-tag yellow">Machine Learning</span>
-        <span class="skill-tag yellow">Data Structures</span>
-        <span class="skill-tag yellow">Algorithms</span>
-        <span class="skill-tag yellow">Linux</span>
-        <span class="skill-tag yellow">SQL</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ========================================================= -->
-<!-- KHU VỰC 5: PROJECTS (Các dự án nổi bật)                   -->
-<!-- Trình bày các sản phẩm/dự án đã làm dưới dạng Thẻ (Card). -->
-<!-- ========================================================= -->
-<section id="projects">
-  <div class="section-label">03 — Dự án</div>
-  <h2 class="section-title reveal">Những gì tôi <span>đã xây dựng</span></h2>
-  <div class="projects-grid">
-
-    <div class="project-card featured reveal">
-      <div class="project-thumb">
-        <div class="thumb-pattern">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="0.5"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
+    <div class="hero-right">
+      <div class="code-card">
+        <div class="code-header">
+          <div class="dot r"></div>
+          <div class="dot y"></div>
+          <div class="dot g"></div>
+          <span class="code-filename">developer.ts</span>
         </div>
-        <span class="project-icon">🛒</span>
-        <div class="thumb-label">E-COMMERCE</div>
-      </div>
-      <div class="project-content">
-        <div class="project-tags">
-          <span class="project-tag">React</span>
-          <span class="project-tag">Node.js</span>
-          <span class="project-tag">MongoDB</span>
-          <span class="project-tag">Full-stack</span>
-        </div>
-        <h3 class="project-title">Nền tảng E-Commerce (Dự án môn học)</h3>
-        <p class="project-desc">Ứng dụng web thương mại điện tử đầy đủ tính năng: xác thực người dùng, giỏ hàng, thanh toán, quản lý sản phẩm và bảng điều khiển admin. Xây dựng với kiến trúc MERN Stack.</p>
-        <div class="project-links">
-          <a href="#" class="project-link">⬡ GitHub</a>
-          <a href="#" class="project-link">↗ Live Demo</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="project-card reveal reveal-d1">
-      <div class="project-thumb">
-        <div class="thumb-pattern">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1" fill="rgba(0,152,102,0.2)"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dots)" />
-          </svg>
-        </div>
-        <span class="project-icon">🧠</span>
-      </div>
-      <div class="project-content">
-        <div class="project-tags">
-          <span class="project-tag">Python</span>
-          <span class="project-tag">ML</span>
-          <span class="project-tag">scikit-learn</span>
-        </div>
-        <h3 class="project-title">Phân loại email Spam bằng ML</h3>
-        <p class="project-desc">Mô hình máy học phân loại email spam/ham sử dụng Naive Bayes và TF-IDF. Đạt độ chính xác 97% trên tập kiểm tra với 5.000+ mẫu dữ liệu.</p>
-        <div class="project-links">
-          <a href="#" class="project-link">⬡ GitHub</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="project-card reveal reveal-d2">
-      <div class="project-thumb">
-        <div class="thumb-pattern">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="diag" width="16" height="16" patternUnits="userSpaceOnUse">
-                <path d="M-4,4 l8,-8 M0,16 l16,-16 M12,20 l8,-8" stroke="rgba(0,119,188,0.15)" stroke-width="1"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#diag)" />
-          </svg>
-        </div>
-        <span class="project-icon">📡</span>
-      </div>
-      <div class="project-content">
-        <div class="project-tags">
-          <span class="project-tag">C++</span>
-          <span class="project-tag">Socket</span>
-          <span class="project-tag">Networking</span>
-        </div>
-        <h3 class="project-title">Chat App với TCP/UDP Sockets</h3>
-        <p class="project-desc">Ứng dụng chat nhiều người dùng (client-server) viết bằng C++ thuần, hỗ trợ cả TCP và UDP, xử lý đồng thời nhiều kết nối với multi-threading.</p>
-        <div class="project-links">
-          <a href="#" class="project-link">⬡ GitHub</a>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ========================================================= -->
-<!-- KHU VỰC 6: EXPERIENCE & EDUCATION (Kinh nghiệm & Học vấn) -->
-<!-- Trình bày lộ trình phát triển dưới dạng Dòng thời gian.   -->
-<!-- ========================================================= -->
-<section id="experience">
-  <div class="section-label">04 — Kinh nghiệm</div>
-  <h2 class="section-title reveal">Hành trình <span>của tôi</span></h2>
-  <div class="timeline">
-
-    <div class="timeline-item">
-      <div class="timeline-dot"></div>
-      <div class="timeline-date">2023 — Hiện tại</div>
-      <div class="timeline-title">Sinh viên Công nghệ Thông tin</div>
-      <div class="timeline-org">Học viện Bưu chính Viễn thông (PTIT) · Hà Nội</div>
-      <div class="timeline-desc">Học các môn chuyên ngành: Cấu trúc dữ liệu & Giải thuật, Lập trình mạng, Hệ điều hành, Cơ sở dữ liệu, Trí tuệ nhân tạo. Tích cực tham gia các dự án nhóm và câu lạc bộ lập trình.</div>
-    </div>
-
-    <div class="timeline-item">
-      <div class="timeline-dot"></div>
-      <div class="timeline-date">2022 — 2023</div>
-      <div class="timeline-title">Tự học lập trình Web</div>
-      <div class="timeline-org">Self-taught · Online Platforms</div>
-      <div class="timeline-desc">Tự học HTML, CSS, JavaScript và xây dựng các project cá nhân đầu tiên. Hoàn thành các khóa học trên freeCodeCamp và The Odin Project.</div>
-    </div>
-
-    <div class="timeline-item">
-      <div class="timeline-dot"></div>
-      <div class="timeline-date">2020 — 2022</div>
-      <div class="timeline-title">Khởi đầu với C/C++</div>
-      <div class="timeline-org">Niềm đam mê từ thời trung học</div>
-      <div class="timeline-desc">Bắt đầu hành trình lập trình với ngôn ngữ C và C++. Tham gia các cuộc thi tin học tại trường và khu vực, xây dựng nền tảng tư duy thuật toán vững chắc.</div>
-    </div>
-
-    <div class="timeline-item">
-      <div class="timeline-dot"></div>
-      <div class="timeline-date">Từ nhỏ</div>
-      <div class="timeline-title">Niềm đam mê khởi nguồn 💡</div>
-      <div class="timeline-org">Tò mò & Khám phá</div>
-      <div class="timeline-desc">Từ khi còn bé, tôi đã luôn tò mò về cách máy tính hoạt động — đó là ngọn lửa dẫn đường cho toàn bộ hành trình này.</div>
-    </div>
-
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ========================================================= -->
-<!-- KHU VỰC 7: CONTACT (Liên hệ)                              -->
-<!-- Chứa Email và các link mạng xã hội (GitHub, LinkedIn...). -->
-<!-- ========================================================= -->
-<section id="contact">
-  <div class="contact-inner">
-    <div class="section-label" style="justify-content:center">05 — Liên hệ</div>
-    <h2 class="section-title reveal" style="margin-bottom:12px">Hãy cùng <span>kết nối!</span></h2>
-    <p class="reveal" style="color:var(--text-muted); max-width:420px; margin:0 auto; line-height:1.7; font-size:0.95rem;">
-      Tôi luôn mở rộng cánh cửa với những cơ hội mới, dự án thú vị hay đơn giản là một cuộc trò chuyện về công nghệ. 👋
-    </p>
-    <a href="mailto:daohuy1701@gmail.com" class="contact-email reveal">
-      daohuy1701@gmail.com
-    </a>
-    <div class="social-links">
-      <a href="https://github.com/huydao24/portfolio" class="social-link reveal reveal-d1">⬡ GitHub</a>
-      <a href="https://www.facebook.com/huy.ngoc.26" class="social-link reveal reveal-d4">📘 Facebook</a>
-    </div>
-
-    <!-- Ảnh chân dung -->
-    <div class="contact-image-wrapper reveal reveal-d2">
-      <img src="./images/avatar.jpg" alt="Đào Ngọc Huy" class="contact-avatar" />
-    </div>
-  </div>
-</section>
-<!-- ========================================================= -->
-<!-- KHU VỰC 8: CHAT APP (Giao diện bong bóng Chat realtime)   -->
-<!-- Nút tròn nổi ở góc dưới và cửa sổ Chat Popover.           -->
-<!-- ========================================================= -->
-<div id="chat-float-btn">
-  <svg width="32" height="32" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#00b894"/><path d="M7 10h10M7 14h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-</div>
-
-<!-- Chat Popover/Dialog -->
-<div id="chat-popover" class="hidden">
-  <div class="chat-header">
-    <span>💬 Chat với Huy</span>
-    <div style="display: flex; gap: 10px; align-items: center;">
-      <button id="chat-video-call-btn" title="Gọi Video" style="background:none; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-      </button>
-      <button id="chat-close-btn">&times;</button>
-    </div>
-  </div>
-  <div class="chat-messages" id="chat-messages"></div>
-  <form id="chat-form">
-    <div class="chat-form-fields">
-      <div id="chat-image-preview-container" class="hidden">
-        <div class="preview-wrapper">
-          <img id="chat-image-preview" src="" alt="Preview" />
-          <video id="chat-video-preview" src="" muted loop autoplay style="display: none;"></video>
-          <div id="chat-audio-preview" style="display: none; width: 100%; margin: 5px 0;">
-            <audio id="audio-preview-el" controls style="width: 100%; height: 32px;"></audio>
+        <div class="code-body" id="codeDisplay">
+          <div><span class="ln">01</span><span class="kw">const</span> <span class="prop">dev</span> <span
+              class="op">=</span> {</div>
+          <div><span class="ln">02</span>&nbsp;&nbsp;<span class="prop">name</span>: <span class="str">"Đào Ngọc
+              Huy"</span>,</div>
+          <div><span class="ln">03</span>&nbsp;&nbsp;<span class="prop">age</span>: <span class="num">20</span>,</div>
+          <div><span class="ln">04</span>&nbsp;&nbsp;<span class="prop">school</span>: <span class="str">"PTIT"</span>,
           </div>
-          <button type="button" id="remove-image-btn">&times;</button>
+          <div><span class="ln">05</span>&nbsp;&nbsp;<span class="prop">passion</span>: <span class="str">"Lập
+              trình"</span>,</div>
+          <div><span class="ln">06</span>&nbsp;&nbsp;<span class="prop">skills</span>: [</div>
+          <div><span class="ln">07</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"C/C++"</span>, <span
+              class="str">"Python"</span>,</div>
+          <div><span class="ln">08</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"Web Dev"</span>, <span
+              class="str">"AI/ML"</span></div>
+          <div><span class="ln">09</span>&nbsp;&nbsp;],</div>
+          <div><span class="ln">10</span>&nbsp;&nbsp;<span class="prop">goal</span>: <span class="str">"Build the
+              future"</span>,</div>
+          <div><span class="ln">11</span>&nbsp;&nbsp;<span class="prop">status</span>: <span class="str"
+              id="typedStatus">"<span class="typed-text"></span><span class="cursor-blink"></span>"</span></div>
+          <div><span class="ln">12</span>};</div>
+          <div style="margin-top:12px"><span class="ln">13</span></div>
+          <div><span class="ln">14</span><span class="cm">// Sẵn sàng cho cơ hội mới! 🚀</span></div>
         </div>
       </div>
-      <input id="chat-name-input" type="text" placeholder="Tên của bạn" autocomplete="name" maxlength="400" />
-      <div class="chat-input-wrapper">
-        <label for="chat-image-input" class="chat-image-btn" id="chat-image-label" title="Gửi ảnh">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </label>
-        <input id="chat-image-input" type="file" accept="image/*" style="display: none;" />
+    </div>
+  </section>
 
-        <label for="chat-video-input" class="chat-image-btn pc-only" id="chat-video-label" title="Gửi video">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-        </label>
-        <input id="chat-video-input" type="file" accept="video/*" style="display: none;" />
-        
-        <label for="chat-camera-input" class="chat-image-btn mobile-only" title="Chụp ảnh">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        </label>
-        <input id="chat-camera-input" type="file" accept="image/*,video/*" capture="environment" style="display: none;" />
+  <div class="divider"></div>
 
-        <button type="button" id="chat-audio-rec-btn" class="chat-image-btn" title="Gửi voice message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        </button>
-
-        <input id="chat-input" type="text" placeholder="Nhập message..." autocomplete="on" />
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 3: ABOUT (Về tôi)                                 -->
+  <!-- Chứa đoạn văn giới thiệu chi tiết và các con số thống kê. -->
+  <!-- ========================================================= -->
+  <section id="about">
+    <div class="section-label">01 — Về tôi</div>
+    <h2 class="section-title reveal">Tôi là ai & <span>Tôi muốn gì</span></h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p class="reveal reveal-d1">
+          Xin chào! Tôi là <strong>Đào Ngọc Huy</strong>, sinh viên <strong>20 tuổi</strong> đang theo học tại
+          <em>Học viện Bưu chính Viễn thông (PTIT)</em> — một trong những trường hàng đầu về
+          công nghệ thông tin và viễn thông tại Việt Nam.
+        </p>
+        <p class="reveal reveal-d2">
+          Từ khi còn nhỏ, tôi đã bị cuốn hút bởi thế giới máy tính và lập trình. Niềm đam mê đó
+          không ngừng lớn mạnh và trở thành <em>động lực chính</em> dẫn dắt tôi đến với con đường
+          công nghệ ngày hôm nay.
+        </p>
+        <p class="reveal reveal-d3">
+          Tôi tin rằng <em>công nghệ là chìa khóa</em> để giải quyết những vấn đề thực tế — và
+          tôi đang từng bước học hỏi, xây dựng, và đóng góp cho cộng đồng lập trình Việt Nam.
+        </p>
+      </div>
+      <div class="about-stats">
+        <div class="stat-card reveal reveal-d1">
+          <div class="stat-num">20</div>
+          <div class="stat-label">Tuổi đời</div>
+        </div>
+        <div class="stat-card reveal reveal-d2">
+          <div class="stat-num">5+</div>
+          <div class="stat-label">Ngôn ngữ lập trình</div>
+        </div>
+        <div class="stat-card reveal reveal-d3">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Niềm đam mê</div>
+        </div>
+        <div class="stat-card reveal reveal-d4">
+          <div class="stat-num">PTIT</div>
+          <div class="stat-label">Học viện BCVT</div>
+        </div>
       </div>
     </div>
-    <button type="submit" id="chat-submit-btn">Gửi</button>
-  </form>
-</div>
+  </section>
 
-<!-- FOOTER -->
-<footer>
-  <p>© 2025 <span>Đào Ngọc Huy</span> — Built with passion</p>
-  <p>Học viện Bưu chính Viễn thông <span>·</span> Phú Thọ, Việt Nam</p>
-</footer>
+  <div class="divider"></div>
 
-<!-- Video Call Overlay for Guest -->
-<div id="video-call-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center;">
-  <h2 id="video-call-status" style="color: white; margin-bottom: 20px; font-family: 'Syne', sans-serif;">Đang gọi cho Huy...</h2>
-  <div style="display: flex; gap: 20px; width: 90%; max-width: 800px; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 300px; position: relative;">
-      <video id="guest-remote-video" autoplay playsinline style="width: 100%; border-radius: 12px; background: #111; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></video>
-      <div style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 14px;">Huy (Admin)</div>
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 4: SKILLS (Kỹ năng chuyên môn)                    -->
+  <!-- Liệt kê các công nghệ, ngôn ngữ lập trình đang sử dụng.   -->
+  <!-- ========================================================= -->
+  <section id="skills">
+    <div class="section-label">02 — Kỹ năng</div>
+    <h2 class="section-title reveal">Bộ công cụ <span>của tôi</span></h2>
+    <div class="skills-grid">
+      <div class="skill-group reveal reveal-d1">
+        <span class="skill-group-icon">⚙️</span>
+        <div class="skill-group-title">Ngôn ngữ lập trình</div>
+        <div class="skill-tags">
+          <span class="skill-tag">C / C++</span>
+          <span class="skill-tag">Python</span>
+          <span class="skill-tag">JavaScript</span>
+          <span class="skill-tag">Java</span>
+          <span class="skill-tag">TypeScript</span>
+        </div>
+      </div>
+      <div class="skill-group reveal reveal-d2">
+        <span class="skill-group-icon">🌐</span>
+        <div class="skill-group-title">Web Development</div>
+        <div class="skill-tags">
+          <span class="skill-tag green">HTML / CSS</span>
+          <span class="skill-tag green">React</span>
+          <span class="skill-tag green">Node.js</span>
+          <span class="skill-tag green">REST API</span>
+          <span class="skill-tag green">Git</span>
+        </div>
+      </div>
+      <div class="skill-group reveal reveal-d3">
+        <span class="skill-group-icon">🤖</span>
+        <div class="skill-group-title">AI / Data & Khác</div>
+        <div class="skill-tags">
+          <span class="skill-tag yellow">Machine Learning</span>
+          <span class="skill-tag yellow">Data Structures</span>
+          <span class="skill-tag yellow">Algorithms</span>
+          <span class="skill-tag yellow">Linux</span>
+          <span class="skill-tag yellow">SQL</span>
+        </div>
+      </div>
     </div>
-    <div style="flex: 1; min-width: 300px; position: relative;">
-      <video id="guest-local-video" autoplay playsinline muted style="width: 100%; border-radius: 12px; background: #111; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></video>
-      <div style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 14px;">Bạn</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 5: PROJECTS (Các dự án nổi bật)                   -->
+  <!-- Trình bày các sản phẩm/dự án đã làm dưới dạng Thẻ (Card). -->
+  <!-- ========================================================= -->
+  <section id="projects">
+    <div class="section-label">03 — Dự án</div>
+    <h2 class="section-title reveal">Những gì tôi <span>đã xây dựng</span></h2>
+    <div class="projects-grid">
+
+      <div class="project-card featured reveal">
+        <div class="project-thumb">
+          <div class="thumb-pattern">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                  <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+          <span class="project-icon">🛒</span>
+          <div class="thumb-label">E-COMMERCE</div>
+        </div>
+        <div class="project-content">
+          <div class="project-tags">
+            <span class="project-tag">React</span>
+            <span class="project-tag">Node.js</span>
+            <span class="project-tag">MongoDB</span>
+            <span class="project-tag">Full-stack</span>
+          </div>
+          <h3 class="project-title">Nền tảng E-Commerce (Dự án môn học)</h3>
+          <p class="project-desc">Ứng dụng web thương mại điện tử đầy đủ tính năng: xác thực người dùng, giỏ hàng, thanh
+            toán, quản lý sản phẩm và bảng điều khiển admin. Xây dựng với kiến trúc MERN Stack.</p>
+          <div class="project-links">
+            <a href="#" class="project-link">⬡ GitHub</a>
+            <a href="#" class="project-link">↗ Live Demo</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="project-card reveal reveal-d1">
+        <div class="project-thumb">
+          <div class="thumb-pattern">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1" fill="rgba(0,152,102,0.2)" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dots)" />
+            </svg>
+          </div>
+          <span class="project-icon">🧠</span>
+        </div>
+        <div class="project-content">
+          <div class="project-tags">
+            <span class="project-tag">Python</span>
+            <span class="project-tag">ML</span>
+            <span class="project-tag">scikit-learn</span>
+          </div>
+          <h3 class="project-title">Phân loại email Spam bằng ML</h3>
+          <p class="project-desc">Mô hình máy học phân loại email spam/ham sử dụng Naive Bayes và TF-IDF. Đạt độ chính
+            xác 97% trên tập kiểm tra với 5.000+ mẫu dữ liệu.</p>
+          <div class="project-links">
+            <a href="#" class="project-link">⬡ GitHub</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="project-card reveal reveal-d2">
+        <div class="project-thumb">
+          <div class="thumb-pattern">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="diag" width="16" height="16" patternUnits="userSpaceOnUse">
+                  <path d="M-4,4 l8,-8 M0,16 l16,-16 M12,20 l8,-8" stroke="rgba(0,119,188,0.15)" stroke-width="1" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#diag)" />
+            </svg>
+          </div>
+          <span class="project-icon">📡</span>
+        </div>
+        <div class="project-content">
+          <div class="project-tags">
+            <span class="project-tag">C++</span>
+            <span class="project-tag">Socket</span>
+            <span class="project-tag">Networking</span>
+          </div>
+          <h3 class="project-title">Chat App với TCP/UDP Sockets</h3>
+          <p class="project-desc">Ứng dụng chat nhiều người dùng (client-server) viết bằng C++ thuần, hỗ trợ cả TCP và
+            UDP, xử lý đồng thời nhiều kết nối với multi-threading.</p>
+          <div class="project-links">
+            <a href="#" class="project-link">⬡ GitHub</a>
+          </div>
+        </div>
+      </div>
+
     </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 6: EXPERIENCE & EDUCATION (Kinh nghiệm & Học vấn) -->
+  <!-- Trình bày lộ trình phát triển dưới dạng Dòng thời gian.   -->
+  <!-- ========================================================= -->
+  <section id="experience">
+    <div class="section-label">04 — Kinh nghiệm</div>
+    <h2 class="section-title reveal">Hành trình <span>của tôi</span></h2>
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2023 — Hiện tại</div>
+        <div class="timeline-title">Sinh viên Công nghệ Thông tin</div>
+        <div class="timeline-org">Học viện Bưu chính Viễn thông (PTIT) · Hà Nội</div>
+        <div class="timeline-desc">Học các môn chuyên ngành: Cấu trúc dữ liệu & Giải thuật, Lập trình mạng, Hệ điều
+          hành, Cơ sở dữ liệu, Trí tuệ nhân tạo. Tích cực tham gia các dự án nhóm và câu lạc bộ lập trình.</div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2022 — 2023</div>
+        <div class="timeline-title">Tự học lập trình Web</div>
+        <div class="timeline-org">Self-taught · Online Platforms</div>
+        <div class="timeline-desc">Tự học HTML, CSS, JavaScript và xây dựng các project cá nhân đầu tiên. Hoàn thành các
+          khóa học trên freeCodeCamp và The Odin Project.</div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2020 — 2022</div>
+        <div class="timeline-title">Khởi đầu với C/C++</div>
+        <div class="timeline-org">Niềm đam mê từ thời trung học</div>
+        <div class="timeline-desc">Bắt đầu hành trình lập trình với ngôn ngữ C và C++. Tham gia các cuộc thi tin học tại
+          trường và khu vực, xây dựng nền tảng tư duy thuật toán vững chắc.</div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Từ nhỏ</div>
+        <div class="timeline-title">Niềm đam mê khởi nguồn 💡</div>
+        <div class="timeline-org">Tò mò & Khám phá</div>
+        <div class="timeline-desc">Từ khi còn bé, tôi đã luôn tò mò về cách máy tính hoạt động — đó là ngọn lửa dẫn
+          đường cho toàn bộ hành trình này.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 7: CONTACT (Liên hệ)                              -->
+  <!-- Chứa Email và các link mạng xã hội (GitHub, LinkedIn...). -->
+  <!-- ========================================================= -->
+  <section id="contact">
+    <div class="contact-inner">
+      <div class="section-label" style="justify-content:center">05 — Liên hệ</div>
+      <h2 class="section-title reveal" style="margin-bottom:12px">Hãy cùng <span>kết nối!</span></h2>
+      <p class="reveal"
+        style="color:var(--text-muted); max-width:420px; margin:0 auto; line-height:1.7; font-size:0.95rem;">
+        Tôi luôn mở rộng cánh cửa với những cơ hội mới, dự án thú vị hay đơn giản là một cuộc trò chuyện về công nghệ.
+        👋
+      </p>
+      <a href="mailto:daohuy1701@gmail.com" class="contact-email reveal">
+        daohuy1701@gmail.com
+      </a>
+      <div class="social-links">
+        <a href="https://github.com/huydao24/portfolio" class="social-link reveal reveal-d1">⬡ GitHub</a>
+        <a href="https://www.facebook.com/huy.ngoc.26" class="social-link reveal reveal-d4">📘 Facebook</a>
+      </div>
+
+      <!-- Ảnh chân dung -->
+      <div class="contact-image-wrapper reveal reveal-d2">
+        <img src="./images/avatar.jpg" alt="Đào Ngọc Huy" class="contact-avatar" />
+      </div>
+    </div>
+  </section>
+  <!-- ========================================================= -->
+  <!-- KHU VỰC 8: CHAT APP (Giao diện bong bóng Chat realtime)   -->
+  <!-- Nút tròn nổi ở góc dưới và cửa sổ Chat Popover.           -->
+  <!-- ========================================================= -->
+  <div id="chat-float-btn">
+    <svg width="32" height="32" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="#00b894" />
+      <path d="M7 10h10M7 14h6" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+    </svg>
   </div>
-  <button id="guest-end-call-btn" style="margin-top: 30px; padding: 12px 30px; background: #da3633; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: transform 0.2s;">Hủy cuộc gọi</button>
-</div>
 
-<script>
-  // ⚡ Sau khi deploy backend lên Render, thay URL bên dưới bằng URL Render của bạn
-  // Ví dụ: 'https://portfolio-chat-api.onrender.com'
-  window.CHAT_BACKEND_URL =
-    window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
-      ? 'http://localhost:3000'
-      : 'https://portfolio-1-yjvu.onrender.com';
-</script>
-<!-- 🔒 Auth Module — PHẢI load đầu tiên để Protected Route Guard chạy ngay -->
-<script src="./auth-ui.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<!-- Tải file xử lý Giao diện, Hiệu ứng (UI/UX) và Chat realtime -->
-<script src="./index.js"></script>
+  <!-- Chat Popover/Dialog -->
+  <div id="chat-popover" class="hidden">
+    <div class="chat-header">
+      <span>💬 Chat với Huy</span>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="chat-video-call-btn" title="Gọi Video"
+          style="background:none; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+        </button>
+        <button id="chat-close-btn">&times;</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <form id="chat-form">
+      <div class="chat-form-fields">
+        <div id="chat-image-preview-container" class="hidden">
+          <div class="preview-wrapper">
+            <img id="chat-image-preview" src="" alt="Preview" />
+            <video id="chat-video-preview" src="" muted loop autoplay style="display: none;"></video>
+            <div id="chat-audio-preview" style="display: none; width: 100%; margin: 5px 0;">
+              <audio id="audio-preview-el" controls style="width: 100%; height: 32px;"></audio>
+            </div>
+            <button type="button" id="remove-image-btn">&times;</button>
+          </div>
+        </div>
+        <input id="chat-name-input" type="text" placeholder="Tên của bạn" autocomplete="name" maxlength="400" />
+        <div class="chat-input-wrapper">
+          <label for="chat-image-input" class="chat-image-btn" id="chat-image-label" title="Gửi ảnh">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+          </label>
+          <input id="chat-image-input" type="file" accept="image/*" style="display: none;" />
+
+          <label for="chat-video-input" class="chat-image-btn pc-only" id="chat-video-label" title="Gửi video">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 7l-7 5 7 5V7z" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+          </label>
+          <input id="chat-video-input" type="file" accept="video/*" style="display: none;" />
+
+          <label for="chat-camera-input" class="chat-image-btn mobile-only" title="Chụp ảnh">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </label>
+          <input id="chat-camera-input" type="file" accept="image/*,video/*" capture="environment"
+            style="display: none;" />
+
+          <button type="button" id="chat-audio-rec-btn" class="chat-image-btn" title="Gửi voice message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </button>
+
+          <input id="chat-input" type="text" placeholder="Nhập message..." autocomplete="on" />
+        </div>
+      </div>
+      <button type="submit" id="chat-submit-btn">Gửi</button>
+    </form>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 <span>Đào Ngọc Huy</span> — Built with passion</p>
+    <p>Học viện Bưu chính Viễn thông <span>·</span> Phú Thọ, Việt Nam</p>
+  </footer>
+
+  <!-- Video Call Overlay for Guest -->
+  <div id="video-call-overlay"
+    style="position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center;">
+    <h2 id="video-call-status" style="color: white; margin-bottom: 20px; font-family: 'Syne', sans-serif;">Đang gọi cho
+      Huy...</h2>
+    <div style="display: flex; gap: 20px; width: 90%; max-width: 800px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 300px; position: relative;">
+        <video id="guest-remote-video" autoplay playsinline
+          style="width: 100%; border-radius: 12px; background: #111; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></video>
+        <div
+          style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 14px;">
+          Huy (Admin)</div>
+      </div>
+      <div style="flex: 1; min-width: 300px; position: relative;">
+        <video id="guest-local-video" autoplay playsinline muted
+          style="width: 100%; border-radius: 12px; background: #111; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></video>
+        <div
+          style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 14px;">
+          Bạn</div>
+      </div>
+    </div>
+    <button id="guest-end-call-btn"
+      style="margin-top: 30px; padding: 12px 30px; background: #da3633; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: transform 0.2s;">Hủy
+      cuộc gọi</button>
+  </div>
+
+  <script>
+    // ⚡ Sau khi deploy backend lên Render, thay URL bên dưới bằng URL Render của bạn
+    // Ví dụ: 'https://portfolio-chat-api.onrender.com'
+    window.CHAT_BACKEND_URL =
+      window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
+        ? 'http://localhost:3000'
+        : 'https://portfolio-2-wesv.onrender.com';
+  </script>
+  <!-- 🔒 Auth Module — PHẢI load đầu tiên để Protected Route Guard chạy ngay -->
+  <script src="./auth-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Tải file xử lý Giao diện, Hiệu ứng (UI/UX) và Chat realtime -->
+  <script src="./index.js"></script>
 </body>
+
 </html>

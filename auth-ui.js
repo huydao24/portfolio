@@ -18,14 +18,14 @@
 
 // ── Cấu hình ────────────────────────────────────────────────────────────────
 const AUTH_TOKEN_KEY = 'portfolio-auth-token';
-const AUTH_USER_KEY  = 'portfolio-auth-user';
+const AUTH_USER_KEY = 'portfolio-auth-user';
 
 // Lấy BACKEND URL (Ưu tiên CHAT_BACKEND_URL từ index.html, nếu không có thì tự nhận diện)
-const BACKEND_URL = (function() {
-  const url = window.CHAT_BACKEND_URL || 
-             (['localhost', '127.0.0.1'].includes(window.location.hostname) 
-               ? 'http://localhost:3000' 
-               : 'https://portfolio-1-yjvu.onrender.com');
+const BACKEND_URL = (function () {
+  const url = window.CHAT_BACKEND_URL ||
+    (['localhost', '127.0.0.1'].includes(window.location.hostname)
+      ? 'http://localhost:3000'
+      : 'https://portfolio-2-wesv.onrender.com');
   console.log('[Auth] API URL:', url); // Log để anh kiểm tra trong Console (F12)
   return url;
 })();
@@ -286,11 +286,11 @@ function showAuthOverlay() {
 }
 
 function setLoading(form, loading) {
-  const btn       = form.querySelector('.auth-submit-btn');
-  const btnText   = btn?.querySelector('.btn-text');
+  const btn = form.querySelector('.auth-submit-btn');
+  const btnText = btn?.querySelector('.btn-text');
   const btnSpinner = btn?.querySelector('.btn-spinner');
-  if (btn)       btn.disabled = loading;
-  if (btnText)   btnText.style.opacity = loading ? '0.5' : '1';
+  if (btn) btn.disabled = loading;
+  if (btnText) btnText.style.opacity = loading ? '0.5' : '1';
   if (btnSpinner) btnSpinner.hidden = !loading;
 }
 
@@ -323,7 +323,7 @@ function validateEmail(email) {
  * @returns {boolean} true nếu hợp lệ
  */
 function validateLoginForm() {
-  const email    = document.getElementById('login-email').value;
+  const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   let valid = true;
 
@@ -345,10 +345,10 @@ function validateLoginForm() {
  * @returns {boolean} true nếu hợp lệ
  */
 function validateRegisterForm() {
-  const name     = document.getElementById('reg-name').value;
-  const email    = document.getElementById('reg-email').value;
+  const name = document.getElementById('reg-name').value;
+  const email = document.getElementById('reg-email').value;
   const password = document.getElementById('reg-password').value;
-  const confirm  = document.getElementById('reg-confirm').value;
+  const confirm = document.getElementById('reg-confirm').value;
   let valid = true;
 
   if (!name.trim()) {
@@ -386,9 +386,9 @@ function validateRegisterForm() {
  */
 async function apiLogin(email, password) {
   const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ email: email.trim().toLowerCase(), password }),
+    body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Đăng nhập thất bại.');
@@ -400,9 +400,9 @@ async function apiLogin(email, password) {
  */
 async function apiRegister(name, email, password) {
   const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password }),
+    body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Đăng ký thất bại.');
@@ -427,9 +427,9 @@ async function apiVerifyToken(token) {
  */
 async function apiForgotPassword(email) {
   const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ email: email.trim().toLowerCase() }),
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Yêu cầu thất bại.');
@@ -441,9 +441,9 @@ async function apiForgotPassword(email) {
  */
 async function apiResetPassword(email, resetCode, newPassword) {
   const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ email: email.trim().toLowerCase(), resetCode, newPassword }),
+    body: JSON.stringify({ email: email.trim().toLowerCase(), resetCode, newPassword }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Đặt lại mật khẩu thất bại.');
@@ -460,14 +460,14 @@ async function handleLoginSubmit(e) {
   clearErrors(form);
   if (!validateLoginForm()) return;
 
-  const email    = document.getElementById('login-email').value;
+  const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
 
   setLoading(form, true);
   try {
     const { user, token } = await apiLogin(email, password);
     saveAuthData(token, user);
-    
+
     // Cập nhật lại session chat theo ID user mới đăng nhập
     if (typeof window.refreshChatSession === 'function') {
       window.refreshChatSession();
@@ -488,15 +488,15 @@ async function handleRegisterSubmit(e) {
   clearErrors(form);
   if (!validateRegisterForm()) return;
 
-  const name     = document.getElementById('reg-name').value;
-  const email    = document.getElementById('reg-email').value;
+  const name = document.getElementById('reg-name').value;
+  const email = document.getElementById('reg-email').value;
   const password = document.getElementById('reg-password').value;
 
   setLoading(form, true);
   try {
     const { user, token } = await apiRegister(name, email, password);
     saveAuthData(token, user);
-    
+
     // Cập nhật lại session chat theo ID user mới đăng nhập
     if (typeof window.refreshChatSession === 'function') {
       window.refreshChatSession();
@@ -628,9 +628,9 @@ async function handleForgotStep2(e) {
   const form = document.getElementById('forgot-step2-form');
   clearErrors(form);
 
-  const code        = document.getElementById('reset-code').value.trim();
+  const code = document.getElementById('reset-code').value.trim();
   const newPassword = document.getElementById('reset-new-password').value;
-  const confirmPwd  = document.getElementById('reset-confirm-password').value;
+  const confirmPwd = document.getElementById('reset-confirm-password').value;
   let valid = true;
 
   if (!code) {
@@ -713,13 +713,13 @@ async function initAuthGuard() {
 // ════════════════════════════════════════════════════════════════════════════
 
 function setupTabSwitching() {
-  const tabLogin    = document.getElementById('tab-login');
+  const tabLogin = document.getElementById('tab-login');
   const tabRegister = document.getElementById('tab-register');
-  const loginForm   = document.getElementById('login-form');
-  const regForm     = document.getElementById('register-form');
+  const loginForm = document.getElementById('login-form');
+  const regForm = document.getElementById('register-form');
 
   tabLogin.addEventListener('click', () => {
-    tabLogin.classList.add('active');    tabLogin.setAttribute('aria-selected', 'true');
+    tabLogin.classList.add('active'); tabLogin.setAttribute('aria-selected', 'true');
     tabRegister.classList.remove('active'); tabRegister.setAttribute('aria-selected', 'false');
     loginForm.classList.remove('hidden');
     regForm.classList.add('hidden');
@@ -730,8 +730,8 @@ function setupTabSwitching() {
   });
 
   tabRegister.addEventListener('click', () => {
-    tabRegister.classList.add('active');    tabRegister.setAttribute('aria-selected', 'true');
-    tabLogin.classList.remove('active');   tabLogin.setAttribute('aria-selected', 'false');
+    tabRegister.classList.add('active'); tabRegister.setAttribute('aria-selected', 'true');
+    tabLogin.classList.remove('active'); tabLogin.setAttribute('aria-selected', 'false');
     regForm.classList.remove('hidden');
     loginForm.classList.add('hidden');
     clearErrors(loginForm);

@@ -2,7 +2,7 @@
 const CHAT_BACKEND_URL =
   window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
     ? 'http://localhost:3000'
-    : 'https://portfolio-1-yjvu.onrender.com';
+    : 'https://portfolio-2-wesv.onrender.com';
 
 const socket = io(CHAT_BACKEND_URL);
 
@@ -45,7 +45,7 @@ socket.on('chat error', (data) => {
 
 socket.on('call:incoming', ({ sessionId, callerId }) => {
   console.log('Incoming call from:', sessionId, callerId);
-  
+
   // Create UI for incoming call
   const callEl = document.createElement('div');
   callEl.className = 'call-item';
@@ -121,14 +121,14 @@ window.acceptCall = async (sessionId, callerId) => {
 
   try {
     await setupLocalStream();
-    
+
     currentCallerId = callerId;
     videoContainer.style.display = 'flex';
     endCallBtn.style.display = 'inline-block';
 
     // Initialize WebRTC
     peerConnection = new RTCPeerConnection(peerConnectionConfig);
-    
+
     // Add local stream tracks to peer connection
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);
@@ -171,7 +171,7 @@ function endCall() {
     localStream.getTracks().forEach(t => t.stop());
     localStream = null;
   }
-  
+
   if (currentCallerId) {
     socket.emit('call:end', { targetId: currentCallerId });
     currentCallerId = null;
