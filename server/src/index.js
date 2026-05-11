@@ -1044,11 +1044,11 @@ io.on('connection', (socket) => {
     console.log(`[VideoCall] Request from ${sessionId}`);
     socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
 
-    // Thông báo cho Admin qua Telegram để kịp thời vào web bắt máy
-    if (TELEGRAM_API_URL && TELEGRAM_CHAT_ID) {
-      const adminUrl = process.env.ADMIN_URL || 'http://localhost:5500/admin.html';
+    // Thông báo cho Admin qua Bot Auth (Bot Regis) để kịp thời vào web bắt máy
+    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
+      const adminUrl = 'https://portfolioptit.vercel.app/admin.html';
       const text = [
-        `📹 CÓ CUỘC GỌI VIDEO TỪ KHÁCH!`,
+        `📹 CÓ CUỘC GỌI VIDEO MỚI!`,
         `━━━━━━━━━━━━━━━━━━━`,
         `👤 Session: ${sessionId}`,
         `👉 Truy cập ngay trang Admin để bắt máy:`,
@@ -1056,12 +1056,12 @@ io.on('connection', (socket) => {
       ].join('\n');
 
       try {
-        await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
-          chat_id: TELEGRAM_CHAT_ID,
+        await axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+          chat_id: TELEGRAM_AUTH_CHAT_ID,
           text: text
         });
       } catch (err) {
-        console.error('[telegram] Failed to notify video call:', err.message);
+        console.error('[telegram-auth] Failed to notify video call:', err.message);
       }
     }
   });
