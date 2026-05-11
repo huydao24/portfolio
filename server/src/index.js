@@ -1041,7 +1041,8 @@ io.on('connection', (socket) => {
 
   // WebRTC & Video Call Signaling
   socket.on('call:request', async ({ sessionId }) => {
-    console.log(`[VideoCall] Request from ${sessionId}`);
+    console.log(`[VideoCall] 📢 Nhận yêu cầu gọi từ: ${sessionId}`);
+    console.log(`[VideoCall] Debug Bot Regis: API=${TELEGRAM_AUTH_API_URL ? 'OK' : 'NULL'}, ChatID=${TELEGRAM_AUTH_CHAT_ID ? 'OK' : 'NULL'}`);
     socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
 
     // Thông báo cho Admin qua Bot Auth (Bot Regis) để kịp thời vào web bắt máy

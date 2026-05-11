@@ -20,12 +20,15 @@
 const AUTH_TOKEN_KEY = 'portfolio-auth-token';
 const AUTH_USER_KEY  = 'portfolio-auth-user';
 
-// Lấy BACKEND URL đã được khai báo trong index.html
-const BACKEND_URL =
-  window.CHAT_BACKEND_URL ||
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000'
-    : 'https://portfolio-1-yjvu.onrender.com');
+// Lấy BACKEND URL (Ưu tiên CHAT_BACKEND_URL từ index.html, nếu không có thì tự nhận diện)
+const BACKEND_URL = (function() {
+  const url = window.CHAT_BACKEND_URL || 
+             (['localhost', '127.0.0.1'].includes(window.location.hostname) 
+               ? 'http://localhost:3000' 
+               : 'https://portfolio-1-yjvu.onrender.com');
+  console.log('[Auth] API URL:', url); // Log để anh kiểm tra trong Console (F12)
+  return url;
+})();
 
 // ════════════════════════════════════════════════════════════════════════════
 // KHỞI TẠO DOM — Inject Auth Overlay vào trang
