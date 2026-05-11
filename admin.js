@@ -27,8 +27,20 @@ const endCallBtn = document.getElementById('end-call-btn');
 
 // --- SOCKET LOGIC ---
 socket.on('connect', () => {
-  console.log('Connected to server as Admin');
-  socket.emit('admin:join');
+  console.log('Connected to server');
+  const password = prompt('Nhập mật khẩu Admin (Mặc định: 123456):');
+  if (password) {
+    socket.emit('admin:join', { password });
+  }
+});
+
+socket.on('admin:auth_success', () => {
+  console.log('Admin Authenticated');
+  alert('Đăng nhập Admin thành công. Đang chờ cuộc gọi...');
+});
+
+socket.on('chat error', (data) => {
+  alert('Lỗi: ' + data.error);
 });
 
 socket.on('call:incoming', ({ sessionId, callerId }) => {

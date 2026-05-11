@@ -1028,15 +1028,42 @@ io.on('connection', (socket) => {
       await saveState();
     }
   });
-  socket.on('admin:join', () => {
-    socket.join('admins');
-    console.log(`[Socket] Admin ${socket.id} joined admins room`);
+  socket.on('admin:join', ({ password } = {}) => {
+    const ADMIN_PASS = process.env.ADMIN_PASSWORD || '123456';
+    if (password === ADMIN_PASS) {
+      socket.join('admins');
+      console.log(`[Socket] Admin ${socket.id} joined admins room`);
+      socket.emit('admin:auth_success');
+    } else {
+      socket.emit('chat error', { error: 'Sai mật khẩu Admin' });
+    }
   });
 
   // WebRTC & Video Call Signaling
-  socket.on('call:request', ({ sessionId }) => {
+  socket.on('call:request', async ({ sessionId }) => {
     console.log(`[VideoCall] Request from ${sessionId}`);
     socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
+
+    // Thông báo cho Admin qua Telegram để kịp thời vào web bắt máy
+    if (TELEGRAM_API_URL && TELEGRAM_CHAT_ID) {
+      const adminUrl = process.env.ADMIN_URL || 'http://localhost:5500/admin.html';
+      const text = [
+        `📹 CÓ CUỘC GỌI VIDEO TỪ KHÁCH!`,
+        `━━━━━━━━━━━━━━━━━━━`,
+        `👤 Session: ${sessionId}`,
+        `👉 Truy cập ngay trang Admin để bắt máy:`,
+        `🌐 ${adminUrl}`
+      ].join('\n');
+
+      try {
+        await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
+          chat_id: TELEGRAM_CHAT_ID,
+          text: text
+        });
+      } catch (err) {
+        console.error('[telegram] Failed to notify video call:', err.message);
+      }
+    }
   });
 
   socket.on('call:accept', ({ sessionId }) => {
