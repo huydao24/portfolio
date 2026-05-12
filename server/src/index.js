@@ -23,6 +23,12 @@ const PORT = Number(process.env.PORT || 3000);
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID?.trim();
 const TELEGRAM_THREAD_ID = process.env.TELEGRAM_THREAD_ID?.trim();
+
+// Biến lưu trữ OTP Admin và hàng chờ cuộc gọi (Dùng chung cho toàn Server)
+let currentAdminOTP = null;
+let adminOTPExpiry = null;
+const pendingCalls = new Map();
+
 const TELEGRAM_API_URL = TELEGRAM_BOT_TOKEN
   ? `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`
   : null;
@@ -1029,29 +1035,51 @@ io.on('connection', (socket) => {
     }
   });
   socket.on('admin:join', ({ password } = {}) => {
-    const ADMIN_PASS = process.env.ADMIN_PASSWORD || '123456';
-    if (password === ADMIN_PASS) {
+    const now = Date.now();
+    // Chỉ cho phép đăng nhập bằng mã OTP động gửi qua Telegram
+    const isValidOTP = currentAdminOTP && password === currentAdminOTP && now < adminOTPExpiry;
+
+    if (isValidOTP) {
       socket.join('admins');
       console.log(`[Socket] Admin ${socket.id} joined admins room`);
       socket.emit('admin:auth_success');
+
+      // 📢 Gửi ngay các cuộc gọi đang chờ cho Admin vừa vào
+      if (pendingCalls.size > 0) {
+        pendingCalls.forEach((callData) => {
+          socket.emit('call:incoming', callData);
+        });
+      }
     } else {
-      socket.emit('chat error', { error: 'Sai mật khẩu Admin' });
+      socket.emit('chat error', { error: 'Mã OTP không đúng hoặc đã hết hạn' });
     }
   });
 
   // WebRTC & Video Call Signaling
   socket.on('call:request', async ({ sessionId }) => {
     console.log(`[VideoCall] 📢 Nhận yêu cầu gọi từ: ${sessionId}`);
-    console.log(`[VideoCall] Debug Bot Regis: API=${TELEGRAM_AUTH_API_URL ? 'OK' : 'NULL'}, ChatID=${TELEGRAM_AUTH_CHAT_ID ? 'OK' : 'NULL'}`);
-    socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
+    
+    // 1. Tạo OTP ngẫu nhiên 6 số
+    currentAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    adminOTPExpiry = Date.now() + 5 * 60 * 1000; // Hiệu lực 5 phút
+    
+    // 2. Lưu vào danh sách chờ
+    const callData = { sessionId, callerId: socket.id };
+    pendingCalls.set(sessionId, callData);
 
-    // Thông báo cho Admin qua Bot Auth (Bot Regis) để kịp thời vào web bắt máy
+    // 3. Gửi cho các admin đang trực tuyến qua Socket
+    socket.to('admins').emit('call:incoming', callData);
+
+    // 4. Thông báo cho Admin qua Bot Auth (Bot Regis)
     if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
       const adminUrl = 'https://portfolioptit.vercel.app/admin.html';
       const text = [
-        `📹 CÓ CUỘC GỌI VIDEO MỚI!`,
+        `📹 <b>CÓ CUỘC GỌI VIDEO MỚI!</b>`,
         `━━━━━━━━━━━━━━━━━━━`,
-        `👤 Session: ${sessionId}`,
+        `👤 Khách: <code>${sessionId}</code>`,
+        `🔑 Mã OTP Admin: <b>${currentAdminOTP}</b>`,
+        `⏳ Hiệu lực OTP: 5 phút`,
+        `━━━━━━━━━━━━━━━━━━━`,
         `👉 Truy cập ngay trang Admin để bắt máy:`,
         `🌐 ${adminUrl}`
       ].join('\n');
@@ -1059,7 +1087,8 @@ io.on('connection', (socket) => {
       try {
         await axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
           chat_id: TELEGRAM_AUTH_CHAT_ID,
-          text: text
+          text: text,
+          parse_mode: 'HTML'
         });
       } catch (err) {
         console.error('[telegram-auth] Failed to notify video call:', err.message);
@@ -1069,20 +1098,26 @@ io.on('connection', (socket) => {
 
   socket.on('call:accept', ({ sessionId }) => {
     console.log(`[VideoCall] Admin ${socket.id} accepted call from ${sessionId}`);
+    pendingCalls.delete(sessionId); // Xóa khỏi hàng chờ khi đã bắt máy
     socket.to(sessionId).emit('call:accepted', { adminId: socket.id });
   });
 
   socket.on('call:reject', ({ sessionId }) => {
+    pendingCalls.delete(sessionId); // Xóa khỏi hàng chờ khi từ chối
     socket.to(sessionId).emit('call:rejected');
   });
 
   socket.on('call:end', ({ targetId }) => {
-    // targetId có thể là sessionId (nếu admin cúp) hoặc adminId (nếu guest cúp)
-    // Nếu không biết đích xác, có thể gửi cho cả 2 phía bằng cách gửi cho targetId
+    // Tìm và xóa khỏi hàng chờ nếu có
+    for (const [sid, data] of pendingCalls.entries()) {
+      if (sid === targetId || data.callerId === socket.id) {
+        pendingCalls.delete(sid);
+      }
+    }
+
     if (targetId) {
       socket.to(targetId).emit('call:ended');
     } else {
-      // Broadcast to both admins and the session if targetId isn't specified
       socket.broadcast.emit('call:ended');
     }
   });

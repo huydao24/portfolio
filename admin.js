@@ -28,7 +28,7 @@ const endCallBtn = document.getElementById('end-call-btn');
 // --- SOCKET LOGIC ---
 socket.on('connect', () => {
   console.log('Connected to server');
-  const password = prompt('Nhập mật khẩu Admin (Mặc định: 123456):');
+  const password = prompt('Nhập mã OTP Admin (kiểm tra Telegram):');
   if (password) {
     socket.emit('admin:join', { password });
   }
@@ -41,6 +41,12 @@ socket.on('admin:auth_success', () => {
 
 socket.on('chat error', (data) => {
   alert('Lỗi: ' + data.error);
+  if (data.error.includes('OTP') || data.error.includes('mật khẩu')) {
+    const password = prompt('Nhập lại mã OTP hoặc mật khẩu Admin:');
+    if (password) {
+      socket.emit('admin:join', { password });
+    }
+  }
 });
 
 socket.on('call:incoming', ({ sessionId, callerId }) => {
