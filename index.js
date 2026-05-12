@@ -150,7 +150,7 @@ mobileLinks.forEach(link => {
 const DEFAULT_CHAT_BACKEND_URL =
   window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname)
     ? 'http://localhost:3000'
-    : 'https://portfolio-1-yjvu.onrender.com';
+    : 'https://portfolio-2-wesv.onrender.com';
 
 const CHAT_BACKEND_URL = window.CHAT_BACKEND_URL || DEFAULT_CHAT_BACKEND_URL;
 const CHAT_SESSION_KEY = 'portfolio-chat-session-id'; // Key lưu ID phiên chat vào LocalStorage
