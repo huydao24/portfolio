@@ -803,7 +803,28 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const result = await requestPasswordReset(req.body);
 
-    // ── Gửi mã reset qua Email cho người dùng ──────────────────────────
+    // ✅ PHẢN HỒI NGAY LẬP TỨC: Không để Client đợi lâu
+    res.json({ message: 'Mã xác nhận đang được gửi. Vui lòng kiểm tra Email hoặc Telegram sau ít giây.' });
+
+    // ── CHẠY NGẦM: Thông báo qua Telegram ──
+    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID && result.resetCode) {
+      const telegramText = [
+        `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU`,
+        `━━━━━━━━━━━━━━━━━━━`,
+        `👤 ${result.userName} (${result.userEmail})`,
+        `🔑 Mã xác thực: ${result.resetCode}`,
+        `⏰ Hết hạn sau 15 phút`,
+      ].join('\n');
+
+      axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+        chat_id: TELEGRAM_AUTH_CHAT_ID,
+        text: telegramText
+      }, { timeout: 10000 }).catch(err => {
+        console.error('[telegram-auth] Background send failed:', err.message);
+      });
+    }
+
+    // ── CHẠY NGẦM: Gửi mã reset qua Email ──
     if (mailTransporter && result.resetCode) {
       const htmlContent = `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0d1117; color: #e6edf3; border-radius: 12px; overflow: hidden; border: 1px solid rgba(0,212,255,0.15);">
@@ -834,44 +855,17 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         </div>
       `;
 
-      try {
-        await mailTransporter.sendMail({
-          from: `"DNH.dev" <${GMAIL_USER}>`,
-          to: result.userEmail,
-          subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
-          html: htmlContent,
-        });
-        console.log(`[email] Reset code sent to ${result.userEmail}`);
-      } catch (mailErr) {
-        console.error('[email] Failed to send reset code:', mailErr.message);
-        return res.status(500).json({ error: 'Không thể gửi email. Vui lòng thử lại sau.' });
-      }
-    } else if (!mailTransporter) {
-      console.error('[email] Mail transporter not configured');
-      return res.status(500).json({ error: 'Chức năng gửi email chưa được cấu hình.' });
+      mailTransporter.sendMail({
+        from: `"DNH.dev" <${GMAIL_USER}>`,
+        to: result.userEmail,
+        subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
+        html: htmlContent,
+      }).then(() => {
+        console.log(`[email] Background reset code sent to ${result.userEmail}`);
+      }).catch(mailErr => {
+        console.error('[email] Background send failed:', mailErr.message);
+      });
     }
-
-    // Thông báo mã reset qua Telegram cho admin/user qua Auth Bot
-    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID && result.resetCode) {
-      const telegramText = [
-        `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU`,
-        `━━━━━━━━━━━━━━━━━━━`,
-        `👤 ${result.userName} (${result.userEmail})`,
-        `🔑 Mã xác thực: ${result.resetCode}`,
-        `⏰ Hết hạn sau 15 phút`,
-      ].join('\n');
-
-      try {
-        await axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
-          chat_id: TELEGRAM_AUTH_CHAT_ID,
-          text: telegramText
-        }, { timeout: 10000 });
-      } catch (tgErr) {
-        console.error('[telegram-auth] Failed to send reset code:', tgErr.message);
-      }
-    }
-
-    return res.json({ message: 'Mã xác nhận đã được gửi. Vui lòng kiểm tra email hoặc Telegram của bạn.' });
   } catch (err) {
     const status = err.statusCode || 500;
     if (status === 200) {
