@@ -119,6 +119,14 @@ async function setupLocalStream() {
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     localVideo.srcObject = localStream;
+    updateControlButtons();
+    
+    // Đảm bảo micro được bật
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = true;
+      console.log("Admin microphone activated");
+    }
   } catch (err) {
     alert('Không thể truy cập Camera/Micro: ' + err.message);
     throw err;
@@ -226,7 +234,6 @@ if (adminFlipBtn) {
   adminFlipBtn.addEventListener('click', async () => {
     if (!localStream || adminFlipBtn.disabled) return;
     
-    // Tạm thời vô hiệu hóa nút để tránh spam click khi đang xử lý
     adminFlipBtn.disabled = true;
     adminFlipBtn.style.opacity = '0.5';
     
@@ -234,8 +241,8 @@ if (adminFlipBtn) {
     
     try {
       const oldVideoTrack = localStream.getVideoTracks()[0];
+      const audioTrack = localStream.getAudioTracks()[0]; // Lấy track audio hiện tại để giữ lại
       
-      // CHỈ lấy video mới, KHÔNG lấy lại audio để tránh treo trình duyệt
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: currentFacingMode,
@@ -243,25 +250,29 @@ if (adminFlipBtn) {
           height: { ideal: 720 }
         }
       });
-
       
       const newVideoTrack = newStream.getVideoTracks()[0];
 
-      if (oldVideoTrack) {
-        oldVideoTrack.stop();
-        localStream.removeTrack(oldVideoTrack);
+      // TẠO LUỒNG MỚI KẾT HỢP: Video mới + Audio cũ
+      const combinedStream = new MediaStream([newVideoTrack]);
+      if (audioTrack) {
+        combinedStream.addTrack(audioTrack);
       }
-      localStream.addTrack(newVideoTrack);
-      localVideo.srcObject = localStream;
       
-      // Cập nhật cho khách
-      const allPCs = [peerConnection, ...Object.values(peerConnections)].filter(Boolean);
+      localVideo.srcObject = combinedStream;
+      
+      // Thay thế track cho các PC
+      const allPCs = [peerConnection, ...Object.values(peerConnections || {})].filter(Boolean);
       for (const pc of allPCs) {
-        const videoSender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
         if (videoSender) {
           await videoSender.replaceTrack(newVideoTrack);
         }
       }
+      
+      if (oldVideoTrack) oldVideoTrack.stop();
+      localStream = combinedStream; // Cập nhật localStream (vẫn chứa đủ Audio/Video)
       
       updateControlButtons();
     } catch (err) {
@@ -273,6 +284,7 @@ if (adminFlipBtn) {
     }
   });
 }
+
 
 
 
