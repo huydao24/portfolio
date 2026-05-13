@@ -988,20 +988,7 @@ if (guestFlipBtn) {
   });
 }
 
-async function checkGuestMultiCamera() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    if (videoDevices.length > 1) {
-      if (guestFlipBtn) guestFlipBtn.style.display = 'flex';
-    }
-  } catch (e) {
-    console.error("Error checking guest cameras:", e);
-  }
-}
-
-// Check on load
-checkGuestMultiCamera();
+// Check on load (No longer hiding button)
 
 
 if (videoCallBtn) {

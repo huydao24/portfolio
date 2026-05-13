@@ -257,20 +257,7 @@ if (adminFlipBtn) {
   });
 }
 
-async function checkMultiCamera() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    if (videoDevices.length > 1) {
-      if (adminFlipBtn) adminFlipBtn.style.display = 'flex';
-    }
-  } catch (e) {
-    console.error("Error checking cameras:", e);
-  }
-}
-
-// Check cameras on load
-checkMultiCamera();
+// Check cameras on load (No longer hiding button, logic removed)
 
 
 window.rejectCall = (sessionId, callerId) => {
