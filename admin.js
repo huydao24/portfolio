@@ -237,8 +237,13 @@ if (adminFlipBtn) {
       
       // CHỈ lấy video mới, KHÔNG lấy lại audio để tránh treo trình duyệt
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: currentFacingMode }
+        video: { 
+          facingMode: currentFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
+
       
       const newVideoTrack = newStream.getVideoTracks()[0];
 

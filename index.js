@@ -955,32 +955,35 @@ if (guestVideoBtn) {
 
 if (guestFlipBtn) {
   guestFlipBtn.addEventListener('click', async () => {
-    if (!guestLocalStream) return;
-
+    if (!guestLocalStream || guestFlipBtn.disabled) return;
+    
+    guestFlipBtn.disabled = true;
+    guestFlipBtn.style.opacity = '0.5';
+    
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
 
     try {
-      // 1. Dừng track cũ
       const oldVideoTrack = guestLocalStream.getVideoTracks()[0];
-      if (oldVideoTrack) oldVideoTrack.stop();
-
-      // 2. Lấy stream mới
+      
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: currentFacingMode },
-        audio: true
+        video: { 
+          facingMode: currentFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
 
       const newVideoTrack = newStream.getVideoTracks()[0];
 
-      // 3. Cập nhật local stream và render lại
-      guestLocalStream.removeTrack(oldVideoTrack);
+      if (oldVideoTrack) {
+        oldVideoTrack.stop();
+        guestLocalStream.removeTrack(oldVideoTrack);
+      }
       guestLocalStream.addTrack(newVideoTrack);
       guestLocalVideo.srcObject = guestLocalStream;
 
-      // 4. Thay thế track trong PeerConnection để Admin thấy
       if (guestPeerConnection) {
-        const senders = guestPeerConnection.getSenders();
-        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        const videoSender = guestPeerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
         if (videoSender) {
           await videoSender.replaceTrack(newVideoTrack);
         }
@@ -990,9 +993,13 @@ if (guestFlipBtn) {
     } catch (err) {
       console.error("Flip camera failed:", err);
       currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    } finally {
+      guestFlipBtn.disabled = false;
+      guestFlipBtn.style.opacity = '1';
     }
   });
 }
+
 
 
 // Check on load (No longer hiding button)
