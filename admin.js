@@ -26,6 +26,9 @@ const remoteVideo = document.getElementById('remoteVideo');
 const endCallBtn = document.getElementById('end-call-btn');
 const adminMuteBtn = document.getElementById('admin-mute-btn');
 const adminVideoBtn = document.getElementById('admin-video-toggle-btn');
+const adminFlipBtn = document.getElementById('admin-flip-btn');
+
+let currentFacingMode = 'user';
 
 // --- SOCKET LOGIC ---
 socket.on('connect', () => {
@@ -218,6 +221,57 @@ if (adminVideoBtn) {
     }
   });
 }
+
+if (adminFlipBtn) {
+  adminFlipBtn.addEventListener('click', async () => {
+    if (!localStream) return;
+    
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: currentFacingMode },
+        audio: true
+      });
+      
+      const videoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = localStream.getVideoTracks()[0];
+      
+      localStream.removeTrack(oldVideoTrack);
+      localStream.addTrack(videoTrack);
+      oldVideoTrack.stop();
+      
+      localVideo.srcObject = localStream;
+      
+      // Update track in all active peer connections
+      Object.values(peerConnections).forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender) sender.replaceTrack(videoTrack);
+      });
+      
+      updateControlButtons();
+    } catch (err) {
+      console.error("Flip camera failed:", err);
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    }
+  });
+}
+
+async function checkMultiCamera() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    if (videoDevices.length > 1) {
+      if (adminFlipBtn) adminFlipBtn.style.display = 'flex';
+    }
+  } catch (e) {
+    console.error("Error checking cameras:", e);
+  }
+}
+
+// Check cameras on load
+checkMultiCamera();
+
 
 window.rejectCall = (sessionId, callerId) => {
   const callEl = document.getElementById(`call-${callerId}`);
