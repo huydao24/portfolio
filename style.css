@@ -1734,27 +1734,31 @@
 }
 
 .control-btn {
-    width: 54px;
-    height: 54px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid rgba(255,255,255,0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    background: #2d3436; /* Màu nền đậm hơn */
     color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .control-btn:hover {
-    background: rgba(255,255,255,0.2);
-    transform: translateY(-3px);
+    background: #485460;
+    transform: translateY(-2px);
 }
 
 .control-btn.end-call {
-    background: var(--danger);
+    background: #eb4d4b;
+    width: 60px; /* Nút kết thúc to hơn một chút */
+    height: 60px;
 }
+
 
 .control-btn.end-call:hover {
     background: #ff6b81;
