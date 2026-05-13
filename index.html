@@ -489,30 +489,34 @@
   </footer>
 
   <!-- Video Call Overlay for Guest -->
-  <div id="video-call-overlay"
-    style="position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center;">
-    <h2 id="video-call-status" style="color: white; margin-bottom: 20px; font-family: 'Syne', sans-serif;">Đang gọi cho
-      Huy...</h2>
-    <div style="display: flex; gap: 20px; width: 90%; max-width: 800px; flex-wrap: wrap;">
-      <div style="flex: 1; min-width: 300px; position: relative;">
-        <video id="guest-remote-video" autoplay playsinline
-          style="width: 100%; border-radius: 12px; background: #111; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></video>
-        <div
-          style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-          Huy (Admin)</div>
-      </div>
-      <div style="flex: 1; min-width: 300px; position: relative;">
-        <video id="guest-local-video" autoplay playsinline muted
-          style="width: 100%; border-radius: 12px; background: #111; border: 1px solid #333; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></video>
-        <div
-          style="position: absolute; bottom: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; font-size: 14px;">
-          Bạn</div>
+  <div id="video-call-overlay" style="display: none;">
+    <div class="call-info">
+      <h2 id="video-call-status">Đang gọi cho Huy...</h2>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span>LIVE 00:00</span>
       </div>
     </div>
-    <button id="guest-end-call-btn"
-      style="margin-top: 30px; padding: 12px 30px; background: #da3633; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: transform 0.2s;">Hủy
-      cuộc gọi</button>
+
+    <div class="video-grid-premium">
+      <video id="guest-remote-video" autoplay playsinline></video>
+      <video id="guest-local-video" autoplay playsinline muted></video>
+
+      <div class="call-controls">
+        <button class="control-btn end-call" id="guest-end-call-btn" title="Kết thúc cuộc gọi">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+            <line x1="23" y1="1" x2="1" y2="23" />
+          </svg>
+          <span class="btn-text" style="display: none;">Hủy cuộc gọi</span>
+        </button>
+      </div>
+
+    </div>
   </div>
+
 
   <script>
     // ⚡ Sau khi deploy backend lên Render, thay URL bên dưới bằng URL Render của bạn

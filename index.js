@@ -850,7 +850,9 @@ async function startVideoCall() {
     
     videoCallOverlay.style.display = 'flex';
     videoCallStatus.innerText = 'Đang gọi cho Huy...';
-    guestEndCallBtn.innerText = 'Hủy cuộc gọi';
+    guestEndCallBtn.title = 'Hủy cuộc gọi';
+    const btnText = guestEndCallBtn.querySelector('.btn-text');
+    if (btnText) btnText.innerText = 'Hủy cuộc gọi';
     
     // Yêu cầu gọi điện
     socket.emit('call:request', { sessionId: chatSessionId });
@@ -893,7 +895,9 @@ function attachWebRTCSocketEvents() {
   socket.on('call:accepted', async ({ adminId }) => {
     callAdminId = adminId;
     videoCallStatus.innerText = 'Đã kết nối!';
-    guestEndCallBtn.innerText = 'Kết thúc cuộc gọi';
+    guestEndCallBtn.title = 'Kết thúc cuộc gọi';
+    const btnText = guestEndCallBtn.querySelector('.btn-text');
+    if (btnText) btnText.innerText = 'Kết thúc cuộc gọi';
     
     guestPeerConnection = new RTCPeerConnection(rtcConfig);
     

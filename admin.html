@@ -5,79 +5,157 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Video Call Panel</title>
   <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #161b22;
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #00d4ff;
+      --danger: #ff4757;
+      --success: #2ed573;
+    }
+
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background-color: #0d1117;
+      font-family: 'Syne', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
       color: #e6edf3;
       margin: 0;
-      padding: 20px;
-    }
-    .header {
-      border-bottom: 1px solid #30363d;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      color: #00d4ff;
-    }
-    #incoming-calls {
+      padding: 40px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
+      align-items: center;
     }
+
+    .header {
+      width: 100%;
+      max-width: 1100px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #00d4ff, #009866);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+
+    .header p {
+      color: #8b949e;
+      margin-top: 10px;
+    }
+
+    #incoming-calls {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
     .call-item {
-      background: #161b22;
-      border: 1px solid #30363d;
-      padding: 15px;
-      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      animation: slideIn 0.3s ease-out;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
     .btn {
-      padding: 8px 16px;
+      padding: 10px 20px;
       border: none;
-      border-radius: 6px;
+      border-radius: 10px;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 700;
+      transition: all 0.2s;
     }
-    .btn-accept { background: #2ea043; color: white; }
-    .btn-reject { background: #da3633; color: white; }
-    .btn-end { background: #da3633; color: white; display: none; margin-top: 10px;}
-    
+
+    .btn-accept { background: var(--success); color: white; }
+    .btn-accept:hover { background: #32e082; transform: scale(1.05); }
+
+    .btn-reject { background: var(--danger); color: white; }
+    .btn-reject:hover { background: #ff6b81; transform: scale(1.05); }
+
+    .btn-end { 
+      background: var(--danger); 
+      color: white; 
+      display: none; 
+      margin-top: 30px; 
+      padding: 12px 32px;
+      font-size: 16px;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+
     #video-container {
-      display: none;
-      gap: 20px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-    .video-box {
-      flex: 1;
-      min-width: 300px;
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #30363d;
+      display: none; /* Flex when active */
       position: relative;
-    }
-    video {
       width: 100%;
-      height: auto;
-      display: block;
+      max-width: 1100px;
+      height: 70vh;
+      background: #000;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
     }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #remoteVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #localVideo {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 280px;
+      aspect-ratio: 16/9;
+      background: #111;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      object-fit: cover;
+      z-index: 10;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
     .video-label {
       position: absolute;
-      bottom: 10px;
-      left: 10px;
+      bottom: 20px;
+      left: 20px;
       background: rgba(0,0,0,0.6);
-      padding: 4px 8px;
-      border-radius: 4px;
+      backdrop-filter: blur(5px);
+      padding: 6px 14px;
+      border-radius: 8px;
       font-size: 14px;
+      font-weight: 600;
+      z-index: 5;
+      border: 1px solid var(--border);
     }
   </style>
+
 </head>
 <body>
   <div class="header">
@@ -90,18 +168,19 @@
   </div>
 
   <div id="video-container">
-    <div class="video-box">
+    <div class="video-wrapper">
       <video id="remoteVideo" autoplay playsinline></video>
       <div class="video-label">Khách</div>
-    </div>
-    <div class="video-box">
+      
       <video id="localVideo" autoplay playsinline muted></video>
-      <div class="video-label">Admin (Bạn)</div>
-    </div>
-    <div style="width: 100%; text-align: center;">
-      <button class="btn btn-end" id="end-call-btn">Kết thúc cuộc gọi</button>
+      <div class="video-label" style="top: 20px; left: auto; right: 20px; bottom: auto;">Bạn (Admin)</div>
     </div>
   </div>
+
+  <div style="width: 100%; text-align: center;">
+    <button class="btn btn-end" id="end-call-btn">Kết thúc cuộc gọi</button>
+  </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
   <script src="admin.js"></script>
