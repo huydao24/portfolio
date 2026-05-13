@@ -960,33 +960,40 @@ if (guestFlipBtn) {
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
     
     try {
+      // 1. Dừng track cũ
+      const oldVideoTrack = guestLocalStream.getVideoTracks()[0];
+      if (oldVideoTrack) oldVideoTrack.stop();
+
+      // 2. Lấy stream mới
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: currentFacingMode },
         audio: true
       });
       
-      const videoTrack = newStream.getVideoTracks()[0];
-      const oldVideoTrack = guestLocalStream.getVideoTracks()[0];
-      
+      const newVideoTrack = newStream.getVideoTracks()[0];
+
+      // 3. Cập nhật local stream và render lại
       guestLocalStream.removeTrack(oldVideoTrack);
-      guestLocalStream.addTrack(videoTrack);
-      oldVideoTrack.stop();
-      
+      guestLocalStream.addTrack(newVideoTrack);
       guestLocalVideo.srcObject = guestLocalStream;
       
-      // Update track in peer connection if active
+      // 4. Thay thế track trong PeerConnection để Admin thấy
       if (guestPeerConnection) {
-        const sender = guestPeerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-        if (sender) sender.replaceTrack(videoTrack);
+        const senders = guestPeerConnection.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          await videoSender.replaceTrack(newVideoTrack);
+        }
       }
       
       updateGuestControls();
     } catch (err) {
       console.error("Flip camera failed:", err);
-      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user'; // Revert
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
     }
   });
 }
+
 
 // Check on load (No longer hiding button)
 

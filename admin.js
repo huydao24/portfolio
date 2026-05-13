@@ -229,33 +229,48 @@ if (adminFlipBtn) {
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
     
     try {
+      // 1. Dừng track video cũ để giải phóng tài nguyên
+      const oldVideoTrack = localStream.getVideoTracks()[0];
+      if (oldVideoTrack) oldVideoTrack.stop();
+
+      // 2. Lấy stream mới với facingMode đã chọn
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: currentFacingMode },
-        audio: true
+        audio: true // Giữ audio để không bị mất tiếng
       });
       
-      const videoTrack = newStream.getVideoTracks()[0];
-      const oldVideoTrack = localStream.getVideoTracks()[0];
-      
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      const newAudioTrack = newStream.getAudioTracks()[0];
+
+      // 3. Cập nhật localStream để hiển thị trên màn hình của mình
       localStream.removeTrack(oldVideoTrack);
-      localStream.addTrack(videoTrack);
-      oldVideoTrack.stop();
+      localStream.addTrack(newVideoTrack);
       
+      // Quan trọng: Phải cập nhật lại srcObject để trình duyệt render lại
       localVideo.srcObject = localStream;
       
-      // Update track in all active peer connections
-      Object.values(peerConnections).forEach(pc => {
-        const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
-        if (sender) sender.replaceTrack(videoTrack);
-      });
+      // 4. Thay thế track video trong kết nối WebRTC (để bên khách thấy)
+      // Chúng ta duyệt qua tất cả các PC đang hoạt động (kể cả biến đơn và biến object)
+      const allPCs = [peerConnection, ...Object.values(peerConnections)].filter(Boolean);
+      
+      for (const pc of allPCs) {
+        const senders = pc.getSenders();
+        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+          await videoSender.replaceTrack(newVideoTrack);
+          console.log("Đã thay thế track video cho PC:", pc);
+        }
+      }
       
       updateControlButtons();
     } catch (err) {
-      console.error("Flip camera failed:", err);
+      console.error("Lỗi xoay camera:", err);
+      // Quay lại chế độ cũ nếu lỗi
       currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
     }
   });
 }
+
 
 // Check cameras on load (No longer hiding button, logic removed)
 
