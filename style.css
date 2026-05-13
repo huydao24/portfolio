@@ -1699,19 +1699,16 @@
 }
 
 #guest-local-video {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 240px;
-    aspect-ratio: 16/9;
+    width: 100%;
+    height: 100%;
     border-radius: 16px;
     object-fit: cover;
-    border: 2px solid var(--glass-border);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     z-index: 10;
-    background: #222;
+    background: transparent;
     transition: transform 0.3s ease, border-color 0.3s ease;
+    display: block;
 }
+
 
 #guest-local-video:hover {
     transform: scale(1.05);
@@ -1836,7 +1833,13 @@
     aspect-ratio: 16/9;
     z-index: 10;
     transition: all 0.3s ease;
+    border-radius: 16px;
+    border: 2px solid var(--glass-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    background: #111;
 }
+
 
 .video-label {
     position: absolute;
