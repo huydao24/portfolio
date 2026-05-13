@@ -173,19 +173,23 @@ function updateControlButtons() {
   const videoTrack = localStream.getVideoTracks()[0];
 
   if (adminMuteBtn) {
-    adminMuteBtn.classList.toggle('is-off', !audioTrack.enabled);
+    const isMuted = !audioTrack.enabled;
+    adminMuteBtn.classList.toggle('is-off', isMuted);
+    adminMuteBtn.title = isMuted ? "Bật Mic" : "Tắt Mic";
   }
   if (adminVideoBtn) {
-    adminVideoBtn.classList.toggle('is-off', !videoTrack.enabled);
+    const isVideoOff = !videoTrack.enabled;
+    adminVideoBtn.classList.toggle('is-off', isVideoOff);
+    adminVideoBtn.title = isVideoOff ? "Bật Camera" : "Tắt Camera";
     
     // Toggle placeholder
     let placeholder = document.getElementById('admin-video-placeholder');
-    if (!videoTrack.enabled) {
+    if (isVideoOff) {
       if (!placeholder) {
         placeholder = document.createElement('div');
         placeholder.id = 'admin-video-placeholder';
         placeholder.className = 'video-off-placeholder';
-        placeholder.innerHTML = '<div style="font-size: 40px;">🎙️</div><div style="margin-top:10px; font-size:12px;">Camera đang tắt</div>';
+        placeholder.innerHTML = '<div style="font-size: 30px;">📷</div><div style="margin-top:8px; font-size:11px; color:#888;">Camera tắt</div>';
         localVideo.parentElement.appendChild(placeholder);
       }
     } else if (placeholder) {
@@ -193,6 +197,7 @@ function updateControlButtons() {
     }
   }
 }
+
 
 if (adminMuteBtn) {
   adminMuteBtn.addEventListener('click', () => {

@@ -1778,8 +1778,10 @@
     justify-content: center;
     flex-direction: column;
     z-index: 5;
-    border-radius: 24px;
+    border-radius: 16px; /* Khớp với video */
+    border: 1px solid var(--glass-border);
 }
+
 
 .video-off-avatar {
     width: 80px;

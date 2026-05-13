@@ -900,22 +900,29 @@ function updateGuestControls() {
   const audioTrack = guestLocalStream.getAudioTracks()[0];
   const videoTrack = guestLocalStream.getVideoTracks()[0];
 
+  // Cập nhật trạng thái nút Mic
   if (guestMuteBtn) {
-    guestMuteBtn.classList.toggle('is-off', !audioTrack.enabled);
+    const isMuted = !audioTrack.enabled;
+    guestMuteBtn.classList.toggle('is-off', isMuted);
+    guestMuteBtn.title = isMuted ? "Bật Mic" : "Tắt Mic";
+    // Có thể thêm icon gạch chéo cho Mic ở đây nếu muốn
   }
+
+  // Cập nhật trạng thái nút Video & Placeholder
   if (guestVideoBtn) {
-    guestVideoBtn.classList.toggle('is-off', !videoTrack.enabled);
+    const isVideoOff = !videoTrack.enabled;
+    guestVideoBtn.classList.toggle('is-off', isVideoOff);
+    guestVideoBtn.title = isVideoOff ? "Bật Camera" : "Tắt Camera";
     
-    // Toggle placeholder
     let placeholder = document.getElementById('guest-video-placeholder');
-    if (!videoTrack.enabled) {
+    if (isVideoOff) {
       if (!placeholder) {
         placeholder = document.createElement('div');
         placeholder.id = 'guest-video-placeholder';
         placeholder.className = 'video-off-placeholder';
         placeholder.innerHTML = `
           <div class="video-off-avatar">👤</div>
-          <div style="font-size:14px; font-weight:600;">Bạn đang ở chế độ Voice</div>
+          <div style="font-size:12px; font-weight:600; color: #888;">Camera tắt</div>
         `;
         guestLocalVideo.parentElement.appendChild(placeholder);
       }
@@ -924,6 +931,7 @@ function updateGuestControls() {
     }
   }
 }
+
 
 if (guestMuteBtn) {
   guestMuteBtn.addEventListener('click', () => {
