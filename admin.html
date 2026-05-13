@@ -122,7 +122,42 @@
       font-size: 13px;
       z-index: 10;
     }
+
+    .control-btn-small {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .control-btn-small:hover {
+      background: var(--surface);
+    }
+
+    .control-btn-small.is-off {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .video-off-placeholder {
+      position: absolute;
+      inset: 0;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 5;
+    }
   </style>
+
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -141,12 +176,23 @@
     <div class="video-box">
       <video id="localVideo" autoplay playsinline muted></video>
       <div class="video-label">Admin (Bạn)</div>
+      
+      <!-- Admin Controls Overlay -->
+      <div style="position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; z-index: 20;">
+        <button class="control-btn-small" id="admin-mute-btn" title="Tắt/Bật Mic">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        </button>
+        <button class="control-btn-small" id="admin-video-toggle-btn" title="Tắt/Bật Camera">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+        </button>
+      </div>
     </div>
   </div>
 
   <div style="width: 100%; text-align: center;">
     <button class="btn btn-end" id="end-call-btn">Kết thúc cuộc gọi</button>
   </div>
+
 
 
 

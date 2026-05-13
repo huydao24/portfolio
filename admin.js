@@ -24,6 +24,8 @@ const videoContainer = document.getElementById('video-container');
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 const endCallBtn = document.getElementById('end-call-btn');
+const adminMuteBtn = document.getElementById('admin-mute-btn');
+const adminVideoBtn = document.getElementById('admin-video-toggle-btn');
 
 // --- SOCKET LOGIC ---
 socket.on('connect', () => {
@@ -157,10 +159,60 @@ window.acceptCall = async (sessionId, callerId) => {
 
     // Notify guest that we accepted, Guest will send an Offer
     socket.emit('call:accept', { sessionId });
+
+    // Initial button states
+    updateControlButtons();
   } catch (e) {
     console.error(e);
   }
 };
+
+function updateControlButtons() {
+  if (!localStream) return;
+  const audioTrack = localStream.getAudioTracks()[0];
+  const videoTrack = localStream.getVideoTracks()[0];
+
+  if (adminMuteBtn) {
+    adminMuteBtn.classList.toggle('is-off', !audioTrack.enabled);
+  }
+  if (adminVideoBtn) {
+    adminVideoBtn.classList.toggle('is-off', !videoTrack.enabled);
+    
+    // Toggle placeholder
+    let placeholder = document.getElementById('admin-video-placeholder');
+    if (!videoTrack.enabled) {
+      if (!placeholder) {
+        placeholder = document.createElement('div');
+        placeholder.id = 'admin-video-placeholder';
+        placeholder.className = 'video-off-placeholder';
+        placeholder.innerHTML = '<div style="font-size: 40px;">🎙️</div><div style="margin-top:10px; font-size:12px;">Camera đang tắt</div>';
+        localVideo.parentElement.appendChild(placeholder);
+      }
+    } else if (placeholder) {
+      placeholder.remove();
+    }
+  }
+}
+
+if (adminMuteBtn) {
+  adminMuteBtn.addEventListener('click', () => {
+    if (localStream) {
+      const track = localStream.getAudioTracks()[0];
+      track.enabled = !track.enabled;
+      updateControlButtons();
+    }
+  });
+}
+
+if (adminVideoBtn) {
+  adminVideoBtn.addEventListener('click', () => {
+    if (localStream) {
+      const track = localStream.getVideoTracks()[0];
+      track.enabled = !track.enabled;
+      updateControlButtons();
+    }
+  });
+}
 
 window.rejectCall = (sessionId, callerId) => {
   const callEl = document.getElementById(`call-${callerId}`);

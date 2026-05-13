@@ -826,10 +826,14 @@ const videoCallStatus = document.getElementById('video-call-status');
 const guestLocalVideo = document.getElementById('guest-local-video');
 const guestRemoteVideo = document.getElementById('guest-remote-video');
 const guestEndCallBtn = document.getElementById('guest-end-call-btn');
+const guestMuteBtn = document.getElementById('guest-mute-btn');
+const guestVideoBtn = document.getElementById('guest-video-toggle-btn');
+const guestFlipBtn = document.getElementById('guest-flip-btn');
 
 let guestPeerConnection;
 let guestLocalStream;
 let callAdminId = null;
+let currentFacingMode = 'user';
 
 const rtcConfig = {
   iceServers: [
@@ -856,6 +860,7 @@ async function startVideoCall() {
     
     // Yêu cầu gọi điện
     socket.emit('call:request', { sessionId: chatSessionId });
+    updateGuestControls();
   } catch (err) {
     alert('Không thể truy cập Camera/Micro: ' + err.message);
   }
@@ -882,6 +887,97 @@ function endVideoCall() {
   videoCallOverlay.style.display = 'none';
   guestRemoteVideo.srcObject = null;
   guestLocalVideo.srcObject = null;
+  
+  // Reset buttons
+  if(guestMuteBtn) guestMuteBtn.classList.remove('is-off');
+  if(guestVideoBtn) guestVideoBtn.classList.remove('is-off');
+  const placeholder = document.getElementById('guest-video-placeholder');
+  if(placeholder) placeholder.remove();
+}
+
+function updateGuestControls() {
+  if (!guestLocalStream) return;
+  const audioTrack = guestLocalStream.getAudioTracks()[0];
+  const videoTrack = guestLocalStream.getVideoTracks()[0];
+
+  if (guestMuteBtn) {
+    guestMuteBtn.classList.toggle('is-off', !audioTrack.enabled);
+  }
+  if (guestVideoBtn) {
+    guestVideoBtn.classList.toggle('is-off', !videoTrack.enabled);
+    
+    // Toggle placeholder
+    let placeholder = document.getElementById('guest-video-placeholder');
+    if (!videoTrack.enabled) {
+      if (!placeholder) {
+        placeholder = document.createElement('div');
+        placeholder.id = 'guest-video-placeholder';
+        placeholder.className = 'video-off-placeholder';
+        placeholder.innerHTML = `
+          <div class="video-off-avatar">👤</div>
+          <div style="font-size:14px; font-weight:600;">Bạn đang ở chế độ Voice</div>
+        `;
+        guestLocalVideo.parentElement.appendChild(placeholder);
+      }
+    } else if (placeholder) {
+      placeholder.remove();
+    }
+  }
+}
+
+if (guestMuteBtn) {
+  guestMuteBtn.addEventListener('click', () => {
+    if (guestLocalStream) {
+      const track = guestLocalStream.getAudioTracks()[0];
+      track.enabled = !track.enabled;
+      updateGuestControls();
+    }
+  });
+}
+
+if (guestVideoBtn) {
+  guestVideoBtn.addEventListener('click', () => {
+    if (guestLocalStream) {
+      const track = guestLocalStream.getVideoTracks()[0];
+      track.enabled = !track.enabled;
+      updateGuestControls();
+    }
+  });
+}
+
+if (guestFlipBtn) {
+  guestFlipBtn.addEventListener('click', async () => {
+    if (!guestLocalStream) return;
+    
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: currentFacingMode },
+        audio: true
+      });
+      
+      const videoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = guestLocalStream.getVideoTracks()[0];
+      
+      guestLocalStream.removeTrack(oldVideoTrack);
+      guestLocalStream.addTrack(videoTrack);
+      oldVideoTrack.stop();
+      
+      guestLocalVideo.srcObject = guestLocalStream;
+      
+      // Update track in peer connection if active
+      if (guestPeerConnection) {
+        const sender = guestPeerConnection.getSenders().find(s => s.track.kind === 'video');
+        if (sender) sender.replaceTrack(videoTrack);
+      }
+      
+      updateGuestControls();
+    } catch (err) {
+      console.error("Flip camera failed:", err);
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user'; // Revert
+    }
+  });
 }
 
 if (videoCallBtn) {
