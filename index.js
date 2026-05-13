@@ -20,13 +20,13 @@ if (isDesktop) {
   function animCursor() {
     cursor.style.left = `${mx}px`;
     cursor.style.top = `${my}px`;
-    
+
     // Hiệu ứng "đuổi theo" (vòng tròn di chuyển trễ hơn con trỏ)
     rx += (mx - rx) * 0.15;
     ry += (my - ry) * 0.15;
     ring.style.left = `${rx}px`;
     ring.style.top = `${ry}px`;
-    
+
     requestAnimationFrame(animCursor);
   }
 
@@ -451,7 +451,7 @@ function openChat() {
  * Cung cấp hàm toàn cục để auth-ui.js gọi sau khi login thành công
  * Ngắt socket cũ hoàn toàn và tạo kết nối mới với sessionId mới
  */
-window.refreshChatSession = function() {
+window.refreshChatSession = function () {
   const oldSessionId = chatSessionId;
   chatSessionId = getChatSessionId();
 
@@ -496,7 +496,7 @@ async function compressImage(file, maxWidth = 1280, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
-    
+
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
       const canvas = document.createElement('canvas');
@@ -534,7 +534,7 @@ async function compressImage(file, maxWidth = 1280, quality = 0.7) {
 async function handleVideoFile(file) {
   if (!file) return;
   // Tăng giới hạn lên 50MB để hỗ trợ quay video trực tiếp từ iPhone
-  if (file.size > 50 * 1024 * 1024) { 
+  if (file.size > 50 * 1024 * 1024) {
     alert('Video quá lớn. Vui lòng gửi video dưới 50MB.');
     return;
   }
@@ -543,12 +543,12 @@ async function handleVideoFile(file) {
   reader.onload = e => {
     selectedVideoBase64 = e.target.result;
     selectedImageBase64 = null;
-    
+
     chatVideoPreview.src = selectedVideoBase64;
     chatVideoPreview.style.display = 'block';
     chatImagePreview.style.display = 'none';
     chatImagePreviewContainer.classList.remove('hidden');
-    
+
     if (chatPopover.classList.contains('hidden')) {
       openChat();
     }
@@ -561,10 +561,10 @@ async function handleVideoFile(file) {
 
 async function handleMediaFile(file) {
   if (!file) return;
-  
+
   // Xử lý một số định dạng video đặc biệt trên iOS (như .mov)
   const isVideo = file.type.startsWith('video/') || file.name.toLowerCase().endsWith('.mov');
-  
+
   if (isVideo) {
     handleVideoFile(file);
   } else {
@@ -584,7 +584,7 @@ async function handleImageFile(file) {
     chatVideoPreview.style.display = 'none';
     chatVideoPreview.src = '';
     chatImagePreviewContainer.classList.remove('hidden');
-    
+
     if (chatPopover.classList.contains('hidden')) {
       openChat();
     }
@@ -680,7 +680,7 @@ if (chatAudioRecBtn) {
           chatImagePreviewContainer.classList.remove('hidden');
         };
         reader.readAsDataURL(audioBlob);
-        
+
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
       };
@@ -725,7 +725,7 @@ chatForm.onsubmit = async e => {
 
   const submitButton = chatForm.querySelector('button[type="submit"]');
   const originalSubmitText = submitButton.innerHTML;
-  
+
   chatInput.disabled = true;
   submitButton.disabled = true;
   submitButton.innerHTML = 'Đang gửi...';
@@ -766,31 +766,31 @@ chatForm.onsubmit = async e => {
   }
 };
 
-window.handleDeleteMessage = function(messageId) {
+window.handleDeleteMessage = function (messageId) {
   if (confirm('Bạn có chắc chắn muốn thu hồi tin nhắn này?')) {
     socket.emit('chat:delete', { sessionId: chatSessionId, messageId });
   }
 };
 
-window.handleEditMessage = function(messageId) {
+window.handleEditMessage = function (messageId) {
   const el = document.querySelector(`.chat-bubble[data-id="${messageId}"]`);
   if (!el) return;
   const textEl = el.querySelector('.chat-bubble-text');
   if (!textEl) return;
-  
+
   const originalText = textEl.innerText.replace('(đã sửa)', '').trim();
   const newText = prompt('Sửa tin nhắn:', originalText);
-  
+
   if (newText !== null && newText.trim() !== '' && newText.trim() !== originalText) {
-    socket.emit('chat:edit', { 
-      sessionId: chatSessionId, 
-      messageId, 
-      text: newText.trim() 
+    socket.emit('chat:edit', {
+      sessionId: chatSessionId,
+      messageId,
+      text: newText.trim()
     });
   }
 };
 
-window.renderReactionsHtml = function(messageId, reactions) {
+window.renderReactionsHtml = function (messageId, reactions) {
   if (!reactions) return '';
   return Object.entries(reactions)
     .filter(([_, count]) => count > 0)
@@ -801,7 +801,7 @@ window.renderReactionsHtml = function(messageId, reactions) {
     `).join('');
 };
 
-window.sendReaction = function(messageId, emoji) {
+window.sendReaction = function (messageId, emoji) {
   if (socket && socket.connected) {
     socket.emit('chat:reaction', { sessionId: chatSessionId, messageId, emoji });
   }
@@ -847,17 +847,17 @@ async function startVideoCall() {
     alert('Chưa kết nối với máy chủ chat.');
     return;
   }
-  
+
   try {
     guestLocalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     guestLocalVideo.srcObject = guestLocalStream;
-    
+
     videoCallOverlay.style.display = 'flex';
     videoCallStatus.innerText = 'Đang gọi cho Huy...';
     guestEndCallBtn.title = 'Hủy cuộc gọi';
     const btnText = guestEndCallBtn.querySelector('.btn-text');
     if (btnText) btnText.innerText = 'Hủy cuộc gọi';
-    
+
     // Yêu cầu gọi điện
     socket.emit('call:request', { sessionId: chatSessionId });
     updateGuestControls();
@@ -875,24 +875,24 @@ function endVideoCall() {
     guestLocalStream.getTracks().forEach(t => t.stop());
     guestLocalStream = null;
   }
-  
+
   if (callAdminId) {
     socket.emit('call:end', { targetId: callAdminId });
   } else {
     // Trường hợp huỷ trước khi có admin bắt máy
     if (socket) socket.emit('call:end', { targetId: chatSessionId });
   }
-  
+
   callAdminId = null;
   videoCallOverlay.style.display = 'none';
   guestRemoteVideo.srcObject = null;
   guestLocalVideo.srcObject = null;
-  
+
   // Reset buttons
-  if(guestMuteBtn) guestMuteBtn.classList.remove('is-off');
-  if(guestVideoBtn) guestVideoBtn.classList.remove('is-off');
+  if (guestMuteBtn) guestMuteBtn.classList.remove('is-off');
+  if (guestVideoBtn) guestVideoBtn.classList.remove('is-off');
   const placeholder = document.getElementById('guest-video-placeholder');
-  if(placeholder) placeholder.remove();
+  if (placeholder) placeholder.remove();
 }
 
 function updateGuestControls() {
@@ -913,7 +913,7 @@ function updateGuestControls() {
     const isVideoOff = !videoTrack.enabled;
     guestVideoBtn.classList.toggle('is-off', isVideoOff);
     guestVideoBtn.title = isVideoOff ? "Bật Camera" : "Tắt Camera";
-    
+
     let placeholder = document.getElementById('guest-video-placeholder');
     if (isVideoOff) {
       if (!placeholder) {
@@ -956,9 +956,9 @@ if (guestVideoBtn) {
 if (guestFlipBtn) {
   guestFlipBtn.addEventListener('click', async () => {
     if (!guestLocalStream) return;
-    
+
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    
+
     try {
       // 1. Dừng track cũ
       const oldVideoTrack = guestLocalStream.getVideoTracks()[0];
@@ -969,14 +969,14 @@ if (guestFlipBtn) {
         video: { facingMode: currentFacingMode },
         audio: true
       });
-      
+
       const newVideoTrack = newStream.getVideoTracks()[0];
 
       // 3. Cập nhật local stream và render lại
       guestLocalStream.removeTrack(oldVideoTrack);
       guestLocalStream.addTrack(newVideoTrack);
       guestLocalVideo.srcObject = guestLocalStream;
-      
+
       // 4. Thay thế track trong PeerConnection để Admin thấy
       if (guestPeerConnection) {
         const senders = guestPeerConnection.getSenders();
@@ -985,7 +985,7 @@ if (guestFlipBtn) {
           await videoSender.replaceTrack(newVideoTrack);
         }
       }
-      
+
       updateGuestControls();
     } catch (err) {
       console.error("Flip camera failed:", err);
@@ -1012,9 +1012,9 @@ function attachWebRTCSocketEvents() {
     guestEndCallBtn.title = 'Kết thúc cuộc gọi';
     const btnText = guestEndCallBtn.querySelector('.btn-text');
     if (btnText) btnText.innerText = 'Kết thúc cuộc gọi';
-    
+
     guestPeerConnection = new RTCPeerConnection(rtcConfig);
-    
+
     guestLocalStream.getTracks().forEach(track => {
       guestPeerConnection.addTrack(track, guestLocalStream);
     });
@@ -1051,7 +1051,7 @@ function attachWebRTCSocketEvents() {
   socket.on('webrtc:signal', async ({ senderId, signal }) => {
     if (senderId !== callAdminId) return;
     if (!guestPeerConnection) return;
-    
+
     if (signal.type === 'answer') {
       await guestPeerConnection.setRemoteDescription(new RTCSessionDescription(signal));
     } else if (signal.candidate) {

@@ -184,7 +184,7 @@ function updateControlButtons() {
     const isVideoOff = !videoTrack.enabled;
     adminVideoBtn.classList.toggle('is-off', isVideoOff);
     adminVideoBtn.title = isVideoOff ? "Bật Camera" : "Tắt Camera";
-    
+
     // Toggle placeholder
     let placeholder = document.getElementById('admin-video-placeholder');
     if (isVideoOff) {
@@ -224,52 +224,51 @@ if (adminVideoBtn) {
 
 if (adminFlipBtn) {
   adminFlipBtn.addEventListener('click', async () => {
-    if (!localStream) return;
+    if (!localStream || adminFlipBtn.disabled) return;
+    
+    // Tạm thời vô hiệu hóa nút để tránh spam click khi đang xử lý
+    adminFlipBtn.disabled = true;
+    adminFlipBtn.style.opacity = '0.5';
     
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
     
     try {
-      // 1. Dừng track video cũ để giải phóng tài nguyên
       const oldVideoTrack = localStream.getVideoTracks()[0];
-      if (oldVideoTrack) oldVideoTrack.stop();
-
-      // 2. Lấy stream mới với facingMode đã chọn
+      
+      // CHỈ lấy video mới, KHÔNG lấy lại audio để tránh treo trình duyệt
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: currentFacingMode },
-        audio: true // Giữ audio để không bị mất tiếng
+        video: { facingMode: currentFacingMode }
       });
       
       const newVideoTrack = newStream.getVideoTracks()[0];
-      const newAudioTrack = newStream.getAudioTracks()[0];
 
-      // 3. Cập nhật localStream để hiển thị trên màn hình của mình
-      localStream.removeTrack(oldVideoTrack);
+      if (oldVideoTrack) {
+        oldVideoTrack.stop();
+        localStream.removeTrack(oldVideoTrack);
+      }
       localStream.addTrack(newVideoTrack);
-      
-      // Quan trọng: Phải cập nhật lại srcObject để trình duyệt render lại
       localVideo.srcObject = localStream;
       
-      // 4. Thay thế track video trong kết nối WebRTC (để bên khách thấy)
-      // Chúng ta duyệt qua tất cả các PC đang hoạt động (kể cả biến đơn và biến object)
+      // Cập nhật cho khách
       const allPCs = [peerConnection, ...Object.values(peerConnections)].filter(Boolean);
-      
       for (const pc of allPCs) {
-        const senders = pc.getSenders();
-        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+        const videoSender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
         if (videoSender) {
           await videoSender.replaceTrack(newVideoTrack);
-          console.log("Đã thay thế track video cho PC:", pc);
         }
       }
       
       updateControlButtons();
     } catch (err) {
-      console.error("Lỗi xoay camera:", err);
-      // Quay lại chế độ cũ nếu lỗi
+      console.error("Lỗi xoay camera Admin:", err);
       currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    } finally {
+      adminFlipBtn.disabled = false;
+      adminFlipBtn.style.opacity = '1';
     }
   });
 }
+
 
 
 // Check cameras on load (No longer hiding button, logic removed)
