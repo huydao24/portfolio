@@ -1806,11 +1806,12 @@
         height: 70vh;
     }
     #local-video-container {
-        width: 150px;
-        bottom: 100px;
-        top: auto;
+        width: 130px; /* Nhỏ lại một chút cho cân đối trên mobile */
+        top: 20px;    /* Chuyển lên phía trên */
+        bottom: auto;
         right: 15px;
     }
+
     .call-info {
         top: 15px;
         left: 15px;
