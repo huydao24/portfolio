@@ -1053,19 +1053,28 @@ io.on('connection', (socket) => {
   socket.on('call:request', async ({ sessionId }) => {
     console.log(`[VideoCall] 📢 Nhận yêu cầu gọi từ: ${sessionId}`);
 
-    // ── Chống duplicate: nếu cuộc gọi cùng sessionId đã được xử lý trong 10 giây qua, bỏ qua ──
+    // ── Chống duplicate: nếu cuộc gọi cùng sessionId đã được xử lý trong 60 giây qua, bỏ qua ──
     const existing = pendingCalls.get(sessionId);
     const now = Date.now();
-    if (existing && existing.requestedAt && (now - existing.requestedAt) < 10000) {
-      console.log(`[VideoCall] ⚠️ Bỏ qua call:request trùng lặp từ ${sessionId} (cooldown 10s)`);
+    if (existing && existing.requestedAt && (now - existing.requestedAt) < 60000) {
+      console.log(`[VideoCall] ⚠️ Bỏ qua call:request trùng lặp từ ${sessionId} (cooldown 60s)`);
       // Vẫn emit call:incoming cho admin đang online (không gửi Telegram lần 2)
       socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
       return;
     }
 
-    // 1. Tạo OTP ngẫu nhiên 6 số
-    currentAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    adminOTPExpiry = now + 5 * 60 * 1000; // Hiệu lực 5 phút
+    // ── Kiểm tra xem admin đã online chưa ──
+    const adminsRoom = io.sockets.adapter.rooms.get('admins');
+    const adminIsOnline = adminsRoom && adminsRoom.size > 0;
+
+    // 1. Tái sử dụng OTP nếu vẫn còn hiệu lực, không tạo mới
+    if (!currentAdminOTP || now >= adminOTPExpiry) {
+      currentAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      adminOTPExpiry = now + 5 * 60 * 1000; // Hiệu lực 5 phút
+      console.log(`[VideoCall] 🔑 Tạo OTP mới: ${currentAdminOTP}`);
+    } else {
+      console.log(`[VideoCall] ♻️ Tái sử dụng OTP hiện tại (còn ${Math.round((adminOTPExpiry - now) / 1000)}s)`);
+    }
 
     // 2. Lưu vào danh sách chờ (kèm timestamp để chống duplicate)
     const callData = { sessionId, callerId: socket.id, requestedAt: now };
@@ -1074,8 +1083,8 @@ io.on('connection', (socket) => {
     // 3. Gửi cho các admin đang trực tuyến qua Socket
     socket.to('admins').emit('call:incoming', callData);
 
-    // 4. Thông báo cho Admin qua Bot Auth (Bot Regis)
-    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
+    // 4. Chỉ gửi Telegram nếu CHƯA có admin online (tránh spam khi admin đang gọi)
+    if (!adminIsOnline && TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
       const adminUrl = 'https://portfolioptit.vercel.app/admin.html';
       const text = [
         `📹 <b>CÓ CUỘC GỌI VIDEO MỚI!</b>`,
@@ -1097,6 +1106,8 @@ io.on('connection', (socket) => {
       } catch (err) {
         console.error('[telegram-auth] Failed to notify video call:', err.message);
       }
+    } else if (adminIsOnline) {
+      console.log('[VideoCall] Admin đã online, bỏ qua gửi Telegram');
     }
   });
 
