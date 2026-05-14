@@ -834,6 +834,7 @@ let guestPeerConnection;
 let guestLocalStream;
 let callAdminId = null;
 let currentFacingMode = 'user';
+let isProcessingEndCall = false; // Flag để tránh lặp thông báo kết thúc
 
 const rtcConfig = {
   iceServers: [
@@ -866,7 +867,10 @@ async function startVideoCall() {
   }
 }
 
-function endVideoCall() {
+function endVideoCall(showNotify = false) {
+  if (isProcessingEndCall) return;
+  isProcessingEndCall = true;
+
   if (guestPeerConnection) {
     guestPeerConnection.close();
     guestPeerConnection = null;
@@ -879,7 +883,6 @@ function endVideoCall() {
   if (callAdminId) {
     socket.emit('call:end', { targetId: callAdminId });
   } else {
-    // Trường hợp huỷ trước khi có admin bắt máy
     if (socket) socket.emit('call:end', { targetId: chatSessionId });
   }
 
@@ -888,7 +891,13 @@ function endVideoCall() {
   guestRemoteVideo.srcObject = null;
   guestLocalVideo.srcObject = null;
 
-  // Reset buttons
+  if (showNotify) {
+    alert('Cuộc gọi đã kết thúc.');
+  }
+
+  // Reset flag sau khi UI đã đóng
+  setTimeout(() => { isProcessingEndCall = false; }, 1000);
+
   if (guestMuteBtn) guestMuteBtn.classList.remove('is-off');
   if (guestVideoBtn) guestVideoBtn.classList.remove('is-off');
   const placeholder = document.getElementById('guest-video-placeholder');
@@ -1051,8 +1060,7 @@ function attachWebRTCSocketEvents() {
   });
 
   socket.on('call:ended', () => {
-    alert('Cuộc gọi đã kết thúc.');
-    endVideoCall();
+    endVideoCall(true);
   });
 
   socket.on('webrtc:signal', async ({ senderId, signal }) => {

@@ -35,6 +35,7 @@ const mFlipBtn = document.getElementById('m-admin-flip-btn');
 const mEndBtn = document.getElementById('m-admin-end-btn');
 
 let currentFacingMode = 'user';
+let isProcessingEndCall = false; // Tránh lặp thông báo kết thúc
 let isAdminAuthenticated = false;
 let cachedAdminPassword = null;
 
@@ -97,8 +98,7 @@ socket.on('call:incoming', ({ sessionId, callerId }) => {
 });
 
 socket.on('call:ended', () => {
-  alert('Cuộc gọi đã kết thúc.');
-  endCall();
+  endCall(true);
 });
 
 // Guest gửi Offer -> Admin xử lý và gửi lại Answer
@@ -310,7 +310,10 @@ window.rejectCall = (sessionId, callerId) => {
   socket.emit('call:reject', { sessionId });
 };
 
-function endCall() {
+function endCall(showNotify = false) {
+  if (isProcessingEndCall) return;
+  isProcessingEndCall = true;
+
   if (peerConnection) {
     peerConnection.close();
     peerConnection = null;
@@ -330,8 +333,14 @@ function endCall() {
   remoteVideo.srcObject = null;
   localVideo.srcObject = null;
 
-  // Mobile: thoát chế độ full-screen
   document.body.classList.remove('in-call');
+
+  if (showNotify) {
+    alert('Cuộc gọi đã kết thúc.');
+  }
+
+  // Reset flag
+  setTimeout(() => { isProcessingEndCall = false; }, 1000);
 }
 
 endCallBtn.addEventListener('click', endCall);
