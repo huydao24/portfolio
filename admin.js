@@ -241,7 +241,7 @@ if (adminFlipBtn) {
     
     try {
       const oldVideoTrack = localStream.getVideoTracks()[0];
-      const audioTrack = localStream.getAudioTracks()[0]; // Lấy track audio hiện tại để giữ lại
+      const audioTrack = localStream.getAudioTracks()[0];
       
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: { 
@@ -253,26 +253,24 @@ if (adminFlipBtn) {
       
       const newVideoTrack = newStream.getVideoTracks()[0];
 
-      // TẠO LUỒNG MỚI KẾT HỢP: Video mới + Audio cũ
-      const combinedStream = new MediaStream([newVideoTrack]);
-      if (audioTrack) {
-        combinedStream.addTrack(audioTrack);
-      }
-      
-      localVideo.srcObject = combinedStream;
-      
-      // Thay thế track cho các PC
-      const allPCs = [peerConnection, ...Object.values(peerConnections || {})].filter(Boolean);
-      for (const pc of allPCs) {
-        const senders = pc.getSenders();
-        const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+      // Thay thế video track trong PeerConnection TRƯỚC khi stop track cũ
+      if (peerConnection) {
+        const videoSender = peerConnection.getSenders().find(s => s.track?.kind === 'video');
         if (videoSender) {
           await videoSender.replaceTrack(newVideoTrack);
+          console.log('Admin flip cam: replaceTrack thành công');
         }
       }
-      
+
+      // Stop track cũ SAU KHI đã replace xong
       if (oldVideoTrack) oldVideoTrack.stop();
-      localStream = combinedStream; // Cập nhật localStream (vẫn chứa đủ Audio/Video)
+
+      // Cập nhật localStream: xóa track cũ, thêm track mới
+      if (oldVideoTrack) localStream.removeTrack(oldVideoTrack);
+      localStream.addTrack(newVideoTrack);
+      
+      // Gán lại srcObject để hiển thị local preview
+      localVideo.srcObject = localStream;
       
       updateControlButtons();
     } catch (err) {
