@@ -17,6 +17,8 @@
       --glass-border: rgba(255, 255, 255, 0.12);
     }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Syne', system-ui, -apple-system, sans-serif;
       background-color: var(--bg);
@@ -24,11 +26,13 @@
       margin: 0;
       padding: 20px;
       min-height: 100vh;
+      min-height: 100dvh; /* Dynamic viewport height — tránh bị thanh address bar che */
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
+    /* === HEADER === */
     .header {
       width: 100%;
       max-width: 1000px;
@@ -40,30 +44,34 @@
 
     h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: clamp(20px, 5vw, 28px);
       font-weight: 800;
       background: linear-gradient(90deg, #00d4ff, #009866);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
+    /* === INCOMING CALLS === */
     #incoming-calls {
       width: 100%;
       max-width: 600px;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      padding: 0 4px;
     }
 
     .call-item {
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 15px;
+      padding: 12px 15px;
       border-radius: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      flex-wrap: wrap;
     }
 
     .btn {
@@ -73,6 +81,7 @@
       cursor: pointer;
       font-weight: 700;
       transition: 0.2s;
+      font-size: 14px;
     }
 
     .btn-accept { background: var(--success); color: white; }
@@ -86,7 +95,9 @@
       border-radius: 50px;
     }
 
-    /* === DESKTOP: Giữ nguyên giao diện 2 video cạnh nhau === */
+    /* ═══════════════════════════════════════════
+       VIDEO CONTAINER — Desktop mặc định
+       ═══════════════════════════════════════════ */
     #video-container {
       display: none;
       gap: 20px;
@@ -113,6 +124,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
     .video-label {
@@ -127,11 +139,22 @@
       z-index: 10;
       border: 1px solid var(--glass-border);
       color: white;
+      pointer-events: none;
+    }
+
+    /* Desktop controls — nhỏ gọn trên video box */
+    .desktop-controls {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
     }
 
     .control-btn-small {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: 1px solid var(--border);
       background: rgba(0,0,0,0.5);
@@ -141,6 +164,7 @@
       justify-content: center;
       cursor: pointer;
       transition: 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .control-btn-small:hover {
@@ -163,51 +187,45 @@
       z-index: 5;
     }
 
-    /* Desktop controls overlay — nhỏ gọn trên video box */
-    .desktop-controls {
-      position: absolute;
-      bottom: 15px;
-      right: 15px;
-      display: flex;
-      gap: 8px;
-      z-index: 20;
-    }
-
-    /* === MOBILE CALL CONTROLS (Giống bên khách) === */
+    /* ═══════════════════════════════════════════
+       MOBILE CALL CONTROLS — Floating bar
+       ═══════════════════════════════════════════ */
     .mobile-call-controls {
       display: none;
       position: fixed;
       bottom: 30px;
+      bottom: calc(30px + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%);
-      gap: 16px;
-      padding: 12px 24px;
+      gap: 14px;
+      padding: 10px 20px;
       background: var(--glass-bg);
       backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       border: 1px solid var(--glass-border);
       border-radius: 100px;
-      z-index: 20;
+      z-index: 100001;
     }
 
     .mobile-control-btn {
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       border: 1px solid rgba(255,255,255,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       background: #2d3436;
       color: white;
       box-shadow: 0 4px 15px rgba(0,0,0,0.3);
       position: relative;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .mobile-control-btn:hover {
-      background: #485460;
-      transform: translateY(-2px);
+    .mobile-control-btn:active {
+      transform: scale(0.92);
     }
 
     .mobile-control-btn.is-off {
@@ -217,116 +235,30 @@
 
     .mobile-control-btn.end-call {
       background: #eb4d4b;
-      width: 60px;
-      height: 60px;
+      width: 56px;
+      height: 56px;
     }
 
-    .mobile-control-btn.end-call:hover {
+    .mobile-control-btn.end-call:active {
       background: #ff6b81;
-      box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
     }
 
     .mobile-control-btn .btn-label {
       font-size: 8px;
       position: absolute;
-      bottom: -15px;
+      bottom: -14px;
       white-space: nowrap;
+      opacity: 0.7;
     }
 
-    /* === MOBILE: Chuyển sang full-screen giống giao diện khách === */
-    @media (max-width: 768px) {
-
-      body.in-call {
-        padding: 0;
-        overflow: hidden;
-      }
-
-      /* Ẩn header và incoming calls khi đang gọi */
-      body.in-call .header,
-      body.in-call #incoming-calls,
-      body.in-call .end-call-wrapper {
-        display: none !important;
-      }
-
-      /* Video container trở thành full-screen overlay */
-      body.in-call #video-container {
-        position: fixed !important;
-        inset: 0 !important;
-        max-width: none !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-        background: var(--call-bg) !important;
-        z-index: 99999 !important;
-        flex-wrap: nowrap !important;
-        gap: 0 !important;
-        flex-direction: column !important;
-      }
-
-      /* Remote video chiếm full screen */
-      body.in-call .video-box.remote-box {
-        position: absolute !important;
-        inset: 0 !important;
-        min-width: 100% !important;
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        z-index: 1;
-      }
-
-      /* Local video chuyển thành PIP nhỏ */
-      body.in-call .video-box.local-box {
-        position: absolute !important;
-        top: 20px !important;
-        right: 15px !important;
-        width: 130px !important;
-        height: auto !important;
-        aspect-ratio: 9/16;
-        min-width: 0 !important;
-        border-radius: 16px !important;
-        border: 2px solid var(--glass-border) !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
-        z-index: 10 !important;
-        overflow: hidden !important;
-        flex: none !important;
-      }
-
-      body.in-call .video-box.local-box .video-label {
-        font-size: 10px;
-        bottom: 6px;
-        left: 6px;
-        padding: 2px 6px;
-      }
-
-      /* Ẩn desktop controls */
-      body.in-call .desktop-controls {
-        display: none !important;
-      }
-
-      /* Hiện mobile call controls */
-      body.in-call .mobile-call-controls {
-        display: flex !important;
-      }
-
-      /* Call info trên mobile */
-      body.in-call .mobile-call-info {
-        display: block !important;
-      }
-
-      /* Ẩn nút end-call gốc trên mobile */
-      body.in-call #end-call-btn {
-        display: none !important;
-      }
-    }
-
-    /* Mặc định ẩn mobile-only elements */
+    /* ═══════════════════════════════════════════
+       MOBILE CALL INFO — Trạng thái cuộc gọi
+       ═══════════════════════════════════════════ */
     .mobile-call-info {
       display: none;
       position: fixed;
       top: 15px;
+      top: calc(15px + env(safe-area-inset-top, 0px));
       left: 15px;
       z-index: 100000;
       pointer-events: none;
@@ -334,7 +266,7 @@
 
     .mobile-call-info h2 {
       margin: 0 0 8px 0;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 700;
       text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
@@ -343,10 +275,10 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
+      padding: 5px 10px;
       background: rgba(0,0,0,0.5);
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       letter-spacing: 1px;
       width: fit-content;
     }
@@ -364,6 +296,264 @@
       0% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.5); opacity: 0.5; }
       100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE — Chế độ full-screen khi đang gọi (≤ 1024px)
+       Áp dụng cho tablet trở xuống
+       ═══════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+
+      body.in-call {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      body.in-call .header,
+      body.in-call #incoming-calls,
+      body.in-call .end-call-wrapper {
+        display: none !important;
+      }
+
+      /* Video container → full-screen overlay */
+      body.in-call #video-container {
+        position: fixed !important;
+        inset: 0 !important;
+        max-width: none !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        background: var(--call-bg) !important;
+        z-index: 99999 !important;
+        flex-wrap: nowrap !important;
+        gap: 0 !important;
+        flex-direction: column !important;
+      }
+
+      /* Remote video → full-screen */
+      body.in-call .video-box.remote-box {
+        position: absolute !important;
+        inset: 0 !important;
+        min-width: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        z-index: 1;
+      }
+
+      /* Local video → PIP */
+      body.in-call .video-box.local-box {
+        position: absolute !important;
+        top: 20px !important;
+        top: calc(20px + env(safe-area-inset-top, 0px)) !important;
+        right: 15px !important;
+        width: 180px !important;
+        height: auto !important;
+        aspect-ratio: 3/4;
+        min-width: 0 !important;
+        border-radius: 16px !important;
+        border: 2px solid var(--glass-border) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        z-index: 10 !important;
+        overflow: hidden !important;
+        flex: none !important;
+      }
+
+      body.in-call .video-box.local-box .video-label {
+        font-size: 11px;
+        bottom: 8px;
+        left: 8px;
+        padding: 2px 8px;
+      }
+
+      /* Ẩn desktop controls, hiện mobile controls */
+      body.in-call .desktop-controls {
+        display: none !important;
+      }
+
+      body.in-call .mobile-call-controls {
+        display: flex !important;
+      }
+
+      body.in-call .mobile-call-info {
+        display: block !important;
+      }
+
+      body.in-call #end-call-btn {
+        display: none !important;
+      }
+    }
+
+    /* ═══════════════════════════════════
+       PHONE ≤ 768px — PIP nhỏ hơn
+       ═══════════════════════════════════ */
+    @media (max-width: 768px) {
+
+      body {
+        padding: 16px;
+      }
+
+      .header {
+        margin-bottom: 20px;
+      }
+
+      .call-item {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      /* PIP nhỏ hơn trên phone */
+      body.in-call .video-box.local-box {
+        width: 130px !important;
+        top: 20px !important;
+        top: calc(20px + env(safe-area-inset-top, 0px)) !important;
+        right: 12px !important;
+      }
+
+      /* Controls nhỏ hơn */
+      .mobile-call-controls {
+        gap: 12px;
+        padding: 10px 18px;
+      }
+
+      .mobile-control-btn {
+        width: 46px;
+        height: 46px;
+      }
+
+      .mobile-control-btn.end-call {
+        width: 54px;
+        height: 54px;
+      }
+    }
+
+    /* ═══════════════════════════════════
+       SMALL PHONE ≤ 380px — Thu gọn thêm
+       ═══════════════════════════════════ */
+    @media (max-width: 380px) {
+
+      body {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 18px;
+      }
+
+      .call-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+      }
+
+      body.in-call .video-box.local-box {
+        width: 100px !important;
+        right: 10px !important;
+      }
+
+      .mobile-call-controls {
+        gap: 8px;
+        padding: 8px 14px;
+        bottom: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .mobile-control-btn {
+        width: 40px;
+        height: 40px;
+      }
+
+      .mobile-control-btn.end-call {
+        width: 48px;
+        height: 48px;
+      }
+
+      .mobile-control-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .mobile-control-btn.end-call svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .mobile-control-btn .btn-label {
+        display: none;
+      }
+
+      .mobile-call-info h2 {
+        font-size: 0.95rem;
+      }
+    }
+
+    /* ═══════════════════════════════════
+       LANDSCAPE trên phone — PIP sang trái
+       ═══════════════════════════════════ */
+    @media (max-height: 500px) and (orientation: landscape) {
+
+      body.in-call .video-box.local-box {
+        width: 120px !important;
+        top: 10px !important;
+        right: auto !important;
+        left: 15px !important;
+        left: calc(15px + env(safe-area-inset-left, 0px)) !important;
+        aspect-ratio: 4/3;
+      }
+
+      .mobile-call-controls {
+        bottom: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        gap: 10px;
+        padding: 8px 16px;
+      }
+
+      .mobile-control-btn {
+        width: 40px;
+        height: 40px;
+      }
+
+      .mobile-control-btn.end-call {
+        width: 48px;
+        height: 48px;
+      }
+
+      .mobile-control-btn .btn-label {
+        display: none;
+      }
+
+      .mobile-call-info {
+        top: 8px !important;
+        left: calc(150px + env(safe-area-inset-left, 0px)) !important;
+      }
+
+      .mobile-call-info h2 {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* ═══════════════════════════════════
+       TABLET 769-1024px — PIP lớn hơn
+       ═══════════════════════════════════ */
+    @media (min-width: 769px) and (max-width: 1024px) {
+
+      body.in-call .video-box.local-box {
+        width: 200px !important;
+      }
+
+      .mobile-control-btn {
+        width: 52px;
+        height: 52px;
+      }
+
+      .mobile-control-btn.end-call {
+        width: 60px;
+        height: 60px;
+      }
     }
   </style>
 
