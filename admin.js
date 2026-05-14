@@ -78,39 +78,22 @@ socket.on('call:ended', () => {
   endCall();
 });
 
+// Guest gửi Offer -> Admin xử lý và gửi lại Answer
 socket.on('webrtc:signal', async ({ senderId, signal }) => {
   if (senderId !== currentCallerId) return;
+  if (!peerConnection) return;
 
   if (signal.type === 'offer') {
-    // Should not happen for admin, as admin creates answer, but just in case
     await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
     socket.emit('webrtc:signal', { targetId: senderId, signal: peerConnection.localDescription });
-  } else if (signal.type === 'answer') {
-    // When Guest answers our offer, or Guest creates offer and we answered
-    // Actually, Guest sends Offer -> Admin sends Answer.
-    // Wait, let's establish the roles:
-    // Guest calls Admin -> Admin accepts.
-    // Admin creates Offer? Or Guest creates Offer?
-    // Let's have Admin create the Answer if Guest sends the Offer.
   } else if (signal.candidate) {
     try {
       await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
     } catch (e) {
       console.error('Error adding received ice candidate', e);
     }
-  }
-});
-
-// Since Guest initiated, let's have Guest create the Offer when Admin accepts.
-socket.on('webrtc:signal', async ({ senderId, signal }) => {
-  if (!peerConnection) return;
-  if (signal.type === 'offer') {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    socket.emit('webrtc:signal', { targetId: senderId, signal: peerConnection.localDescription });
   }
 });
 
