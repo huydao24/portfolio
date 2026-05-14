@@ -28,6 +28,12 @@ const adminMuteBtn = document.getElementById('admin-mute-btn');
 const adminVideoBtn = document.getElementById('admin-video-toggle-btn');
 const adminFlipBtn = document.getElementById('admin-flip-btn');
 
+// Mobile DOM Elements
+const mMuteBtn = document.getElementById('m-admin-mute-btn');
+const mVideoBtn = document.getElementById('m-admin-video-btn');
+const mFlipBtn = document.getElementById('m-admin-flip-btn');
+const mEndBtn = document.getElementById('m-admin-end-btn');
+
 let currentFacingMode = 'user';
 let isAdminAuthenticated = false;
 let cachedAdminPassword = null;
@@ -145,6 +151,9 @@ window.acceptCall = async (sessionId, callerId) => {
     videoContainer.style.display = 'flex';
     endCallBtn.style.display = 'inline-block';
 
+    // Mobile: kích hoạt chế độ full-screen
+    document.body.classList.add('in-call');
+
     // Initialize WebRTC
     peerConnection = new RTCPeerConnection(peerConnectionConfig);
 
@@ -183,29 +192,35 @@ function updateControlButtons() {
   const audioTrack = localStream.getAudioTracks()[0];
   const videoTrack = localStream.getVideoTracks()[0];
 
+  const isMuted = !audioTrack.enabled;
+  const isVideoOff = !videoTrack.enabled;
+
+  // Desktop buttons
   if (adminMuteBtn) {
-    const isMuted = !audioTrack.enabled;
     adminMuteBtn.classList.toggle('is-off', isMuted);
     adminMuteBtn.title = isMuted ? "Bật Mic" : "Tắt Mic";
   }
   if (adminVideoBtn) {
-    const isVideoOff = !videoTrack.enabled;
     adminVideoBtn.classList.toggle('is-off', isVideoOff);
     adminVideoBtn.title = isVideoOff ? "Bật Camera" : "Tắt Camera";
+  }
 
-    // Toggle placeholder
-    let placeholder = document.getElementById('admin-video-placeholder');
-    if (isVideoOff) {
-      if (!placeholder) {
-        placeholder = document.createElement('div');
-        placeholder.id = 'admin-video-placeholder';
-        placeholder.className = 'video-off-placeholder';
-        placeholder.innerHTML = '<div style="font-size: 30px;">📷</div><div style="margin-top:8px; font-size:11px; color:#888;">Camera tắt</div>';
-        localVideo.parentElement.appendChild(placeholder);
-      }
-    } else if (placeholder) {
-      placeholder.remove();
+  // Mobile buttons — sync trạng thái
+  if (mMuteBtn) mMuteBtn.classList.toggle('is-off', isMuted);
+  if (mVideoBtn) mVideoBtn.classList.toggle('is-off', isVideoOff);
+
+  // Toggle placeholder
+  let placeholder = document.getElementById('admin-video-placeholder');
+  if (isVideoOff) {
+    if (!placeholder) {
+      placeholder = document.createElement('div');
+      placeholder.id = 'admin-video-placeholder';
+      placeholder.className = 'video-off-placeholder';
+      placeholder.innerHTML = '<div style="font-size: 30px;">📷</div><div style="margin-top:8px; font-size:11px; color:#888;">Camera tắt</div>';
+      localVideo.parentElement.appendChild(placeholder);
     }
+  } else if (placeholder) {
+    placeholder.remove();
   }
 }
 
@@ -314,6 +329,79 @@ function endCall() {
   endCallBtn.style.display = 'none';
   remoteVideo.srcObject = null;
   localVideo.srcObject = null;
+
+  // Mobile: thoát chế độ full-screen
+  document.body.classList.remove('in-call');
 }
 
 endCallBtn.addEventListener('click', endCall);
+
+// === MOBILE CONTROLS ===
+if (mMuteBtn) {
+  mMuteBtn.addEventListener('click', () => {
+    if (localStream) {
+      const track = localStream.getAudioTracks()[0];
+      track.enabled = !track.enabled;
+      updateControlButtons();
+    }
+  });
+}
+
+if (mVideoBtn) {
+  mVideoBtn.addEventListener('click', () => {
+    if (localStream) {
+      const track = localStream.getVideoTracks()[0];
+      track.enabled = !track.enabled;
+      updateControlButtons();
+    }
+  });
+}
+
+if (mFlipBtn) {
+  mFlipBtn.addEventListener('click', async () => {
+    if (!localStream || mFlipBtn.disabled) return;
+    
+    mFlipBtn.disabled = true;
+    mFlipBtn.style.opacity = '0.5';
+    
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    
+    try {
+      const oldVideoTrack = localStream.getVideoTracks()[0];
+      
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: currentFacingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      const newVideoTrack = newStream.getVideoTracks()[0];
+
+      if (peerConnection) {
+        const videoSender = peerConnection.getSenders().find(s => s.track?.kind === 'video');
+        if (videoSender) {
+          await videoSender.replaceTrack(newVideoTrack);
+        }
+      }
+
+      if (oldVideoTrack) oldVideoTrack.stop();
+      if (oldVideoTrack) localStream.removeTrack(oldVideoTrack);
+      localStream.addTrack(newVideoTrack);
+      localVideo.srcObject = localStream;
+      
+      updateControlButtons();
+    } catch (err) {
+      console.error("Lỗi xoay camera Admin (mobile):", err);
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    } finally {
+      mFlipBtn.disabled = false;
+      mFlipBtn.style.opacity = '1';
+    }
+  });
+}
+
+if (mEndBtn) {
+  mEndBtn.addEventListener('click', endCall);
+}

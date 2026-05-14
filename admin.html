@@ -12,6 +12,9 @@
       --accent: #00d4ff;
       --danger: #ff4757;
       --success: #2ed573;
+      --call-bg: rgba(10, 10, 10, 0.98);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
     }
 
     body {
@@ -83,6 +86,7 @@
       border-radius: 50px;
     }
 
+    /* === DESKTOP: Giữ nguyên giao diện 2 video cạnh nhau === */
     #video-container {
       display: none;
       gap: 20px;
@@ -121,6 +125,8 @@
       border-radius: 6px;
       font-size: 13px;
       z-index: 10;
+      border: 1px solid var(--glass-border);
+      color: white;
     }
 
     .control-btn-small {
@@ -156,6 +162,209 @@
       flex-direction: column;
       z-index: 5;
     }
+
+    /* Desktop controls overlay — nhỏ gọn trên video box */
+    .desktop-controls {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
+    }
+
+    /* === MOBILE CALL CONTROLS (Giống bên khách) === */
+    .mobile-call-controls {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      gap: 16px;
+      padding: 12px 24px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      z-index: 20;
+    }
+
+    .mobile-control-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: #2d3436;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .mobile-control-btn:hover {
+      background: #485460;
+      transform: translateY(-2px);
+    }
+
+    .mobile-control-btn.is-off {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .mobile-control-btn.end-call {
+      background: #eb4d4b;
+      width: 60px;
+      height: 60px;
+    }
+
+    .mobile-control-btn.end-call:hover {
+      background: #ff6b81;
+      box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+    }
+
+    .mobile-control-btn .btn-label {
+      font-size: 8px;
+      position: absolute;
+      bottom: -15px;
+      white-space: nowrap;
+    }
+
+    /* === MOBILE: Chuyển sang full-screen giống giao diện khách === */
+    @media (max-width: 768px) {
+
+      body.in-call {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      /* Ẩn header và incoming calls khi đang gọi */
+      body.in-call .header,
+      body.in-call #incoming-calls,
+      body.in-call .end-call-wrapper {
+        display: none !important;
+      }
+
+      /* Video container trở thành full-screen overlay */
+      body.in-call #video-container {
+        position: fixed !important;
+        inset: 0 !important;
+        max-width: none !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        background: var(--call-bg) !important;
+        z-index: 99999 !important;
+        flex-wrap: nowrap !important;
+        gap: 0 !important;
+        flex-direction: column !important;
+      }
+
+      /* Remote video chiếm full screen */
+      body.in-call .video-box.remote-box {
+        position: absolute !important;
+        inset: 0 !important;
+        min-width: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        z-index: 1;
+      }
+
+      /* Local video chuyển thành PIP nhỏ */
+      body.in-call .video-box.local-box {
+        position: absolute !important;
+        top: 20px !important;
+        right: 15px !important;
+        width: 130px !important;
+        height: auto !important;
+        aspect-ratio: 9/16;
+        min-width: 0 !important;
+        border-radius: 16px !important;
+        border: 2px solid var(--glass-border) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        z-index: 10 !important;
+        overflow: hidden !important;
+        flex: none !important;
+      }
+
+      body.in-call .video-box.local-box .video-label {
+        font-size: 10px;
+        bottom: 6px;
+        left: 6px;
+        padding: 2px 6px;
+      }
+
+      /* Ẩn desktop controls */
+      body.in-call .desktop-controls {
+        display: none !important;
+      }
+
+      /* Hiện mobile call controls */
+      body.in-call .mobile-call-controls {
+        display: flex !important;
+      }
+
+      /* Call info trên mobile */
+      body.in-call .mobile-call-info {
+        display: block !important;
+      }
+
+      /* Ẩn nút end-call gốc trên mobile */
+      body.in-call #end-call-btn {
+        display: none !important;
+      }
+    }
+
+    /* Mặc định ẩn mobile-only elements */
+    .mobile-call-info {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 100000;
+      pointer-events: none;
+    }
+
+    .mobile-call-info h2 {
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      width: fit-content;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(1); opacity: 1; }
+    }
   </style>
 
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
@@ -168,17 +377,26 @@
 
   <div id="incoming-calls"></div>
 
+  <!-- Mobile Call Info (hiện khi đang gọi trên mobile) -->
+  <div class="mobile-call-info" id="mobile-call-info">
+    <h2>Đang gọi...</h2>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span>LIVE</span>
+    </div>
+  </div>
+
   <div id="video-container">
-    <div class="video-box">
+    <div class="video-box remote-box">
       <video id="remoteVideo" autoplay playsinline></video>
       <div class="video-label">Khách</div>
     </div>
-    <div class="video-box">
+    <div class="video-box local-box">
       <video id="localVideo" autoplay playsinline muted></video>
       <div class="video-label">Admin (Bạn)</div>
       
-      <!-- Admin Controls Overlay -->
-      <div style="position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; z-index: 20;">
+      <!-- Desktop Controls Overlay -->
+      <div class="desktop-controls">
         <button class="control-btn-small" id="admin-mute-btn" title="Tắt/Bật Mic">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
         </button>
@@ -188,13 +406,34 @@
         <button class="control-btn-small" id="admin-flip-btn" title="Xoay Camera">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
         </button>
-
       </div>
 
     </div>
   </div>
 
-  <div style="width: 100%; text-align: center;">
+  <!-- Mobile Floating Call Controls (giống bên khách) -->
+  <div class="mobile-call-controls" id="mobile-call-controls">
+    <button class="mobile-control-btn" id="m-admin-mute-btn" title="Tắt/Bật Mic">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+      <span class="btn-label">Mic</span>
+    </button>
+    <button class="mobile-control-btn" id="m-admin-video-btn" title="Tắt/Bật Camera">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+      <span class="btn-label">Cam</span>
+    </button>
+    <button class="mobile-control-btn" id="m-admin-flip-btn" title="Xoay Camera">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+      <span class="btn-label">Flip</span>
+    </button>
+    <button class="mobile-control-btn end-call" id="m-admin-end-btn" title="Kết thúc cuộc gọi">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 .7.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+        <line x1="23" y1="1" x2="1" y2="23" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="end-call-wrapper" style="width: 100%; text-align: center;">
     <button class="btn btn-end" id="end-call-btn">Kết thúc cuộc gọi</button>
   </div>
 
