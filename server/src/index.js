@@ -1052,13 +1052,23 @@ io.on('connection', (socket) => {
   // WebRTC & Video Call Signaling
   socket.on('call:request', async ({ sessionId }) => {
     console.log(`[VideoCall] 📢 Nhận yêu cầu gọi từ: ${sessionId}`);
-    
+
+    // ── Chống duplicate: nếu cuộc gọi cùng sessionId đã được xử lý trong 10 giây qua, bỏ qua ──
+    const existing = pendingCalls.get(sessionId);
+    const now = Date.now();
+    if (existing && existing.requestedAt && (now - existing.requestedAt) < 10000) {
+      console.log(`[VideoCall] ⚠️ Bỏ qua call:request trùng lặp từ ${sessionId} (cooldown 10s)`);
+      // Vẫn emit call:incoming cho admin đang online (không gửi Telegram lần 2)
+      socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
+      return;
+    }
+
     // 1. Tạo OTP ngẫu nhiên 6 số
     currentAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    adminOTPExpiry = Date.now() + 5 * 60 * 1000; // Hiệu lực 5 phút
-    
-    // 2. Lưu vào danh sách chờ
-    const callData = { sessionId, callerId: socket.id };
+    adminOTPExpiry = now + 5 * 60 * 1000; // Hiệu lực 5 phút
+
+    // 2. Lưu vào danh sách chờ (kèm timestamp để chống duplicate)
+    const callData = { sessionId, callerId: socket.id, requestedAt: now };
     pendingCalls.set(sessionId, callData);
 
     // 3. Gửi cho các admin đang trực tuyến qua Socket

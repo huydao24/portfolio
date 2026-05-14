@@ -29,28 +29,45 @@ const adminVideoBtn = document.getElementById('admin-video-toggle-btn');
 const adminFlipBtn = document.getElementById('admin-flip-btn');
 
 let currentFacingMode = 'user';
+let isAdminAuthenticated = false;
+let cachedAdminPassword = null;
 
 // --- SOCKET LOGIC ---
 socket.on('connect', () => {
   console.log('Connected to server');
+
+  if (isAdminAuthenticated && cachedAdminPassword) {
+    // Reconnect sau khi đã xác thực: tự join lại mà không hỏi lại
+    socket.emit('admin:join', { password: cachedAdminPassword });
+    return;
+  }
+
   const password = prompt('Nhập mã OTP Admin (kiểm tra Telegram):');
   if (password) {
+    cachedAdminPassword = password;
     socket.emit('admin:join', { password });
   }
 });
 
 socket.on('admin:auth_success', () => {
   console.log('Admin Authenticated');
+  isAdminAuthenticated = true;
   alert('Đăng nhập Admin thành công. Đang chờ cuộc gọi...');
 });
 
 socket.on('chat error', (data) => {
-  alert('Lỗi: ' + data.error);
+  // Nếu OTP hết hạn trong lúc đang reconnect, reset và hỏi lại
   if (data.error.includes('OTP') || data.error.includes('mật khẩu')) {
-    const password = prompt('Nhập lại mã OTP hoặc mật khẩu Admin:');
+    isAdminAuthenticated = false;
+    cachedAdminPassword = null;
+    alert('Lỗi: ' + data.error);
+    const password = prompt('Nhập lại mã OTP Admin:');
     if (password) {
+      cachedAdminPassword = password;
       socket.emit('admin:join', { password });
     }
+  } else {
+    alert('Lỗi: ' + data.error);
   }
 });
 
