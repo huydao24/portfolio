@@ -1096,6 +1096,12 @@ async function attemptIceRestart() {
     return;
   }
 
+  // Nếu socket chưa kết nối, signal không gửi được → không lock flag
+  if (!socket || !socket.connected) {
+    console.log('[WebRTC Guest] Socket chưa kết nối, hoãn ICE restart...');
+    return;
+  }
+
   if (isReconnecting) {
     console.log('[WebRTC Guest] Đang trong quá trình reconnect, bỏ qua...');
     return;
@@ -1168,12 +1174,38 @@ function attachWebRTCSocketEvents() {
     callAdminId = adminId;
 
     // ── TRƯỜNG HỢP RECONNECT: Admin đổi mạng, socket mới, gửi lại call:accept ──
-    // Nếu đã có PeerConnection (cuộc gọi đang diễn ra), chỉ cập nhật adminId.
-    // KHÔNG tạo mới PeerConnection, không tạo offer mới.
-    // ICE restart sẽ do admin chủ động gửi offer.
     if (guestPeerConnection && oldAdminId) {
-      console.log(`[WebRTC Guest] Admin reconnected: ${oldAdminId} → ${adminId}. Waiting for ICE restart...`);
-      videoCallStatus.innerText = 'Đang khôi phục kết nối...';
+      // Reset flag từ lần ICE restart thất bại trước
+      isReconnecting = false;
+
+      const iceState = guestPeerConnection.iceConnectionState;
+      const sigState = guestPeerConnection.signalingState;
+      const isDead = iceState === 'failed' || iceState === 'closed' || sigState === 'closed';
+
+      console.log(`[WebRTC Guest] Admin reconnected: ${oldAdminId} → ${adminId}. ICE=${iceState}, Sig=${sigState}, dead=${isDead}`);
+
+      if (isDead) {
+        // PeerConnection đã chết → tạo mới hoàn toàn + gửi offer mới
+        console.log('[WebRTC Guest] PeerConnection dead → full reconnect...');
+        try { guestPeerConnection.close(); } catch(e) {}
+        setupGuestPeerConnection();
+
+        try {
+          const offer = await guestPeerConnection.createOffer();
+          await guestPeerConnection.setLocalDescription(offer);
+          socket.emit('webrtc:signal', {
+            targetId: callAdminId,
+            signal: guestPeerConnection.localDescription,
+          });
+          videoCallStatus.innerText = 'Đang khôi phục kết nối...';
+        } catch (e) {
+          console.error('[WebRTC Guest] Full reconnect offer failed:', e);
+          videoCallStatus.innerText = '❌ Không thể khôi phục';
+        }
+      } else {
+        // PeerConnection còn sống, chờ admin ICE restart
+        videoCallStatus.innerText = 'Đang khôi phục kết nối...';
+      }
       return;
     }
 

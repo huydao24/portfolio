@@ -65,20 +65,37 @@ socket.on('admin:auth_success', () => {
   const wasAlreadyAuthenticated = isAdminAuthenticated;
   isAdminAuthenticated = true;
 
-  // Nếu đang trong cuộc gọi (reconnect sau đổi mạng): KHÔNG hiện alert,
-  // thay vào đó re-accept để guest nhận được adminId mới.
+  // Nếu đang trong cuộc gọi (reconnect sau đổi mạng):
   if (currentCallerId && localStream && callSessionId) {
-    console.log('[WebRTC Admin] Reconnect during call: re-accepting to update adminId...');
-    // Gửi lại call:accept → server emit call:accepted với socket.id mới → guest cập nhật
+    // Luôn reset flag trước
+    isReconnecting = false;
+
+    const iceState = peerConnection?.iceConnectionState;
+    const sigState = peerConnection?.signalingState;
+    const isDead = !peerConnection || iceState === 'failed' || iceState === 'closed' || sigState === 'closed';
+
+    console.log(`[WebRTC Admin] Reconnect: ICE=${iceState}, Sig=${sigState}, dead=${isDead}`);
+
+    if (isDead) {
+      // PeerConnection đã chết (tắt 4G lâu) → tạo mới hoàn toàn
+      console.log('[WebRTC Admin] PeerConnection dead → full reconnect...');
+      if (peerConnection) { try { peerConnection.close(); } catch(e) {} }
+      setupAdminPeerConnection();
+    }
+
+    // Gửi lại call:accept → guest nhận adminId mới
+    // Nếu PeerConnection vừa được tạo mới, guest sẽ gửi offer mới
+    // Nếu PeerConnection còn sống, thử ICE restart sau 1.5s
     socket.emit('call:accept', { sessionId: callSessionId });
 
-    // Chờ rồi thử ICE restart nếu PeerConnection vẫn còn sống
-    setTimeout(() => {
-      if (peerConnection && peerConnection.iceConnectionState !== 'connected'
-          && peerConnection.iceConnectionState !== 'completed') {
-        attemptAdminIceRestart();
-      }
-    }, 1500);
+    if (!isDead) {
+      setTimeout(() => {
+        if (peerConnection && peerConnection.iceConnectionState !== 'connected'
+            && peerConnection.iceConnectionState !== 'completed') {
+          attemptAdminIceRestart();
+        }
+      }, 1500);
+    }
     return;
   }
 
@@ -168,6 +185,12 @@ async function attemptAdminIceRestart() {
     return;
   }
 
+  // Nếu socket chưa kết nối, signal không gửi được → không lock flag
+  if (!socket.connected) {
+    console.log('[WebRTC Admin] Socket chưa kết nối, hoãn ICE restart...');
+    return;
+  }
+
   if (isReconnecting) {
     console.log('[WebRTC Admin] Đang trong quá trình reconnect, bỏ qua...');
     return;
@@ -209,6 +232,61 @@ async function setupLocalStream() {
   }
 }
 
+/**
+ * Thiết lập PeerConnection cho Admin với đầy đủ event handlers.
+ * Dùng khi accept call lần đầu và khi full reconnect sau mất mạng lâu.
+ */
+function setupAdminPeerConnection() {
+  peerConnection = new RTCPeerConnection(peerConnectionConfig);
+
+  // Add local stream tracks
+  if (localStream) {
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+  }
+
+  // Handle incoming streams
+  peerConnection.ontrack = (event) => {
+    remoteVideo.srcObject = event.streams[0];
+  };
+
+  // Handle ICE candidates - dùng currentCallerId (không dùng closure variable)
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate && currentCallerId) {
+      socket.emit('webrtc:signal', {
+        targetId: currentCallerId,
+        signal: event.candidate
+      });
+    }
+  };
+
+  // ── ICE Connection Monitoring (Admin) ──
+  peerConnection.oniceconnectionstatechange = () => {
+    const state = peerConnection?.iceConnectionState;
+    console.log(`[WebRTC Admin] ICE state: ${state}`);
+
+    if (state === 'disconnected') {
+      if (iceRestartTimer) clearTimeout(iceRestartTimer);
+      iceRestartTimer = setTimeout(() => {
+        attemptAdminIceRestart();
+      }, 3000);
+    } else if (state === 'failed') {
+      attemptAdminIceRestart();
+    } else if (state === 'connected' || state === 'completed') {
+      if (iceRestartTimer) {
+        clearTimeout(iceRestartTimer);
+        iceRestartTimer = null;
+      }
+      isReconnecting = false;
+    } else if (state === 'closed') {
+      if (iceRestartTimer) clearTimeout(iceRestartTimer);
+    }
+  };
+
+  return peerConnection;
+}
+
 window.acceptCall = async (sessionId, callerId) => {
   // Remove incoming call UI
   const callEl = document.getElementById(`call-${callerId}`);
@@ -225,51 +303,8 @@ window.acceptCall = async (sessionId, callerId) => {
     // Mobile: kích hoạt chế độ full-screen
     document.body.classList.add('in-call');
 
-    // Initialize WebRTC
-    peerConnection = new RTCPeerConnection(peerConnectionConfig);
-
-    // Add local stream tracks to peer connection
-    localStream.getTracks().forEach(track => {
-      peerConnection.addTrack(track, localStream);
-    });
-
-    // Handle incoming streams
-    peerConnection.ontrack = (event) => {
-      remoteVideo.srcObject = event.streams[0];
-    };
-
-    // Handle ICE candidates
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit('webrtc:signal', {
-          targetId: callerId,
-          signal: event.candidate
-        });
-      }
-    };
-
-    // ── ICE Connection Monitoring (Admin) ──
-    peerConnection.oniceconnectionstatechange = () => {
-      const state = peerConnection?.iceConnectionState;
-      console.log(`[WebRTC Admin] ICE state: ${state}`);
-
-      if (state === 'disconnected') {
-        if (iceRestartTimer) clearTimeout(iceRestartTimer);
-        iceRestartTimer = setTimeout(() => {
-          attemptAdminIceRestart();
-        }, 3000);
-      } else if (state === 'failed') {
-        attemptAdminIceRestart();
-      } else if (state === 'connected' || state === 'completed') {
-        if (iceRestartTimer) {
-          clearTimeout(iceRestartTimer);
-          iceRestartTimer = null;
-        }
-        isReconnecting = false;
-      } else if (state === 'closed') {
-        if (iceRestartTimer) clearTimeout(iceRestartTimer);
-      }
-    };
+    // Initialize WebRTC bằng helper function
+    setupAdminPeerConnection();
 
     // Notify guest that we accepted, Guest will send an Offer
     socket.emit('call:accept', { sessionId });
