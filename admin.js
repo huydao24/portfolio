@@ -49,19 +49,7 @@ socket.on('connect', () => {
   if (isAdminAuthenticated && cachedAdminPassword) {
     // Reconnect sau khi đã xác thực: tự join lại mà không hỏi lại
     socket.emit('admin:join', { password: cachedAdminPassword });
-
-    // Nếu đang trong cuộc gọi, thông báo server socket mới
-    if (currentCallerId && localStream && callSessionId) {
-      console.log('[WebRTC Admin] Socket reconnected during call, sending call:reconnect...');
-      socket.emit('call:reconnect', { sessionId: callSessionId, role: 'admin' });
-
-      // Chờ rồi thử ICE restart nếu PeerConnection vẫn còn sống
-      setTimeout(() => {
-        if (peerConnection && peerConnection.iceConnectionState !== 'connected') {
-          attemptAdminIceRestart();
-        }
-      }, 1500);
-    }
+    // Xử lý reconnect cuộc gọi sẽ nằm trong admin:auth_success handler
     return;
   }
 
@@ -74,8 +62,30 @@ socket.on('connect', () => {
 
 socket.on('admin:auth_success', () => {
   console.log('Admin Authenticated');
+  const wasAlreadyAuthenticated = isAdminAuthenticated;
   isAdminAuthenticated = true;
-  alert('Đăng nhập Admin thành công. Đang chờ cuộc gọi...');
+
+  // Nếu đang trong cuộc gọi (reconnect sau đổi mạng): KHÔNG hiện alert,
+  // thay vào đó re-accept để guest nhận được adminId mới.
+  if (currentCallerId && localStream && callSessionId) {
+    console.log('[WebRTC Admin] Reconnect during call: re-accepting to update adminId...');
+    // Gửi lại call:accept → server emit call:accepted với socket.id mới → guest cập nhật
+    socket.emit('call:accept', { sessionId: callSessionId });
+
+    // Chờ rồi thử ICE restart nếu PeerConnection vẫn còn sống
+    setTimeout(() => {
+      if (peerConnection && peerConnection.iceConnectionState !== 'connected'
+          && peerConnection.iceConnectionState !== 'completed') {
+        attemptAdminIceRestart();
+      }
+    }, 1500);
+    return;
+  }
+
+  // Chỉ hiện alert khi đăng nhập lần đầu (không phải reconnect)
+  if (!wasAlreadyAuthenticated) {
+    alert('Đăng nhập Admin thành công. Đang chờ cuộc gọi...');
+  }
 });
 
 socket.on('chat error', (data) => {
@@ -134,7 +144,6 @@ socket.on('webrtc:signal', async ({ senderId, signal }) => {
       await peerConnection.setLocalDescription(answer);
       socket.emit('webrtc:signal', {
         targetId: senderId,
-        sessionId: callSessionId,
         signal: peerConnection.localDescription,
       });
     } else if (signal.type === 'answer') {
@@ -148,16 +157,9 @@ socket.on('webrtc:signal', async ({ senderId, signal }) => {
   }
 });
 
-// Khi đối phương reconnect (đổi mạng), cập nhật targetId mới
-socket.on('call:peer_reconnected', ({ sessionId, newPeerId, role }) => {
-  if (role === 'guest') {
-    console.log(`[WebRTC Admin] Guest reconnected: ${currentCallerId} → ${newPeerId}`);
-    currentCallerId = newPeerId;
-  }
-});
-
 /**
  * ICE restart cho Admin: tạo offer mới với iceRestart=true
+ * Dùng khi chuyển mạng (WiFi→4G, on/off 4G...)
  */
 async function attemptAdminIceRestart() {
   if (!peerConnection || peerConnection.signalingState === 'closed') {
@@ -174,14 +176,11 @@ async function attemptAdminIceRestart() {
   isReconnecting = true;
   console.log('[WebRTC Admin] 🔄 Bắt đầu ICE restart...');
 
-  socket.emit('call:reconnect', { sessionId: callSessionId, role: 'admin' });
-
   try {
     const offer = await peerConnection.createOffer({ iceRestart: true });
     await peerConnection.setLocalDescription(offer);
     socket.emit('webrtc:signal', {
       targetId: currentCallerId,
-      sessionId: callSessionId,
       signal: peerConnection.localDescription,
     });
     console.log('[WebRTC Admin] ✅ ICE restart offer sent');
@@ -244,7 +243,6 @@ window.acceptCall = async (sessionId, callerId) => {
       if (event.candidate) {
         socket.emit('webrtc:signal', {
           targetId: callerId,
-          sessionId: callSessionId,
           signal: event.candidate
         });
       }
