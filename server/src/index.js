@@ -906,6 +906,9 @@ app.get('/', (req, res) => {
   });
 });
 
+// Quản lý các cuộc gọi đang diễn ra để hỗ trợ Reconnection (đổi mạng Wifi/4G)
+const activeCalls = {}; 
+
 io.on('connection', (socket) => {
   socket.on('chat:join', ({ sessionId } = {}) => {
     const normalizedSessionId = String(sessionId || '').trim();
