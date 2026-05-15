@@ -17,6 +17,9 @@ const peerConnectionConfig = {
 let peerConnection;
 let localStream;
 let currentCallerId = null; // socket ID of the guest
+let callSessionId = null;   // sessionId of the active call
+let iceRestartTimer = null;
+let isReconnecting = false;
 
 // DOM Elements
 const incomingCallsContainer = document.getElementById('incoming-calls');
@@ -46,6 +49,19 @@ socket.on('connect', () => {
   if (isAdminAuthenticated && cachedAdminPassword) {
     // Reconnect sau khi đã xác thực: tự join lại mà không hỏi lại
     socket.emit('admin:join', { password: cachedAdminPassword });
+
+    // Nếu đang trong cuộc gọi, thông báo server socket mới
+    if (currentCallerId && localStream && callSessionId) {
+      console.log('[WebRTC Admin] Socket reconnected during call, sending call:reconnect...');
+      socket.emit('call:reconnect', { sessionId: callSessionId, role: 'admin' });
+
+      // Chờ rồi thử ICE restart nếu PeerConnection vẫn còn sống
+      setTimeout(() => {
+        if (peerConnection && peerConnection.iceConnectionState !== 'connected') {
+          attemptAdminIceRestart();
+        }
+      }, 1500);
+    }
     return;
   }
 
@@ -103,22 +119,77 @@ socket.on('call:ended', () => {
 
 // Guest gửi Offer -> Admin xử lý và gửi lại Answer
 socket.on('webrtc:signal', async ({ senderId, signal }) => {
-  if (senderId !== currentCallerId) return;
   if (!peerConnection) return;
 
-  if (signal.type === 'offer') {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    socket.emit('webrtc:signal', { targetId: senderId, signal: peerConnection.localDescription });
-  } else if (signal.candidate) {
-    try {
+  // Cập nhật callerId nếu nhận signal từ peer mới (sau reconnect)
+  if (senderId !== currentCallerId && currentCallerId) {
+    console.log(`[WebRTC Admin] Cập nhật callerId: ${currentCallerId} → ${senderId}`);
+    currentCallerId = senderId;
+  }
+
+  try {
+    if (signal.type === 'offer') {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      socket.emit('webrtc:signal', {
+        targetId: senderId,
+        sessionId: callSessionId,
+        signal: peerConnection.localDescription,
+      });
+    } else if (signal.type === 'answer') {
+      // Admin nhận answer (khi Admin là bên gửi offer, ví dụ ICE restart)
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+    } else if (signal.candidate) {
       await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
-    } catch (e) {
-      console.error('Error adding received ice candidate', e);
     }
+  } catch (e) {
+    console.error('[WebRTC Admin] Signal handling error:', e);
   }
 });
+
+// Khi đối phương reconnect (đổi mạng), cập nhật targetId mới
+socket.on('call:peer_reconnected', ({ sessionId, newPeerId, role }) => {
+  if (role === 'guest') {
+    console.log(`[WebRTC Admin] Guest reconnected: ${currentCallerId} → ${newPeerId}`);
+    currentCallerId = newPeerId;
+  }
+});
+
+/**
+ * ICE restart cho Admin: tạo offer mới với iceRestart=true
+ */
+async function attemptAdminIceRestart() {
+  if (!peerConnection || peerConnection.signalingState === 'closed') {
+    console.log('[WebRTC Admin] PeerConnection đã đóng, không thể ICE restart');
+    isReconnecting = false;
+    return;
+  }
+
+  if (isReconnecting) {
+    console.log('[WebRTC Admin] Đang trong quá trình reconnect, bỏ qua...');
+    return;
+  }
+
+  isReconnecting = true;
+  console.log('[WebRTC Admin] 🔄 Bắt đầu ICE restart...');
+
+  socket.emit('call:reconnect', { sessionId: callSessionId, role: 'admin' });
+
+  try {
+    const offer = await peerConnection.createOffer({ iceRestart: true });
+    await peerConnection.setLocalDescription(offer);
+    socket.emit('webrtc:signal', {
+      targetId: currentCallerId,
+      sessionId: callSessionId,
+      signal: peerConnection.localDescription,
+    });
+    console.log('[WebRTC Admin] ✅ ICE restart offer sent');
+  } catch (e) {
+    console.error('[WebRTC Admin] ICE restart failed:', e);
+    isReconnecting = false;
+  }
+}
 
 // --- MEDIA & CALL LOGIC ---
 async function setupLocalStream() {
@@ -126,7 +197,7 @@ async function setupLocalStream() {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     localVideo.srcObject = localStream;
     updateControlButtons();
-    
+
     // Đảm bảo micro được bật
     const audioTrack = localStream.getAudioTracks()[0];
     if (audioTrack) {
@@ -148,6 +219,7 @@ window.acceptCall = async (sessionId, callerId) => {
     await setupLocalStream();
 
     currentCallerId = callerId;
+    callSessionId = sessionId;
     videoContainer.style.display = 'flex';
     endCallBtn.style.display = 'inline-block';
 
@@ -172,8 +244,32 @@ window.acceptCall = async (sessionId, callerId) => {
       if (event.candidate) {
         socket.emit('webrtc:signal', {
           targetId: callerId,
+          sessionId: callSessionId,
           signal: event.candidate
         });
+      }
+    };
+
+    // ── ICE Connection Monitoring (Admin) ──
+    peerConnection.oniceconnectionstatechange = () => {
+      const state = peerConnection?.iceConnectionState;
+      console.log(`[WebRTC Admin] ICE state: ${state}`);
+
+      if (state === 'disconnected') {
+        if (iceRestartTimer) clearTimeout(iceRestartTimer);
+        iceRestartTimer = setTimeout(() => {
+          attemptAdminIceRestart();
+        }, 3000);
+      } else if (state === 'failed') {
+        attemptAdminIceRestart();
+      } else if (state === 'connected' || state === 'completed') {
+        if (iceRestartTimer) {
+          clearTimeout(iceRestartTimer);
+          iceRestartTimer = null;
+        }
+        isReconnecting = false;
+      } else if (state === 'closed') {
+        if (iceRestartTimer) clearTimeout(iceRestartTimer);
       }
     };
 
@@ -248,24 +344,24 @@ if (adminVideoBtn) {
 if (adminFlipBtn) {
   adminFlipBtn.addEventListener('click', async () => {
     if (!localStream || adminFlipBtn.disabled) return;
-    
+
     adminFlipBtn.disabled = true;
     adminFlipBtn.style.opacity = '0.5';
-    
+
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    
+
     try {
       const oldVideoTrack = localStream.getVideoTracks()[0];
       const audioTrack = localStream.getAudioTracks()[0];
-      
+
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: currentFacingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
       });
-      
+
       const newVideoTrack = newStream.getVideoTracks()[0];
 
       // Thay thế video track trong PeerConnection TRƯỚC khi stop track cũ
@@ -283,10 +379,10 @@ if (adminFlipBtn) {
       // Cập nhật localStream: xóa track cũ, thêm track mới
       if (oldVideoTrack) localStream.removeTrack(oldVideoTrack);
       localStream.addTrack(newVideoTrack);
-      
+
       // Gán lại srcObject để hiển thị local preview
       localVideo.srcObject = localStream;
-      
+
       updateControlButtons();
     } catch (err) {
       console.error("Lỗi xoay camera Admin:", err);
@@ -314,6 +410,12 @@ function endCall(showNotify = false) {
   if (isProcessingEndCall) return;
   isProcessingEndCall = true;
 
+  if (iceRestartTimer) {
+    clearTimeout(iceRestartTimer);
+    iceRestartTimer = null;
+  }
+  isReconnecting = false;
+
   if (peerConnection) {
     peerConnection.close();
     peerConnection = null;
@@ -324,8 +426,9 @@ function endCall(showNotify = false) {
   }
 
   if (currentCallerId) {
-    socket.emit('call:end', { targetId: currentCallerId });
+    socket.emit('call:end', { targetId: currentCallerId, sessionId: callSessionId });
     currentCallerId = null;
+    callSessionId = null;
   }
 
   videoContainer.style.display = 'none';
@@ -369,23 +472,23 @@ if (mVideoBtn) {
 if (mFlipBtn) {
   mFlipBtn.addEventListener('click', async () => {
     if (!localStream || mFlipBtn.disabled) return;
-    
+
     mFlipBtn.disabled = true;
     mFlipBtn.style.opacity = '0.5';
-    
+
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    
+
     try {
       const oldVideoTrack = localStream.getVideoTracks()[0];
-      
+
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: currentFacingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
       });
-      
+
       const newVideoTrack = newStream.getVideoTracks()[0];
 
       if (peerConnection) {
@@ -399,7 +502,7 @@ if (mFlipBtn) {
       if (oldVideoTrack) localStream.removeTrack(oldVideoTrack);
       localStream.addTrack(newVideoTrack);
       localVideo.srcObject = localStream;
-      
+
       updateControlButtons();
     } catch (err) {
       console.error("Lỗi xoay camera Admin (mobile):", err);

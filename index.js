@@ -965,17 +965,17 @@ if (guestVideoBtn) {
 if (guestFlipBtn) {
   guestFlipBtn.addEventListener('click', async () => {
     if (!guestLocalStream || guestFlipBtn.disabled) return;
-    
+
     guestFlipBtn.disabled = true;
     guestFlipBtn.style.opacity = '0.5';
-    
+
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
 
     try {
       const oldVideoTrack = guestLocalStream.getVideoTracks()[0];
-      
+
       const newStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: currentFacingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 }
@@ -1021,6 +1021,153 @@ if (guestEndCallBtn) {
   guestEndCallBtn.addEventListener('click', endVideoCall);
 }
 
+// ─── Biến quản lý ICE restart / reconnect cho Guest ─────────────────────
+let iceRestartTimer = null;
+let isReconnecting = false;
+
+/**
+ * Thiết lập PeerConnection mới với đầy đủ event handlers, 
+ * bao gồm ICE connection monitoring để tự phục hồi khi đổi mạng.
+ */
+function setupGuestPeerConnection() {
+  guestPeerConnection = new RTCPeerConnection(rtcConfig);
+
+  // Thêm các track local vào peer connection
+  if (guestLocalStream) {
+    guestLocalStream.getTracks().forEach(track => {
+      guestPeerConnection.addTrack(track, guestLocalStream);
+    });
+  }
+
+  guestPeerConnection.ontrack = (event) => {
+    guestRemoteVideo.srcObject = event.streams[0];
+  };
+
+  guestPeerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit('webrtc:signal', {
+        targetId: callAdminId,
+        sessionId: chatSessionId,
+        signal: event.candidate
+      });
+    }
+  };
+
+  // ── ICE Connection Monitoring: Phát hiện mất kết nối & tự khôi phục ──
+  guestPeerConnection.oniceconnectionstatechange = () => {
+    const state = guestPeerConnection?.iceConnectionState;
+    console.log(`[WebRTC Guest] ICE state: ${state}`);
+
+    if (state === 'disconnected') {
+      // Mạng tạm mất, chờ 3 giây rồi thử ICE restart
+      videoCallStatus.innerText = '⚠️ Mất kết nối, đang thử lại...';
+      if (iceRestartTimer) clearTimeout(iceRestartTimer);
+      iceRestartTimer = setTimeout(() => {
+        attemptIceRestart();
+      }, 3000);
+    } else if (state === 'failed') {
+      // ICE hoàn toàn thất bại, thử restart ngay lập tức
+      videoCallStatus.innerText = '🔄 Đang khôi phục kết nối...';
+      attemptIceRestart();
+    } else if (state === 'connected' || state === 'completed') {
+      // Đã khôi phục thành công
+      if (iceRestartTimer) {
+        clearTimeout(iceRestartTimer);
+        iceRestartTimer = null;
+      }
+      isReconnecting = false;
+      videoCallStatus.innerText = 'Đã kết nối!';
+    } else if (state === 'closed') {
+      // PeerConnection đã bị đóng hoàn toàn
+      if (iceRestartTimer) clearTimeout(iceRestartTimer);
+    }
+  };
+
+  return guestPeerConnection;
+}
+
+/**
+ * Thực hiện ICE restart: tạo offer mới với iceRestart=true
+ * Dùng khi chuyển mạng (WiFi→4G, on/off 4G...)
+ */
+async function attemptIceRestart() {
+  if (!guestPeerConnection || guestPeerConnection.signalingState === 'closed') {
+    console.log('[WebRTC Guest] PeerConnection đã đóng, thử tạo kết nối mới hoàn toàn...');
+    await performFullReconnect();
+    return;
+  }
+
+  if (isReconnecting) {
+    console.log('[WebRTC Guest] Đang trong quá trình reconnect, bỏ qua...');
+    return;
+  }
+
+  isReconnecting = true;
+  console.log('[WebRTC Guest] 🔄 Bắt đầu ICE restart...');
+  videoCallStatus.innerText = '🔄 Đang khôi phục kết nối...';
+
+  // Thông báo server cập nhật socketId mới
+  socket.emit('call:reconnect', { sessionId: chatSessionId, role: 'guest' });
+
+  try {
+    const offer = await guestPeerConnection.createOffer({ iceRestart: true });
+    await guestPeerConnection.setLocalDescription(offer);
+    socket.emit('webrtc:signal', {
+      targetId: callAdminId,
+      sessionId: chatSessionId,
+      signal: guestPeerConnection.localDescription,
+    });
+    console.log('[WebRTC Guest] ✅ ICE restart offer sent');
+  } catch (e) {
+    console.error('[WebRTC Guest] ICE restart failed:', e);
+    // Nếu ICE restart thất bại, thử tạo kết nối mới hoàn toàn
+    await performFullReconnect();
+  }
+}
+
+/**
+ * Tạo PeerConnection mới hoàn toàn khi ICE restart không thể cứu được.
+ * Đóng peer cũ, tạo mới, gửi offer mới.
+ */
+async function performFullReconnect() {
+  if (!guestLocalStream || !callAdminId) {
+    console.log('[WebRTC Guest] Không thể full reconnect: thiếu stream hoặc adminId');
+    isReconnecting = false;
+    return;
+  }
+
+  console.log('[WebRTC Guest] 🔄 Full reconnect: tạo PeerConnection mới...');
+  videoCallStatus.innerText = '🔄 Đang tạo kết nối mới...';
+
+  // Đóng peer cũ (nếu còn)
+  if (guestPeerConnection) {
+    try { guestPeerConnection.close(); } catch (e) { /* ignore */ }
+    guestPeerConnection = null;
+  }
+
+  // Thông báo server
+  socket.emit('call:reconnect', { sessionId: chatSessionId, role: 'guest' });
+
+  // Tạo peer mới
+  setupGuestPeerConnection();
+
+  try {
+    const offer = await guestPeerConnection.createOffer();
+    await guestPeerConnection.setLocalDescription(offer);
+    socket.emit('webrtc:signal', {
+      targetId: callAdminId,
+      sessionId: chatSessionId,
+      signal: guestPeerConnection.localDescription,
+    });
+    console.log('[WebRTC Guest] ✅ Full reconnect offer sent');
+  } catch (e) {
+    console.error('[WebRTC Guest] Full reconnect failed:', e);
+    videoCallStatus.innerText = '❌ Không thể khôi phục kết nối';
+  }
+
+  isReconnecting = false;
+}
+
 function attachWebRTCSocketEvents() {
   socket.on('call:accepted', async ({ adminId }) => {
     callAdminId = adminId;
@@ -1029,26 +1176,17 @@ function attachWebRTCSocketEvents() {
     const btnText = guestEndCallBtn.querySelector('.btn-text');
     if (btnText) btnText.innerText = 'Kết thúc cuộc gọi';
 
-    guestPeerConnection = new RTCPeerConnection(rtcConfig);
-
-    guestLocalStream.getTracks().forEach(track => {
-      guestPeerConnection.addTrack(track, guestLocalStream);
-    });
-
-    guestPeerConnection.ontrack = (event) => {
-      guestRemoteVideo.srcObject = event.streams[0];
-    };
-
-    guestPeerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit('webrtc:signal', { targetId: callAdminId, signal: event.candidate });
-      }
-    };
+    // Tạo PeerConnection với ICE monitoring
+    setupGuestPeerConnection();
 
     try {
       const offer = await guestPeerConnection.createOffer();
       await guestPeerConnection.setLocalDescription(offer);
-      socket.emit('webrtc:signal', { targetId: callAdminId, signal: guestPeerConnection.localDescription });
+      socket.emit('webrtc:signal', {
+        targetId: callAdminId,
+        sessionId: chatSessionId,
+        signal: guestPeerConnection.localDescription,
+      });
     } catch (e) {
       console.error(e);
     }
@@ -1063,18 +1201,59 @@ function attachWebRTCSocketEvents() {
     endVideoCall(true);
   });
 
+  // Khi đối phương reconnect (đổi mạng), cập nhật targetId mới
+  socket.on('call:peer_reconnected', ({ sessionId, newPeerId, role }) => {
+    if (role === 'admin') {
+      console.log(`[WebRTC Guest] Admin reconnected: ${callAdminId} → ${newPeerId}`);
+      callAdminId = newPeerId;
+    }
+  });
+
   socket.on('webrtc:signal', async ({ senderId, signal }) => {
-    if (senderId !== callAdminId) return;
+    // Chấp nhận signal từ cả adminId cũ và mới (trong trường hợp reconnect)
     if (!guestPeerConnection) return;
 
-    if (signal.type === 'answer') {
-      await guestPeerConnection.setRemoteDescription(new RTCSessionDescription(signal));
-    } else if (signal.candidate) {
-      try {
+    // Cập nhật adminId nếu nhận signal từ peer mới (sau reconnect)
+    if (senderId !== callAdminId && callAdminId) {
+      console.log(`[WebRTC Guest] Cập nhật adminId: ${callAdminId} → ${senderId}`);
+      callAdminId = senderId;
+    }
+
+    try {
+      if (signal.type === 'offer') {
+        // Admin gửi re-offer (ICE restart từ phía Admin)
+        await guestPeerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+        const answer = await guestPeerConnection.createAnswer();
+        await guestPeerConnection.setLocalDescription(answer);
+        socket.emit('webrtc:signal', {
+          targetId: callAdminId,
+          sessionId: chatSessionId,
+          signal: guestPeerConnection.localDescription,
+        });
+      } else if (signal.type === 'answer') {
+        await guestPeerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+      } else if (signal.candidate) {
         await guestPeerConnection.addIceCandidate(new RTCIceCandidate(signal));
-      } catch (e) {
-        console.error(e);
       }
+    } catch (e) {
+      console.error('[WebRTC Guest] Signal handling error:', e);
+    }
+  });
+
+  // ─── Socket reconnect handler: khi socket reconnect sau đổi mạng ───
+  socket.on('connect', () => {
+    // Nếu đang trong cuộc gọi, tự động thông báo server socket mới
+    if (callAdminId && guestLocalStream) {
+      console.log('[WebRTC Guest] Socket reconnected during call, sending call:reconnect...');
+      socket.emit('chat:join', { sessionId: chatSessionId });
+      socket.emit('call:reconnect', { sessionId: chatSessionId, role: 'guest' });
+
+      // Chờ 1 giây rồi thử ICE restart nếu PeerConnection vẫn còn sống
+      setTimeout(() => {
+        if (guestPeerConnection && guestPeerConnection.iceConnectionState !== 'connected') {
+          attemptIceRestart();
+        }
+      }, 1500);
     }
   });
 }

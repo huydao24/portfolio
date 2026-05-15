@@ -29,6 +29,10 @@ let currentAdminOTP = null;
 let adminOTPExpiry = null;
 const pendingCalls = new Map();
 
+// Quản lý các cuộc gọi đang diễn ra (GLOBAL scope để hỗ trợ Reconnection khi đổi mạng Wifi/4G)
+// Cấu trúc: activeCalls[sessionId] = { guestId, adminId, createdAt }
+const activeCalls = {};
+
 const TELEGRAM_API_URL = TELEGRAM_BOT_TOKEN
   ? `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`
   : null;
@@ -1049,41 +1053,38 @@ io.on('connection', (socket) => {
     }
   });
 
+  // activeCalls đã ở scope toàn cục (global) để tồn tại qua reconnection
+
   // WebRTC & Video Call Signaling
   socket.on('call:request', async ({ sessionId }) => {
     console.log(`[VideoCall] 📢 Nhận yêu cầu gọi từ: ${sessionId}`);
+    
+    // Đăng ký cuộc gọi vào hệ thống quản lý
+    activeCalls[sessionId] = { guestId: socket.id, adminId: null, createdAt: Date.now() };
 
     // ── Chống duplicate: nếu cuộc gọi cùng sessionId đã được xử lý trong 60 giây qua, bỏ qua ──
     const existing = pendingCalls.get(sessionId);
     const now = Date.now();
     if (existing && existing.requestedAt && (now - existing.requestedAt) < 60000) {
       console.log(`[VideoCall] ⚠️ Bỏ qua call:request trùng lặp từ ${sessionId} (cooldown 60s)`);
-      // Vẫn emit call:incoming cho admin đang online (không gửi Telegram lần 2)
+      // Cập nhật guestId mới (do reconnect) vào cuộc gọi pending
+      if (activeCalls[sessionId]) activeCalls[sessionId].guestId = socket.id;
       socket.to('admins').emit('call:incoming', { sessionId, callerId: socket.id });
       return;
     }
 
-    // ── Kiểm tra xem admin đã online chưa ──
     const adminsRoom = io.sockets.adapter.rooms.get('admins');
     const adminIsOnline = adminsRoom && adminsRoom.size > 0;
 
-    // 1. Tái sử dụng OTP nếu vẫn còn hiệu lực, không tạo mới
     if (!currentAdminOTP || now >= adminOTPExpiry) {
       currentAdminOTP = Math.floor(100000 + Math.random() * 900000).toString();
-      adminOTPExpiry = now + 5 * 60 * 1000; // Hiệu lực 5 phút
-      console.log(`[VideoCall] 🔑 Tạo OTP mới: ${currentAdminOTP}`);
-    } else {
-      console.log(`[VideoCall] ♻️ Tái sử dụng OTP hiện tại (còn ${Math.round((adminOTPExpiry - now) / 1000)}s)`);
+      adminOTPExpiry = now + 5 * 60 * 1000;
     }
 
-    // 2. Lưu vào danh sách chờ (kèm timestamp để chống duplicate)
     const callData = { sessionId, callerId: socket.id, requestedAt: now };
     pendingCalls.set(sessionId, callData);
-
-    // 3. Gửi cho các admin đang trực tuyến qua Socket
     socket.to('admins').emit('call:incoming', callData);
 
-    // 4. Chỉ gửi Telegram nếu CHƯA có admin online (tránh spam khi admin đang gọi)
     if (!adminIsOnline && TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
       const adminUrl = 'https://portfolioptit.vercel.app/admin.html';
       const text = [
@@ -1106,42 +1107,121 @@ io.on('connection', (socket) => {
       } catch (err) {
         console.error('[telegram-auth] Failed to notify video call:', err.message);
       }
-    } else if (adminIsOnline) {
-      console.log('[VideoCall] Admin đã online, bỏ qua gửi Telegram');
     }
   });
 
   socket.on('call:accept', ({ sessionId }) => {
     console.log(`[VideoCall] Admin ${socket.id} accepted call from ${sessionId}`);
-    pendingCalls.delete(sessionId); // Xóa khỏi hàng chờ khi đã bắt máy
+    pendingCalls.delete(sessionId);
+    
+    // Cập nhật thông tin Admin vào cuộc gọi active
+    if (activeCalls[sessionId]) {
+      activeCalls[sessionId].adminId = socket.id;
+    } else {
+      activeCalls[sessionId] = { guestId: null, adminId: socket.id, createdAt: Date.now() };
+    }
+
     socket.to(sessionId).emit('call:accepted', { adminId: socket.id });
   });
 
+  // ─── ICE Restart / Reconnect Support ───────────────────────────────────────
+  // Khi client bị đổi mạng (WiFi→4G) socket sẽ reconnect → socketId mới.
+  // Client gửi call:reconnect để cập nhật socketId mới vào activeCalls
+  // và yêu cầu đối phương thực hiện ICE restart.
+  socket.on('call:reconnect', ({ sessionId, role }) => {
+    const call = activeCalls[sessionId];
+    if (!call) {
+      console.log(`[VideoCall] ⚠️ call:reconnect: không tìm thấy cuộc gọi cho ${sessionId}`);
+      return;
+    }
+
+    const oldSocketId = role === 'guest' ? call.guestId : call.adminId;
+    console.log(`[VideoCall] 🔄 Reconnect ${role} cho session ${sessionId}: ${oldSocketId} → ${socket.id}`);
+
+    // Cập nhật socketId mới
+    if (role === 'guest') {
+      call.guestId = socket.id;
+    } else {
+      call.adminId = socket.id;
+    }
+
+    // Thông báo cho đối phương biết: peer đã reconnect, gửi lại adminId/guestId mới
+    const targetId = role === 'guest' ? call.adminId : call.guestId;
+    if (targetId) {
+      io.to(targetId).emit('call:peer_reconnected', {
+        sessionId,
+        newPeerId: socket.id,
+        role,
+      });
+    }
+  });
+
   socket.on('call:reject', ({ sessionId }) => {
-    pendingCalls.delete(sessionId); // Xóa khỏi hàng chờ khi từ chối
+    pendingCalls.delete(sessionId);
+    delete activeCalls[sessionId];
     socket.to(sessionId).emit('call:rejected');
   });
 
-  socket.on('call:end', ({ targetId }) => {
-    // Tìm và xóa khỏi hàng chờ nếu có
+  socket.on('call:end', ({ targetId, sessionId }) => {
+    // Xóa khỏi danh sách chờ và danh sách active
+    if (sessionId) delete activeCalls[sessionId];
+    
+    // Dọn tất cả entries trong activeCalls liên quan đến socket này
+    for (const [sid, data] of Object.entries(activeCalls)) {
+      if (data.guestId === socket.id || data.adminId === socket.id) {
+        delete activeCalls[sid];
+      }
+    }
+    
     for (const [sid, data] of pendingCalls.entries()) {
-      if (sid === targetId || data.callerId === socket.id) {
+      if (sid === sessionId || sid === targetId || data.callerId === socket.id) {
         pendingCalls.delete(sid);
       }
     }
 
     if (targetId) {
       socket.to(targetId).emit('call:ended');
+    } else if (sessionId) {
+      socket.to(sessionId).emit('call:ended');
     } else {
       socket.broadcast.emit('call:ended');
     }
   });
 
-  socket.on('webrtc:signal', ({ targetId, signal }) => {
-    // Chuyển tiếp signal (offer, answer, ice-candidate) tới đích
-    // targetId = sessionId (nếu gửi từ Admin -> Guest)
-    // targetId = adminId (nếu gửi từ Guest -> Admin) hoặc gửi vào room 'admins'
-    socket.to(targetId).emit('webrtc:signal', { senderId: socket.id, signal });
+  socket.on('webrtc:signal', ({ targetId, signal, sessionId }) => {
+    // Logic định tuyến thông minh:
+    // Nếu có sessionId, server sẽ tự tìm socketId mới nhất của đối phương
+    let finalTarget = targetId;
+    
+    if (sessionId && activeCalls[sessionId]) {
+      const call = activeCalls[sessionId];
+      // Nếu người gửi là Guest, đích là Admin. Nếu người gửi là Admin, đích là Guest.
+      if (socket.id === call.guestId) {
+        finalTarget = call.adminId;
+      } else if (socket.id === call.adminId) {
+        finalTarget = call.guestId;
+      } else {
+        // Trường hợp reconnect: Nếu socket.id mới chưa khớp, cập nhật nó luôn
+        // Giả sử socket đang ở trong room của sessionId thì đó là Guest
+        if (socket.rooms.has(sessionId)) {
+          call.guestId = socket.id;
+          finalTarget = call.adminId;
+        } else if (socket.rooms.has('admins')) {
+          call.adminId = socket.id;
+          finalTarget = call.guestId;
+        }
+      }
+    }
+
+    if (finalTarget) {
+      socket.to(finalTarget).emit('webrtc:signal', { senderId: socket.id, signal });
+    }
+  });
+  // ─── Disconnect handler: cập nhật activeCalls khi socket ngắt ──────────────
+  socket.on('disconnect', (reason) => {
+    console.log(`[Socket] ${socket.id} disconnected: ${reason}`);
+    // KHÔNG xóa activeCalls ngay lập tức → cho phép reconnect trong 2 phút
+    // Chỉ xóa nếu quá thời gian (cleanup bởi timer bên dưới)
   });
 });
 
