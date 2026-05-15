@@ -157,33 +157,6 @@ window.acceptCall = async (sessionId, callerId) => {
     // Initialize WebRTC
     peerConnection = new RTCPeerConnection(peerConnectionConfig);
 
-    // Theo dõi trạng thái kết nối
-    peerConnection.oniceconnectionstatechange = () => {
-      console.log('Admin ICE State:', peerConnection.iceConnectionState);
-      if (peerConnection.iceConnectionState === 'failed' || 
-          peerConnection.iceConnectionState === 'disconnected') {
-        console.log('Admin: Phát hiện mất kết nối, chờ khôi phục...');
-      }
-    };
-
-    let isNegotiating = false;
-
-    // Xử lý khi cần đàm phán lại (ví dụ Admin muốn chủ động ICE Restart)
-    peerConnection.onnegotiationneeded = async () => {
-      try {
-        if (isNegotiating || peerConnection.signalingState !== 'stable' || !currentCallerId) return;
-        isNegotiating = true;
-
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        socket.emit('webrtc:signal', { targetId: currentCallerId, signal: peerConnection.localDescription });
-      } catch (e) {
-        console.error('Admin Negotiation error:', e);
-      } finally {
-        isNegotiating = false;
-      }
-    };
-
     // Add local stream tracks to peer connection
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);

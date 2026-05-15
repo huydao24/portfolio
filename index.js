@@ -1031,48 +1031,6 @@ function attachWebRTCSocketEvents() {
 
     guestPeerConnection = new RTCPeerConnection(rtcConfig);
 
-    // Theo dõi trạng thái kết nối để phát hiện mất mạng
-    guestPeerConnection.oniceconnectionstatechange = () => {
-      console.log('ICE Connection State:', guestPeerConnection.iceConnectionState);
-      if (guestPeerConnection.iceConnectionState === 'failed' || 
-          guestPeerConnection.iceConnectionState === 'disconnected') {
-        console.log('Phát hiện mất kết nối, đang cố gắng khôi phục...');
-        // Thực hiện ICE Restart nếu kết nối thất bại
-        handleIceRestart();
-      }
-    };
-
-    let isNegotiating = false; // Biến chống xung đột khi đàm phán
-
-    // Tự động xử lý khi cần đàm phán lại (ví dụ khi đổi mạng)
-    guestPeerConnection.onnegotiationneeded = async () => {
-      try {
-        if (isNegotiating || guestPeerConnection.signalingState !== 'stable') return;
-        isNegotiating = true;
-
-        const offer = await guestPeerConnection.createOffer();
-        await guestPeerConnection.setLocalDescription(offer);
-        // Gửi tới sessionId để server tự định tuyến lại nếu socket ID thay đổi
-        socket.emit('webrtc:signal', { targetId: chatSessionId, signal: guestPeerConnection.localDescription });
-      } catch (e) {
-        console.error('Negotiation error:', e);
-      } finally {
-        isNegotiating = false;
-      }
-    };
-
-    async function handleIceRestart() {
-      try {
-        console.log('ICE Restart initiated...');
-        const offer = await guestPeerConnection.createOffer({ iceRestart: true });
-        await guestPeerConnection.setLocalDescription(offer);
-        // Gửi tới sessionId để server tự tìm socket ID hiện tại của Admin
-        socket.emit('webrtc:signal', { targetId: chatSessionId, signal: guestPeerConnection.localDescription });
-      } catch (e) {
-        console.error('ICE Restart error:', e);
-      }
-    }
-
     guestLocalStream.getTracks().forEach(track => {
       guestPeerConnection.addTrack(track, guestLocalStream);
     });
@@ -1083,10 +1041,17 @@ function attachWebRTCSocketEvents() {
 
     guestPeerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        // Gửi qua sessionId nếu callAdminId bị mất hoặc để đảm bảo an toàn khi reconnect
-        socket.emit('webrtc:signal', { targetId: chatSessionId, signal: event.candidate });
+        socket.emit('webrtc:signal', { targetId: callAdminId, signal: event.candidate });
       }
     };
+
+    try {
+      const offer = await guestPeerConnection.createOffer();
+      await guestPeerConnection.setLocalDescription(offer);
+      socket.emit('webrtc:signal', { targetId: callAdminId, signal: guestPeerConnection.localDescription });
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   socket.on('call:rejected', () => {
