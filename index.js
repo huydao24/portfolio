@@ -1168,12 +1168,12 @@ function attachWebRTCSocketEvents() {
     callAdminId = adminId;
 
     // ── TRƯỜNG HỢP RECONNECT: Admin đổi mạng, socket mới, gửi lại call:accept ──
-    // Nếu đã có PeerConnection (cuộc gọi đang diễn ra), chỉ cập nhật adminId.
-    // KHÔNG tạo mới PeerConnection, không tạo offer mới.
-    // ICE restart sẽ do admin chủ động gửi offer.
     if (guestPeerConnection && oldAdminId) {
-      console.log(`[WebRTC Guest] Admin reconnected: ${oldAdminId} → ${adminId}. Waiting for ICE restart...`);
+      console.log(`[WebRTC Guest] Admin reconnected: ${oldAdminId} → ${adminId}. Khởi động ICE restart để khôi phục...`);
       videoCallStatus.innerText = 'Đang khôi phục kết nối...';
+      // Mở khóa cờ reconnect (đề phòng trước đó timer 3s đã khóa) để ép buộc gửi Offer mới ngay
+      isReconnecting = false; 
+      attemptIceRestart();
       return;
     }
 

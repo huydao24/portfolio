@@ -71,14 +71,8 @@ socket.on('admin:auth_success', () => {
     console.log('[WebRTC Admin] Reconnect during call: re-accepting to update adminId...');
     // Gửi lại call:accept → server emit call:accepted với socket.id mới → guest cập nhật
     socket.emit('call:accept', { sessionId: callSessionId });
-
-    // Chờ rồi thử ICE restart nếu PeerConnection vẫn còn sống
-    setTimeout(() => {
-      if (peerConnection && peerConnection.iceConnectionState !== 'connected'
-          && peerConnection.iceConnectionState !== 'completed') {
-        attemptAdminIceRestart();
-      }
-    }, 1500);
+    // Admin KHÔNG tự khởi tạo ICE Restart ở đây nữa để tránh đụng độ (Collision/Glare).
+    // Phía Guest khi nhận được socket.id mới của Admin sẽ tự động gửi Offer mới.
     return;
   }
 
@@ -157,38 +151,7 @@ socket.on('webrtc:signal', async ({ senderId, signal }) => {
   }
 });
 
-/**
- * ICE restart cho Admin: tạo offer mới với iceRestart=true
- * Dùng khi chuyển mạng (WiFi→4G, on/off 4G...)
- */
-async function attemptAdminIceRestart() {
-  if (!peerConnection || peerConnection.signalingState === 'closed') {
-    console.log('[WebRTC Admin] PeerConnection đã đóng, không thể ICE restart');
-    isReconnecting = false;
-    return;
-  }
-
-  if (isReconnecting) {
-    console.log('[WebRTC Admin] Đang trong quá trình reconnect, bỏ qua...');
-    return;
-  }
-
-  isReconnecting = true;
-  console.log('[WebRTC Admin] 🔄 Bắt đầu ICE restart...');
-
-  try {
-    const offer = await peerConnection.createOffer({ iceRestart: true });
-    await peerConnection.setLocalDescription(offer);
-    socket.emit('webrtc:signal', {
-      targetId: currentCallerId,
-      signal: peerConnection.localDescription,
-    });
-    console.log('[WebRTC Admin] ✅ ICE restart offer sent');
-  } catch (e) {
-    console.error('[WebRTC Admin] ICE restart failed:', e);
-    isReconnecting = false;
-  }
-}
+// Admin không cần hàm ICE Restart nữa, toàn bộ sẽ do Guest chủ động.
 
 // --- MEDIA & CALL LOGIC ---
 async function setupLocalStream() {
@@ -253,21 +216,10 @@ window.acceptCall = async (sessionId, callerId) => {
       const state = peerConnection?.iceConnectionState;
       console.log(`[WebRTC Admin] ICE state: ${state}`);
 
-      if (state === 'disconnected') {
-        if (iceRestartTimer) clearTimeout(iceRestartTimer);
-        iceRestartTimer = setTimeout(() => {
-          attemptAdminIceRestart();
-        }, 3000);
-      } else if (state === 'failed') {
-        attemptAdminIceRestart();
-      } else if (state === 'connected' || state === 'completed') {
-        if (iceRestartTimer) {
-          clearTimeout(iceRestartTimer);
-          iceRestartTimer = null;
-        }
-        isReconnecting = false;
-      } else if (state === 'closed') {
-        if (iceRestartTimer) clearTimeout(iceRestartTimer);
+      // Để tránh lỗi đụng độ WebRTC State (Glare) khi cả 2 bên cùng tạo Offer,
+      // Admin sẽ KHÔNG chủ động ICE restart. Admin chỉ đứng im chờ Guest gửi Offer mới.
+      if (state === 'disconnected' || state === 'failed') {
+        console.log('[WebRTC Admin] Mất mạng, đang chờ Khách (Guest) gửi Offer khôi phục...');
       }
     };
 
