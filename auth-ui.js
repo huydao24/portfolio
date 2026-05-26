@@ -83,6 +83,22 @@ function createAuthOverlay() {
         <div class="auth-forgot-link-wrap">
           <button type="button" id="forgot-password-link" class="auth-forgot-link">Quên mật khẩu?</button>
         </div>
+
+        <!-- Divider "hoặc" -->
+        <div class="auth-divider">
+          <span>hoặc</span>
+        </div>
+
+        <!-- Nút Đăng nhập bằng Google -->
+        <button type="button" class="auth-google-btn" id="google-login-btn">
+          <svg class="auth-google-icon" viewBox="0 0 24 24" width="20" height="20">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Đăng nhập bằng Google</span>
+        </button>
       </form>
 
       <!-- ── FORM ĐĂNG KÝ ──────────────────────────────────────── -->
@@ -123,6 +139,22 @@ function createAuthOverlay() {
           <span class="btn-spinner" hidden>
             <svg viewBox="0 0 24 24" class="spin-icon"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg>
           </span>
+        </button>
+
+        <!-- Divider "hoặc" -->
+        <div class="auth-divider">
+          <span>hoặc</span>
+        </div>
+
+        <!-- Nút Đăng ký bằng Google -->
+        <button type="button" class="auth-google-btn" id="google-register-btn">
+          <svg class="auth-google-icon" viewBox="0 0 24 24" width="20" height="20">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span>Đăng ký bằng Google</span>
         </button>
       </form>
 
@@ -450,6 +482,20 @@ async function apiResetPassword(email, resetCode, newPassword) {
   return data;
 }
 
+/**
+ * Gọi API đăng nhập bằng Google ID Token.
+ */
+async function apiGoogleLogin(idToken) {
+  const res = await fetch(`${BACKEND_URL}/api/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Đăng nhập Google thất bại.');
+  return data;
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // EVENT HANDLERS
 // ════════════════════════════════════════════════════════════════════════════
@@ -515,6 +561,138 @@ function handleLogout() {
   clearAuthData();
   // Reload trang → Auth Overlay sẽ xuất hiện lại
   window.location.reload();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// GOOGLE SIGN-IN
+// ════════════════════════════════════════════════════════════════════════════
+
+/** Google Client ID — lấy từ backend URL /api/health hoặc hardcode */
+let _googleClientId = '';
+
+/**
+ * Callback khi Google trả về credential (idToken).
+ * Gọi API backend để verify và đăng nhập.
+ */
+async function handleGoogleCallback(response) {
+  const idToken = response.credential;
+  if (!idToken) {
+    console.error('[Auth] Google callback missing credential');
+    return;
+  }
+
+  // Hiện loading trên cả 2 nút Google
+  const googleBtns = document.querySelectorAll('.auth-google-btn');
+  googleBtns.forEach(btn => {
+    btn.disabled = true;
+    btn.classList.add('loading');
+  });
+
+  try {
+    const { user, token } = await apiGoogleLogin(idToken);
+    saveAuthData(token, user);
+
+    // Cập nhật lại session chat theo ID user mới đăng nhập
+    if (typeof window.refreshChatSession === 'function') {
+      window.refreshChatSession();
+    }
+
+    showSuccessMessage(`Chào mừng, ${user.name}! 🎉`);
+    setTimeout(showPortfolio, 1200);
+  } catch (err) {
+    // Hiện lỗi ở form đang active
+    const loginForm = document.getElementById('login-form');
+    const regForm = document.getElementById('register-form');
+    if (loginForm && !loginForm.classList.contains('hidden')) {
+      showServerError('login-server-err', err.message);
+    } else if (regForm && !regForm.classList.contains('hidden')) {
+      showServerError('reg-server-err', err.message);
+    }
+  } finally {
+    googleBtns.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    });
+  }
+}
+
+/**
+ * Khởi tạo Google Identity Services.
+ * Được gọi khi GIS script đã load xong.
+ */
+function initGoogleSignIn() {
+  // Nếu GIS chưa load xong, retry sau 500ms
+  if (typeof google === 'undefined' || !google?.accounts?.id) {
+    console.log('[Auth] GIS not loaded yet, retrying...');
+    setTimeout(initGoogleSignIn, 500);
+    return;
+  }
+
+  // Lấy Google Client ID từ server
+  fetch(`${BACKEND_URL}/api/auth/google-client-id`)
+    .then(res => res.json())
+    .then(data => {
+      if (!data.clientId) {
+        console.warn('[Auth] Google Client ID not configured on server');
+        // Ẩn nút Google nếu chưa cấu hình
+        document.querySelectorAll('.auth-google-btn, .auth-divider').forEach(el => {
+          el.style.display = 'none';
+        });
+        return;
+      }
+
+      _googleClientId = data.clientId;
+      console.log('[Auth] Google Sign-In initialized');
+
+      // Khởi tạo GIS
+      google.accounts.id.initialize({
+        client_id: _googleClientId,
+        callback: handleGoogleCallback,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      // Gắn sự kiện click cho nút custom Google
+      const loginGoogleBtn = document.getElementById('google-login-btn');
+      const regGoogleBtn = document.getElementById('google-register-btn');
+
+      const triggerGooglePrompt = () => {
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // Fallback: nếu One Tap bị chặn, render nút Google chính thức
+            console.log('[Auth] One Tap not displayed, rendering fallback button');
+            const fallbackContainer = document.createElement('div');
+            fallbackContainer.id = 'google-fallback-btn';
+            fallbackContainer.style.cssText = 'display:flex; justify-content:center; margin-top:10px;';
+            
+            // Tìm nút Google đang active
+            const activeBtn = loginGoogleBtn?.closest('.auth-form:not(.hidden)') 
+              ? loginGoogleBtn : regGoogleBtn;
+            
+            if (activeBtn && !document.getElementById('google-fallback-btn')) {
+              activeBtn.parentElement.appendChild(fallbackContainer);
+              google.accounts.id.renderButton(fallbackContainer, {
+                type: 'standard',
+                theme: 'filled_black',
+                size: 'large',
+                width: 300,
+                text: 'continue_with',
+                shape: 'pill',
+              });
+            }
+          }
+        });
+      };
+
+      if (loginGoogleBtn) loginGoogleBtn.addEventListener('click', triggerGooglePrompt);
+      if (regGoogleBtn) regGoogleBtn.addEventListener('click', triggerGooglePrompt);
+    })
+    .catch(err => {
+      console.warn('[Auth] Could not fetch Google Client ID:', err.message);
+      document.querySelectorAll('.auth-google-btn, .auth-divider').forEach(el => {
+        el.style.display = 'none';
+      });
+    });
 }
 
 function showSuccessMessage(msg) {
@@ -798,6 +976,9 @@ function initAuth() {
 
   // 6. Chạy Protected Route Guard
   initAuthGuard();
+
+  // 7. Khởi tạo Google Sign-In
+  initGoogleSignIn();
 }
 
 // Đảm bảo DOM đã load xong trước khi chạy

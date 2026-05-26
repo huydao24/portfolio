@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +26,10 @@ const USERS_FILE = path.join(DATA_DIR, 'users.json');
 // JWT_SECRET nên được đặt trong file .env (không được commit lên git!)
 const JWT_SECRET  = process.env.JWT_SECRET || 'portfolio_super_secret_change_me_in_production';
 const JWT_EXPIRES = '7d'; // Token hết hạn sau 7 ngày
+
+// ── Google OAuth ─────────────────────────────────────────────────────────────
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 // ── Số vòng hash bcrypt (12 = an toàn, ~250ms/hash) ────────────────────────
 const BCRYPT_SALT_ROUNDS = 12;
@@ -318,6 +323,111 @@ export async function resetPassword({ email, resetCode, newPassword }) {
   await writeUsers(users);
 
   return { message: 'Mật khẩu đã được đặt lại thành công! Bạn có thể đăng nhập với mật khẩu mới.' };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// GOOGLE SIGN-IN — Đăng nhập bằng tài khoản Google
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Đăng nhập (hoặc đăng ký tự động) bằng Google ID Token.
+ *
+ * Flow:
+ *   1. Frontend gọi Google Identity Services → nhận idToken
+ *   2. Backend verify idToken bằng google-auth-library
+ *   3. Nếu email chưa có → tạo user mới (không có password, có googleId)
+ *   4. Nếu email đã có → liên kết googleId vào user hiện tại (merge)
+ *   5. Ký JWT token và trả về { user, token }
+ *
+ * @param {{ idToken: string }} body
+ * @returns {{ user: object, token: string, isNewUser: boolean }}
+ * @throws {Error} nếu token không hợp lệ hoặc server chưa cấu hình
+ */
+export async function googleLogin({ idToken }) {
+  // ── 1. Kiểm tra cấu hình ──────────────────────────────────────────────────
+  if (!googleClient || !GOOGLE_CLIENT_ID) {
+    throw Object.assign(
+      new Error('Google Sign-In chưa được cấu hình trên server.'),
+      { statusCode: 500 }
+    );
+  }
+
+  if (!idToken) {
+    throw Object.assign(
+      new Error('Thiếu Google ID Token.'),
+      { statusCode: 400 }
+    );
+  }
+
+  // ── 2. Verify idToken với Google ──────────────────────────────────────────
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    console.error('[auth] Google token verification failed:', err.message);
+    throw Object.assign(
+      new Error('Google token không hợp lệ hoặc đã hết hạn.'),
+      { statusCode: 401 }
+    );
+  }
+
+  // ── 3. Trích xuất thông tin từ Google payload ─────────────────────────────
+  const googleId = payload.sub;                           // ID duy nhất của Google account
+  const email    = (payload.email || '').toLowerCase();    // Email đã verified bởi Google
+  const name     = payload.name || email.split('@')[0];   // Tên hiển thị
+  const picture  = payload.picture || '';                  // URL ảnh đại diện
+
+  if (!email) {
+    throw Object.assign(
+      new Error('Không lấy được email từ tài khoản Google.'),
+      { statusCode: 400 }
+    );
+  }
+
+  // ── 4. Tìm hoặc tạo user ──────────────────────────────────────────────────
+  const users = await readUsers();
+  let user = users.find(u => u.email === email);
+  let isNewUser = false;
+
+  if (user) {
+    // Email đã tồn tại → liên kết Google vào tài khoản hiện có
+    if (!user.googleId) {
+      user.googleId = googleId;
+    }
+    if (!user.picture && picture) {
+      user.picture = picture;
+    }
+    await writeUsers(users);
+  } else {
+    // Email chưa có → tạo tài khoản mới
+    isNewUser = true;
+    user = {
+      id:        crypto.randomUUID(),
+      name,
+      email,
+      googleId,
+      picture,
+      createdAt: new Date().toISOString(),
+      // Không có passwordHash → user chỉ login được qua Google
+    };
+    users.push(user);
+    await writeUsers(users);
+  }
+
+  // ── 5. Ký JWT token ───────────────────────────────────────────────────────
+  const token = jwt.sign(
+    { sub: user.id, email: user.email, name: user.name },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES }
+  );
+
+  // ── 6. Trả về thông tin user (KHÔNG kèm passwordHash) ────────────────────
+  const { passwordHash: _removed, resetToken: _rt, resetTokenExpires: _rte, ...safeUser } = user;
+  return { user: safeUser, token, isNewUser };
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import axios from 'axios';
 import nodemailer from 'nodemailer';
-import { registerUser, loginUser, requireAuth, requestPasswordReset, resetPassword } from './auth.js';
+import { registerUser, loginUser, requireAuth, requestPasswordReset, resetPassword, googleLogin } from './auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(__dirname, '../.data');
@@ -889,6 +889,56 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const status = err.statusCode || 500;
     return res.status(status).json({ error: err.message || 'Lỗi server.' });
   }
+});
+
+/**
+ * POST /api/auth/google
+ * Body: { idToken }
+ * Đăng nhập hoặc đăng ký tự động bằng Google ID Token.
+ */
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { user, token, isNewUser } = await googleLogin(req.body);
+
+    // Thông báo cho admin qua Telegram nếu là user mới
+    if (isNewUser && TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
+      const text = [
+        `🆕 TÀI KHOẢN MỚI (Google Sign-In)`,
+        `━━━━━━━━━━━━━━━━━━━`,
+        `👤 Tên: ${user.name}`,
+        `📧 Email: ${user.email}`,
+        `🔑 Đăng nhập qua: Google`,
+        `📅 Thời gian: ${formatTime()}`,
+      ].join('\n');
+
+      try {
+        await axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+          chat_id: TELEGRAM_AUTH_CHAT_ID,
+          text: text
+        }, { timeout: 10000 });
+      } catch (tgErr) {
+        console.error('[telegram-auth] Failed to notify Google registration:', tgErr.message);
+      }
+    }
+
+    return res.status(isNewUser ? 201 : 200).json({
+      message: isNewUser ? 'Đăng ký qua Google thành công!' : 'Đăng nhập qua Google thành công!',
+      user,
+      token,
+    });
+  } catch (err) {
+    const status = err.statusCode || 500;
+    return res.status(status).json({ error: err.message || 'Lỗi server.' });
+  }
+});
+
+/**
+ * GET /api/auth/google-client-id
+ * Trả về Google Client ID cho frontend (không phải secret, an toàn để expose).
+ */
+app.get('/api/auth/google-client-id', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || '';
+  return res.json({ clientId: clientId || null });
 });
 
 app.get('/', (req, res) => {
