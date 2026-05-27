@@ -69,6 +69,17 @@ if (GMAIL_USER && GMAIL_APP_PASSWORD) {
     },
   });
   console.log(`[email] Gmail SMTP configured: ${GMAIL_USER}`);
+
+  // Verify kết nối SMTP ngay khi khởi động để phát hiện sớm lỗi App Password
+  mailTransporter.verify()
+    .then(() => console.log('[email] ✅ SMTP connection verified — sẵn sàng gửi email'))
+    .catch(err => {
+      console.error('[email] ❌ SMTP verification FAILED:', err.message);
+      console.error('[email] ❌ Error code:', err.code, '| Response:', err.responseCode);
+      console.error('[email] ⚠️ Email sẽ KHÔNG gửi được cho đến khi sửa App Password!');
+      // Vô hiệu hóa transporter để tránh lỗi lặp lại
+      mailTransporter = null;
+    });
 } else {
   console.warn('[email] Gmail SMTP disabled — GMAIL_USER or GMAIL_APP_PASSWORD is missing');
 }
@@ -862,10 +873,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         to: result.userEmail,
         subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
         html: htmlContent,
-      }).then(() => {
-        console.log(`[email] Background reset code sent to ${result.userEmail}`);
+      }).then(info => {
+        console.log(`[email] ✅ Reset code sent to ${result.userEmail}`);
+        console.log(`[email] Message ID: ${info.messageId}, Response: ${info.response}`);
       }).catch(mailErr => {
-        console.error('[email] Background send failed:', mailErr.message);
+        console.error(`[email] ❌ Send FAILED to ${result.userEmail}`);
+        console.error(`[email] ❌ Error: ${mailErr.message}`);
+        console.error(`[email] ❌ Code: ${mailErr.code}, ResponseCode: ${mailErr.responseCode}`);
       });
     }
   } catch (err) {
