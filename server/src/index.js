@@ -76,9 +76,8 @@ if (GMAIL_USER && GMAIL_APP_PASSWORD) {
     .catch(err => {
       console.error('[email] ❌ SMTP verification FAILED:', err.message);
       console.error('[email] ❌ Error code:', err.code, '| Response:', err.responseCode);
-      console.error('[email] ⚠️ Email sẽ KHÔNG gửi được cho đến khi sửa App Password!');
-      // Vô hiệu hóa transporter để tránh lỗi lặp lại
-      mailTransporter = null;
+      console.error('[email] ⚠️ Email có thể không gửi được. Hãy kiểm tra lại App Password hoặc kết nối mạng.');
+      // Giữ nguyên mailTransporter để có thể thử lại khi gửi OTP, không gán null ở đây
     });
 } else {
   console.warn('[email] Gmail SMTP disabled — GMAIL_USER or GMAIL_APP_PASSWORD is missing');
@@ -816,30 +815,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const result = await requestPasswordReset(req.body);
 
-    // ✅ PHẢN HỒI NGAY LẬP TỨC: Không để Client đợi lâu
-    res.json({ message: 'Mã xác nhận đang được gửi. Vui lòng kiểm tra Email hoặc Telegram sau ít giây.' });
-
-    // ── CHẠY NGẦM: Thông báo qua Telegram ──
-    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID && result.resetCode) {
-      const telegramText = [
-        `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU`,
-        `━━━━━━━━━━━━━━━━━━━`,
-        `👤 ${result.userName} (${result.userEmail})`,
-        `🔑 Mã xác thực: ${result.resetCode}`,
-        `⏰ Hết hạn sau 15 phút`,
-      ].join('\n');
-
-      axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
-        chat_id: TELEGRAM_AUTH_CHAT_ID,
-        text: telegramText
-      }, { timeout: 10000 }).catch(err => {
-        console.error('[telegram-auth] Background send failed:', err.message);
-      });
+    // ── KIỂM TRA SMTP CONFIG ──
+    if (!mailTransporter) {
+      console.warn(`[email] ⚠️ Cannot send reset email to ${result.userEmail} because SMTP is not configured or disabled`);
+      return res.status(500).json({ error: 'Chức năng gửi mã OTP qua Email chưa được cấu hình hoặc đang gặp sự cố. Vui lòng liên hệ Admin.' });
     }
 
-    // ── CHẠY NGẦM: Gửi mã reset qua Email ──
-    if (mailTransporter && result.resetCode) {
-      const htmlContent = `
+    const htmlContent = `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0d1117; color: #e6edf3; border-radius: 12px; overflow: hidden; border: 1px solid rgba(0,212,255,0.15);">
           <div style="background: linear-gradient(135deg, #0077BC, #009866); padding: 28px 32px; text-align: center;">
             <h1 style="margin: 0; font-size: 1.4em; color: #fff; letter-spacing: 0.04em;">🔐 Đặt lại mật khẩu</h1>
@@ -868,20 +850,41 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         </div>
       `;
 
-      mailTransporter.sendMail({
+    // ── GỬI MÀ RESET QUA EMAIL (Có AWAIT để bắt lỗi nếu thất bại) ──
+    try {
+      await mailTransporter.sendMail({
         from: `"DNH.dev" <${GMAIL_USER}>`,
         to: result.userEmail,
         subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
         html: htmlContent,
-      }).then(info => {
-        console.log(`[email] ✅ Reset code sent to ${result.userEmail}`);
-        console.log(`[email] Message ID: ${info.messageId}, Response: ${info.response}`);
-      }).catch(mailErr => {
-        console.error(`[email] ❌ Send FAILED to ${result.userEmail}`);
-        console.error(`[email] ❌ Error: ${mailErr.message}`);
-        console.error(`[email] ❌ Code: ${mailErr.code}, ResponseCode: ${mailErr.responseCode}`);
+      });
+      console.log(`[email] ✅ Reset code successfully sent to ${result.userEmail}`);
+    } catch (mailErr) {
+      console.error(`[email] ❌ Send FAILED to ${result.userEmail}:`, mailErr.message);
+      return res.status(500).json({ error: `Không thể gửi OTP qua email: ${mailErr.message}. Vui lòng thử lại.` });
+    }
+
+    // ── CHẠY NGẦM: Thông báo qua Telegram (Không cần await) ──
+    if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID && result.resetCode) {
+      const telegramText = [
+        `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU`,
+        `━━━━━━━━━━━━━━━━━━━`,
+        `👤 ${result.userName} (${result.userEmail})`,
+        `🔑 Mã xác thực: ${result.resetCode}`,
+        `⏰ Hết hạn sau 15 phút`,
+      ].join('\n');
+
+      axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+        chat_id: TELEGRAM_AUTH_CHAT_ID,
+        text: telegramText
+      }, { timeout: 10000 }).catch(err => {
+        console.error('[telegram-auth] Background send failed:', err.message);
       });
     }
+
+    // ✅ PHẢN HỒI THÀNH CÔNG CHO CLIENT
+    return res.json({ message: 'Mã xác nhận đặt lại mật khẩu đã được gửi đến Gmail của bạn. Vui lòng kiểm tra hộp thư (cả mục Spam).' });
+
   } catch (err) {
     const status = err.statusCode || 500;
     if (status === 200) {
