@@ -32,21 +32,25 @@ if (isDesktop) {
 
   animCursor();
 
-  // Hiệu ứng phóng to con trỏ khi di chuột vào các phần tử tương tác
-  document.querySelectorAll('a, button, .project-card, .stat-card, .skill-group').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursor.style.transform = 'translate(-50%,-50%) scale(2)';
+  // Hiệu ứng phóng to con trỏ khi di chuột vào các phần tử tương tác (dùng Event Delegation)
+  document.addEventListener('mouseover', e => {
+    if (e.target.closest('a, button, .project-card, .stat-card, .skill-group, .social-link, .contact-email')) {
+      cursor.style.transform = 'translate(-50%,-50%) scale(2.2)';
       ring.style.width = '60px';
       ring.style.height = '60px';
-      ring.style.opacity = '0.3';
-    });
+      ring.style.opacity = '0.4';
+      ring.style.borderColor = 'var(--accent)';
+    }
+  });
 
-    el.addEventListener('mouseleave', () => {
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('a, button, .project-card, .stat-card, .skill-group, .social-link, .contact-email')) {
       cursor.style.transform = 'translate(-50%,-50%) scale(1)';
-      ring.style.width = '36px';
-      ring.style.height = '36px';
-      ring.style.opacity = '0.5';
-    });
+      ring.style.width = '38px';
+      ring.style.height = '38px';
+      ring.style.opacity = '0.6';
+      ring.style.borderColor = 'var(--secondary)';
+    }
   });
 } else {
   // Hide cursor elements on touch devices
