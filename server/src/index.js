@@ -55,18 +55,27 @@ app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
-// ── Gmail SMTP Transporter ──────────────────────────────────────────────────
+// ── Email Setup (SMTP & Brevo HTTP API) ──────────────────────────────────────
 const GMAIL_USER = process.env.GMAIL_USER?.trim();
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD?.trim();
+const BREVO_API_KEY = process.env.BREVO_API_KEY?.trim();
 
 let mailTransporter = null;
-if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+let useBrevo = false;
+
+if (BREVO_API_KEY) {
+  useBrevo = true;
+  console.log('[email] Configured to use Brevo HTTP API (Render-friendly port 443)');
+} else if (GMAIL_USER && GMAIL_APP_PASSWORD) {
   mailTransporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: GMAIL_USER,
       pass: GMAIL_APP_PASSWORD,
     },
+    connectionTimeout: 4000, // 4 giây
+    greetingTimeout: 4000,    // 4 giây
+    socketTimeout: 6000,      // 6 giây
   });
   console.log(`[email] Gmail SMTP configured: ${GMAIL_USER}`);
 
@@ -76,11 +85,10 @@ if (GMAIL_USER && GMAIL_APP_PASSWORD) {
     .catch(err => {
       console.error('[email] ❌ SMTP verification FAILED:', err.message);
       console.error('[email] ❌ Error code:', err.code, '| Response:', err.responseCode);
-      console.error('[email] ⚠️ Email có thể không gửi được. Hãy kiểm tra lại App Password hoặc kết nối mạng.');
-      // Giữ nguyên mailTransporter để có thể thử lại khi gửi OTP, không gán null ở đây
+      console.error('[email] ⚠️ Email SMTP có thể không gửi được. Hãy kiểm tra lại App Password hoặc kết nối mạng.');
     });
 } else {
-  console.warn('[email] Gmail SMTP disabled — GMAIL_USER or GMAIL_APP_PASSWORD is missing');
+  console.warn('[email] Email service disabled — BREVO_API_KEY or GMAIL credentials missing');
 }
 
 function createInitialState() {
@@ -815,9 +823,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const result = await requestPasswordReset(req.body);
 
-    // ── KIỂM TRA SMTP CONFIG ──
-    if (!mailTransporter) {
-      console.warn(`[email] ⚠️ Cannot send reset email to ${result.userEmail} because SMTP is not configured or disabled`);
+    // ── KIỂM TRA EMAIL CONFIG (SMTP hoặc Brevo HTTP API) ──
+    if (!mailTransporter && !useBrevo) {
+      console.warn(`[email] ⚠️ Cannot send reset email to ${result.userEmail} because no email service is configured`);
       return res.status(500).json({ error: 'Chức năng gửi mã OTP qua Email chưa được cấu hình hoặc đang gặp sự cố. Vui lòng liên hệ Admin.' });
     }
 
@@ -850,21 +858,78 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         </div>
       `;
 
-    // ── GỬI MÀ RESET QUA EMAIL (Có AWAIT để bắt lỗi nếu thất bại) ──
-    try {
-      await mailTransporter.sendMail({
-        from: `"DNH.dev" <${GMAIL_USER}>`,
-        to: result.userEmail,
-        subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
-        html: htmlContent,
-      });
-      console.log(`[email] ✅ Reset code successfully sent to ${result.userEmail}`);
-    } catch (mailErr) {
-      console.error(`[email] ❌ Send FAILED to ${result.userEmail}:`, mailErr.message);
-      return res.status(500).json({ error: `Không thể gửi OTP qua email: ${mailErr.message}. Vui lòng thử lại.` });
+    // ── GỬI MÃ RESET QUA EMAIL (Brevo HTTP hoặc Gmail SMTP) ──
+    if (useBrevo) {
+      try {
+        await axios.post('https://api.brevo.com/v3/smtp/email', {
+          sender: {
+            name: 'DNH.dev',
+            email: GMAIL_USER || 'daohuy1701@gmail.com' // Sử dụng email người gửi đã verify trên Brevo
+          },
+          to: [
+            {
+              email: result.userEmail,
+              name: result.userName
+            }
+          ],
+          subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
+          htmlContent: htmlContent
+        }, {
+          headers: {
+            'accept': 'application/json',
+            'api-key': BREVO_API_KEY,
+            'content-type': 'application/json'
+          },
+          timeout: 10000
+        });
+        console.log(`[email] ✅ Reset code sent via Brevo HTTP API to ${result.userEmail}`);
+      } catch (mailErr) {
+        const errorDetail = mailErr.response?.data?.message || mailErr.message;
+        console.error(`[email] ❌ Brevo API Send FAILED to ${result.userEmail}:`, errorDetail);
+        return res.status(500).json({ error: `Không thể gửi OTP qua Brevo API: ${errorDetail}. Vui lòng liên hệ Admin.` });
+      }
+    } else if (mailTransporter) {
+      try {
+        await mailTransporter.sendMail({
+          from: `"DNH.dev" <${GMAIL_USER}>`,
+          to: result.userEmail,
+          subject: `🔐 Mã đặt lại mật khẩu: ${result.resetCode}`,
+          html: htmlContent,
+        });
+        console.log(`[email] ✅ Reset code successfully sent to ${result.userEmail}`);
+      } catch (mailErr) {
+        console.error(`[email] ❌ Send FAILED to ${result.userEmail}:`, mailErr.message);
+
+        // Nếu có Telegram hoạt động, vẫn gửi OTP qua Telegram và gợi ý cách lấy
+        let advice = '';
+        if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID) {
+          advice = ' (Gợi ý: Nếu server chạy trên Render Free, cổng gửi mail SMTP bị chặn. Hãy kiểm tra Telegram Bot của Admin để lấy mã OTP!)';
+
+          const telegramText = [
+            `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU (Gửi mail lỗi)`,
+            `━━━━━━━━━━━━━━━━━━━`,
+            `👤 ${result.userName} (${result.userEmail})`,
+            `🔑 Mã xác thực: ${result.resetCode}`,
+            `⏰ Hết hạn sau 15 phút`,
+            `⚠️ Email không gửi được do lỗi: ${mailErr.message}`,
+          ].join('\n');
+
+          axios.post(`${TELEGRAM_AUTH_API_URL}/sendMessage`, {
+            chat_id: TELEGRAM_AUTH_CHAT_ID,
+            text: telegramText
+          }, { timeout: 10000 }).catch(tgErr => {
+            console.error('[telegram-auth] Fallback send failed:', tgErr.message);
+          });
+        }
+
+        return res.status(500).json({ error: `Không thể gửi OTP qua email: ${mailErr.message}.${advice}` });
+      }
+    } else {
+      console.warn(`[email] ⚠️ Cannot send reset email to ${result.userEmail} because no email service is configured`);
+      return res.status(500).json({ error: 'Chức năng gửi mã OTP qua Email chưa được cấu hình. Vui lòng liên hệ Admin.' });
     }
 
-    // ── CHẠY NGẦM: Thông báo qua Telegram (Không cần await) ──
+    // ── CHẠY NGẦM: Thông báo qua Telegram (Không cần await, dùng khi email thành công) ──
     if (TELEGRAM_AUTH_API_URL && TELEGRAM_AUTH_CHAT_ID && result.resetCode) {
       const telegramText = [
         `🔐 YÊU CẦU ĐẶT LẠI MẬT KHẨU`,

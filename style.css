@@ -937,6 +937,42 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.85em;
 }
+/* ── Chat Bubble Actions (Sửa, Xóa, Cảm xúc) ── */
+.chat-bubble-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.chat-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: var(--text-muted);
+  border-radius: 4px;
+  line-height: 1;
+}
+.chat-bubble:hover .chat-action-btn {
+  opacity: 0.7;
+}
+.chat-action-btn:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+.chat-action-btn.delete:hover {
+  color: var(--danger);
+}
+.edited-tag {
+  font-size: 0.7em;
+  opacity: 0.5;
+  font-style: italic;
+  margin-left: 4px;
+}
+
 .chat-bubble-text {
   line-height: 1.5;
   white-space: pre-wrap;
@@ -1758,13 +1794,14 @@
 }
 
 /* --- VIDEO CALL PREMIUM UI --- */
+/* Video Call variables — dùng biến đã khai báo ở :root chính,
+   chỉ bổ sung biến mới, KHÔNG ghi đè --accent */
 :root {
     --call-bg: rgba(10, 10, 10, 0.98);
     --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-border: rgba(255, 255, 255, 0.12);
     --danger: #ff4757;
     --success: #2ed573;
-    --accent: #00d4ff;
 }
 
 #video-call-overlay {
@@ -1932,11 +1969,7 @@
 }
 
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.5); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 1; }
-}
+/* @keyframes pulse đã khai báo ở phần HERO INTRO ANIMATION */
 
 @media (max-width: 768px) {
     .pc-only { display: none !important; }
