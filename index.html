@@ -9,9 +9,25 @@
   <title>Đào Ngọc Huy — Portfolio</title>
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+
+  <!-- ⚡ Preconnect: thiết lập kết nối sớm tới các domain bên ngoài -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://accounts.google.com">
+
+  <!-- ⚡ Google Fonts: tải non-render-blocking -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap">
   <link
     href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
-    rel="stylesheet">
+    rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
+      rel="stylesheet">
+  </noscript>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -388,9 +404,13 @@
         <a href="https://www.facebook.com/huy.ngoc.26" target="_blank" rel="noopener noreferrer" class="social-link reveal reveal-d4">📘 Facebook</a>
       </div>
 
-      <!-- Ảnh chân dung -->
+      <!-- Ảnh chân dung — WebP + fallback JPG, lazy-loaded -->
       <div class="contact-image-wrapper reveal reveal-d2">
-        <img src="./images/avatar.jpg" alt="Đào Ngọc Huy" class="contact-avatar" />
+        <picture>
+          <source srcset="./images/avatar.webp" type="image/webp">
+          <img src="./images/avatar.jpg" alt="Đào Ngọc Huy" class="contact-avatar"
+            width="180" height="180" loading="lazy" decoding="async" />
+        </picture>
       </div>
     </div>
   </section>
@@ -547,12 +567,12 @@
   </script>
   <!-- 🔑 Google Identity Services — Đăng nhập bằng Google -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <!-- 🔒 Auth Module — PHẢI load đầu tiên để Protected Route Guard chạy ngay -->
-  <script src="./auth-ui.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- 🔒 Auth Module — load async/defer, handles DOMContentLoaded internally -->
+  <script src="./auth-ui.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js" defer></script>
   <!-- Tải file xử lý Giao diện, Hiệu ứng (UI/UX) và Chat realtime -->
-  <script src="./index.js"></script>
+  <script src="./index.js" defer></script>
 </body>
 
 </html>
