@@ -82,16 +82,17 @@ body {
   }
 }
 
-/* ── AMBIENT BACKDROP LIGHTWEIGHT GRID & RADIAL MESH ── */
+/* ── AMBIENT BACKDROP NOISE & GRID (GPU ACCELERATED) ── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 20%, rgba(0, 212, 255, 0.04) 0%, transparent 60%),
-              radial-gradient(circle at 80% 80%, rgba(0, 230, 153, 0.03) 0%, transparent 50%);
-  opacity: 0.8;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  transform: translateZ(0);
+  will-change: opacity;
 }
 
 body::after {
@@ -101,14 +102,10 @@ body::after {
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(0, 212, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
   background-size: 50px 50px;
-}
-
-/* Tối ưu phản hồi tương tác toàn hệ thống (Loại bỏ delay chạm/click) */
-a, button, input, select, textarea, .project-card, .stat-card, .skill-group, .social-link, .contact-email {
-  touch-action: manipulation;
+  transform: translateZ(0);
 }
 
 /* ── CUSTOM CURSOR ── */
@@ -1700,43 +1697,19 @@ footer span { color: var(--secondary); }
     width: 100%;
   }
 
-/* ── PERFORMANCE OPTIMIZATIONS (OFFSCREEN RENDERING) ── */
+/* ── HARDWARE-ACCELERATED PERFORMANCE OPTIMIZATIONS (ZERO VISUAL CHANGE) ── */
 section:not(#hero) {
   content-visibility: auto;
   contain-intrinsic-size: 1px 600px;
 }
 
-@media (max-width: 768px) {
-  /* Tối ưu GPU trên di động: Tắt noise SVG filter & grid overlay nặng */
-  body::before, body::after {
-    display: none !important;
-  }
-  
-  /* Tắt quầng sáng xoay liên tục gây hao pin & giật lag scroll trên mobile */
-  .hero-bg-glow, .hero-bg-glow2 {
-    animation: none !important;
-    display: none !important;
-  }
+.hero-bg-glow, .hero-bg-glow2, #chat-float-btn, .code-card, .project-card {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
 
-  #chat-float-btn {
-    animation: none !important;
-  }
-
-  /* Giảm độ mờ Blur nặng (สาเหตุ gây tụt FPS trên Safari/Chrome mobile) */
-  nav, .code-card, .skill-group, .project-card, #chat-popover, .auth-glass {
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-  }
-
-  /* Thay thế shadow glow đa lớp bằng viền đơn giản */
-  .code-card, .project-card:hover, .skill-group:hover, .stat-card:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  /* Xóa độ trễ phản hồi khi chạm (remove 300ms tap delay) */
-  a, button, input, select, textarea, .project-card, .stat-card, .skill-group {
-    touch-action: manipulation;
-  }
+a, button, input, select, textarea, .project-card, .stat-card, .skill-group, .social-link, .contact-email {
+  touch-action: manipulation;
 }
 
 @media (min-width: 769px) {
