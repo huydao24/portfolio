@@ -96,11 +96,12 @@ function typeEffect() {
 
 setTimeout(typeEffect, 1200);
 
-// --- HIỆU ỨNG XUẤT HIỆN KHI CUỘN TRANG (SCROLL REVEAL) ---
+// --- HIỆU ỨNG XUẤT HIỆN KHI CUỘN TRANG (SCROLL REVEAL - TỐI ƯU MOBILE) ---
 const observer = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
+      observer.unobserve(entry.target); // Hủy theo dõi sau khi xuất hiện để giải phóng RAM/CPU mobile
     }
   });
 }, { threshold: 0.12 });
@@ -111,21 +112,29 @@ document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-links a');
 
-// --- TỰ ĐỘNG ĐỔI MÀU LINK NAVBAR KHI CUỘN ĐẾN SECTION TƯƠNG ỨNG ---
+// --- TỰ ĐỘNG ĐỔI MÀU LINK NAVBAR (TỐI ƯU scroll event với requestAnimationFrame & passive) ---
+let isScrolling = false;
 window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(section => {
-    if (window.scrollY >= section.offsetTop - 200) {
-      current = section.id;
-    }
-  });
+  if (!isScrolling) {
+    window.requestAnimationFrame(() => {
+      let current = '';
+      const scrollPos = window.scrollY + 200;
+      sections.forEach(section => {
+        if (scrollPos >= section.offsetTop) {
+          current = section.id;
+        }
+      });
 
-  navLinks.forEach(link => {
-    link.style.color = link.getAttribute('href') === `#${current}`
-      ? 'var(--secondary)'
-      : '';
-  });
-});
+      navLinks.forEach(link => {
+        link.style.color = link.getAttribute('href') === `#${current}`
+          ? 'var(--secondary)'
+          : '';
+      });
+      isScrolling = false;
+    });
+    isScrolling = true;
+  }
+}, { passive: true });
 
 // --- MOBILE MENU LOGIC ---
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
