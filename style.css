@@ -82,15 +82,16 @@ body {
   }
 }
 
-/* ── AMBIENT BACKDROP NOISE & GRID ── */
+/* ── AMBIENT BACKDROP LIGHTWEIGHT GRID & RADIAL MESH ── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  opacity: 0.5;
+  background: radial-gradient(circle at 50% 20%, rgba(0, 212, 255, 0.04) 0%, transparent 60%),
+              radial-gradient(circle at 80% 80%, rgba(0, 230, 153, 0.03) 0%, transparent 50%);
+  opacity: 0.8;
 }
 
 body::after {
@@ -100,9 +101,14 @@ body::after {
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(0, 212, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.02) 1px, transparent 1px);
   background-size: 50px 50px;
+}
+
+/* Tối ưu phản hồi tương tác toàn hệ thống (Loại bỏ delay chạm/click) */
+a, button, input, select, textarea, .project-card, .stat-card, .skill-group, .social-link, .contact-email {
+  touch-action: manipulation;
 }
 
 /* ── CUSTOM CURSOR ── */
