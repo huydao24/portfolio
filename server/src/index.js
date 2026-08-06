@@ -52,8 +52,8 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-app.use(express.json({ limit: '300mb' }));
-app.use(express.urlencoded({ extended: true, limit: '300mb' }));
+app.use(express.json({ limit: '1000mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1000mb' }));
 
 // ── Email Setup (SMTP & Brevo HTTP API) ──────────────────────────────────────
 const GMAIL_USER = process.env.GMAIL_USER?.trim();
@@ -242,6 +242,31 @@ function resolveSessionIdFromTelegramMessage(telegramMessage) {
   }
 
   return getFallbackSessionIdFromState();
+}
+
+function getTelegramReplyHint(user) {
+  const senderName = String(user || 'Ban').trim() || 'Ban';
+  return [
+    `B\u1ea1n ${senderName} g\u1eedi n\u00e8:`,
+    '',
+  ].join('\n');
+}
+
+function buildTelegramOutgoingText(message) {
+  let mediaInfo = '';
+  if (message.file) {
+    mediaInfo = `\n📎 [File: ${message.file.name} (${formatFileSize(message.file.size)})]`;
+  } else if (message.image && !message.text) {
+    mediaInfo = '\n🖼 [Hình ảnh]';
+  } else if (message.video && !message.text) {
+    mediaInfo = '\n🎥 [Video]';
+  } else if (message.audio && !message.text) {
+    mediaInfo = '\n🎙 [Ghi âm]';
+  }
+
+  return `${getTelegramReplyHint(message.user)}${message.text || ''}${mediaInfo}
+
+🔑 Session: ${message.sessionId}`;
 }
 
 function cleanTelegramReplyText(text = '') {
