@@ -264,7 +264,9 @@ function resolveSessionIdFromTelegramMessage(telegramMessage) {
     }
   }
 
-  const sessionMatch = telegramMessage.text?.match(/Session:\s*([a-zA-Z0-9-]+)/i);
+  // Kiểm tra cả text và caption (document/photo/video dùng caption thay vì text)
+  const textToSearch = telegramMessage.text || telegramMessage.caption || '';
+  const sessionMatch = textToSearch.match(/Session:\s*([a-zA-Z0-9-]+)/i);
   if (sessionMatch?.[1]) {
     return sessionMatch[1];
   }
@@ -646,6 +648,7 @@ async function handleTelegramUpdate(update) {
   let file = null;
   if (telegramMessage.document) {
     const tgDoc = telegramMessage.document;
+    console.log(`[telegram] 📎 Document received: ${tgDoc.file_name || 'unknown'} (${tgDoc.mime_type}, ${tgDoc.file_size} bytes)`);
     try {
       const fileRes = await axios.get(`${TELEGRAM_API_URL}/getFile`, {
         params: { file_id: tgDoc.file_id }
@@ -663,9 +666,12 @@ async function handleTelegramUpdate(update) {
           size: tgDoc.file_size || buffer.length,
           data: base64Data,
         };
+        console.log(`[telegram] ✅ Document downloaded successfully: ${file.name}`);
+      } else {
+        console.error('[telegram] ❌ Could not get file path for document');
       }
     } catch (err) {
-      console.error('[telegram] failed to download document:', err.message);
+      console.error('[telegram] ❌ Failed to download document:', err.message);
     }
   }
 
