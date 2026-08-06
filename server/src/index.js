@@ -219,6 +219,52 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function buildMessage({ sessionId, role, user, text, image, video, audio, file, source }) {
+  const createdAt = new Date();
+  return {
+    id: `${createdAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
+    sessionId,
+    role,
+    user,
+    text,
+    image,
+    video,
+    audio,
+    file,
+    source,
+    time: formatTime(createdAt),
+    createdAt: createdAt.toISOString(),
+  };
+}
+
+function saveMessage(message) {
+  const sessionMessages = getSessionMessages(message.sessionId);
+  sessionMessages.push(message);
+  trimSessionMessages(message.sessionId);
+
+  if (message.source === 'web' || message.source === 'telegram') {
+    setActiveTelegramSession(message.sessionId, message.createdAt);
+  }
+
+  io.to(message.sessionId).emit('chat message', message);
+}
+
+async function loadState() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const raw = await fs.readFile(DATA_FILE, 'utf8');
+    state = normalizeState(JSON.parse(raw));
+  } catch (error) {
+    state = createInitialState();
+  }
+}
+
+async function saveState() {
+  trimTelegramMap();
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(DATA_FILE, JSON.stringify(state, null, 2), 'utf8');
+}
+
 function resolveSessionIdFromTelegramMessage(telegramMessage) {
   const replyMsg = telegramMessage.reply_to_message;
   if (replyMsg) {
