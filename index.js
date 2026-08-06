@@ -584,8 +584,8 @@ async function compressImage(file, maxWidth = 1280, quality = 0.7) {
 async function handleVideoFile(file) {
   if (!file) return;
   // Tăng giới hạn lên 50MB để hỗ trợ quay video trực tiếp từ iPhone
-  if (file.size > 50 * 1024 * 1024) {
-    alert('Video quá lớn. Vui lòng gửi video dưới 50MB.');
+  if (file.size > 200 * 1024 * 1024) {
+    alert('Video quá lớn. Vui lòng gửi video dưới 200MB.');
     return;
   }
 
@@ -703,9 +703,9 @@ if (chatFileInput) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Giới hạn 20MB (Telegram Bot API limit)
-    if (file.size > 20 * 1024 * 1024) {
-      alert('File quá lớn. Vui lòng gửi file dưới 20MB.');
+    // Giới hạn 200MB
+    if (file.size > 200 * 1024 * 1024) {
+      alert('File quá lớn. Vui lòng gửi file dưới 200MB.');
       chatFileInput.value = '';
       return;
     }
