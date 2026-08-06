@@ -179,6 +179,24 @@ function setActiveTelegramSession(sessionId, updatedAt = new Date()) {
   state.activeTelegramSessionUpdatedAt = new Date(updatedAt).toISOString();
 }
 
+function getMostRecentSessionId() {
+  let latestSessionId = null;
+  let latestTime = 0;
+
+  for (const [sessionId, messages] of Object.entries(state.sessions)) {
+    if (Array.isArray(messages) && messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      const time = new Date(lastMsg.createdAt || 0).getTime();
+      if (time > latestTime) {
+        latestTime = time;
+        latestSessionId = sessionId;
+      }
+    }
+  }
+
+  return latestSessionId;
+}
+
 function getFallbackSessionIdFromState() {
   if (state.activeTelegramSessionId) {
     const updatedAt = new Date(state.activeTelegramSessionUpdatedAt || 0).getTime();
@@ -187,80 +205,32 @@ function getFallbackSessionIdFromState() {
     }
   }
 
-  const sessionIds = Object.keys(state.sessions);
-  return sessionIds.length === 1 ? sessionIds[0] : null;
+  return getMostRecentSessionId();
 }
 
 function normalizeDisplayName(value) {
   return String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
 }
 
-function buildMessage({ sessionId, role, user, text, image, video, audio, file, source }) {
-  const createdAt = new Date();
-  return {
-    id: `${createdAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
-    sessionId,
-    role,
-    user,
-    text,
-    image,
-    video,
-    audio,
-    file,
-    source,
-    time: formatTime(createdAt),
-    createdAt: createdAt.toISOString(),
-  };
-}
-
-function saveMessage(message) {
-  const sessionMessages = getSessionMessages(message.sessionId);
-  sessionMessages.push(message);
-  trimSessionMessages(message.sessionId);
-
-  if (message.source === 'web' || message.source === 'telegram') {
-    setActiveTelegramSession(message.sessionId, message.createdAt);
-  }
-
-  io.to(message.sessionId).emit('chat message', message);
-}
-
-async function loadState() {
-  try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    const raw = await fs.readFile(DATA_FILE, 'utf8');
-    state = normalizeState(JSON.parse(raw));
-  } catch (error) {
-    state = createInitialState();
-  }
-}
-
-async function saveState() {
-  trimTelegramMap();
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(state, null, 2), 'utf8');
-}
-
-function getTelegramReplyHint(user) {
-  const senderName = String(user || 'Ban').trim() || 'Ban';
-  return [
-    `B\u1ea1n ${senderName} g\u1eedi n\u00e8:`,
-    '',
-  ].join('\n');
-}
-
-function buildTelegramOutgoingText(message) {
-  return `${getTelegramReplyHint(message.user)}${message.text || ''}
-
-🔑 Session: ${message.sessionId}`;
+function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 function resolveSessionIdFromTelegramMessage(telegramMessage) {
-  const repliedMessageId = telegramMessage.reply_to_message?.message_id;
-  if (repliedMessageId) {
+  const replyMsg = telegramMessage.reply_to_message;
+  if (replyMsg) {
+    const repliedMessageId = replyMsg.message_id;
     const match = state.telegramMessageMap[String(repliedMessageId)];
     if (match?.sessionId) {
       return match.sessionId;
+    }
+    const replyText = replyMsg.text || replyMsg.caption || '';
+    const replySessionMatch = replyText.match(/Session:\s*([a-zA-Z0-9-]+)/i);
+    if (replySessionMatch?.[1]) {
+      return replySessionMatch[1];
     }
   }
 
@@ -656,8 +626,8 @@ async function handleTelegramUpdate(update) {
       const filePath = fileRes.data?.result?.file_path;
       if (filePath && TELEGRAM_BOT_TOKEN) {
         const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
-        const docRes = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-        const buffer = Buffer.from(docRes.data, 'binary');
+        const docRes = await axios.get(fileUrl, { responseType: 'arraybuffer', timeout: 60000 });
+        const buffer = Buffer.from(docRes.data);
         const mimeType = tgDoc.mime_type || 'application/octet-stream';
         const base64Data = `data:${mimeType};base64,${buffer.toString('base64')}`;
         file = {
@@ -666,12 +636,19 @@ async function handleTelegramUpdate(update) {
           size: tgDoc.file_size || buffer.length,
           data: base64Data,
         };
-        console.log(`[telegram] ✅ Document downloaded successfully: ${file.name}`);
+        console.log(`[telegram] ✅ Document downloaded successfully: ${file.name} (${buffer.length} bytes)`);
       } else {
         console.error('[telegram] ❌ Could not get file path for document');
       }
     } catch (err) {
       console.error('[telegram] ❌ Failed to download document:', err.message);
+    }
+
+    if (!file) {
+      const fName = tgDoc.file_name || 'tệp';
+      const fSize = formatFileSize(tgDoc.file_size || 0);
+      const errorNotice = `⚠️ [Admin gửi tệp "${fName}" ${fSize ? '(' + fSize + ')' : ''} qua Telegram nhưng không thể tải về (file >20MB hoặc lỗi mạng)]`;
+      text = text ? `${text}\n${errorNotice}` : errorNotice;
     }
   }
 
