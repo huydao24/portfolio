@@ -188,6 +188,7 @@ const chatImageLabel = document.getElementById('chat-image-label');
 const chatAudioRecBtn = document.getElementById('chat-audio-rec-btn');
 const chatAudioPreview = document.getElementById('chat-audio-preview');
 const audioPreviewEl = document.getElementById('audio-preview-el');
+const chatFileInput = document.getElementById('chat-file-input');
 
 if (!isDesktop && chatImageInput) {
   chatImageInput.setAttribute('accept', 'image/*,video/*');
@@ -197,6 +198,7 @@ if (!isDesktop && chatImageInput) {
 let selectedImageBase64 = null;
 let selectedVideoBase64 = null;
 let selectedAudioBase64 = null;
+let selectedFileData = null; // { name, mimeType, size, data }
 
 let socket = null;
 
@@ -679,8 +681,10 @@ if (removeImageBtn) {
     selectedImageBase64 = null;
     selectedVideoBase64 = null;
     selectedAudioBase64 = null;
+    selectedFileData = null;
     chatImageInput.value = '';
     if (chatVideoInput) chatVideoInput.value = '';
+    if (chatFileInput) chatFileInput.value = '';
     chatImagePreviewContainer.classList.add('hidden');
     chatImagePreview.src = '';
     chatVideoPreview.src = '';
@@ -688,6 +692,67 @@ if (removeImageBtn) {
     chatImagePreview.style.display = 'none';
     chatAudioPreview.style.display = 'none';
     audioPreviewEl.src = '';
+    const filePreviewEl = document.getElementById('chat-file-preview-info');
+    if (filePreviewEl) filePreviewEl.style.display = 'none';
+  });
+}
+
+// --- XỬ LÝ GỬI FILE BẤT KỲ ---
+if (chatFileInput) {
+  chatFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Giới hạn 20MB (Telegram Bot API limit)
+    if (file.size > 20 * 1024 * 1024) {
+      alert('File quá lớn. Vui lòng gửi file dưới 20MB.');
+      chatFileInput.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      selectedFileData = {
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        size: file.size,
+        data: ev.target.result,
+      };
+      // Xóa các media khác
+      selectedImageBase64 = null;
+      selectedVideoBase64 = null;
+      selectedAudioBase64 = null;
+
+      // Hiển thị preview tên file
+      chatImagePreview.style.display = 'none';
+      chatVideoPreview.style.display = 'none';
+      chatAudioPreview.style.display = 'none';
+      chatImagePreview.src = '';
+      chatVideoPreview.src = '';
+      audioPreviewEl.src = '';
+
+      // Dùng lại preview container để hiện tên file
+      const previewWrapper = chatImagePreviewContainer.querySelector('.preview-wrapper');
+      let filePreviewEl = document.getElementById('chat-file-preview-info');
+      if (!filePreviewEl) {
+        filePreviewEl = document.createElement('div');
+        filePreviewEl.id = 'chat-file-preview-info';
+        filePreviewEl.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 0; color:#e6edf3; font-size:0.85rem;';
+        previewWrapper.insertBefore(filePreviewEl, previewWrapper.firstChild);
+      }
+      filePreviewEl.innerHTML = `<span style="font-size:1.3rem;">${getFileIcon(file.type)}</span> <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(file.name)}</span> <span style="opacity:0.6; font-size:0.75rem;">(${formatFileSize(file.size)})</span>`;
+      filePreviewEl.style.display = 'flex';
+
+      chatImagePreviewContainer.classList.remove('hidden');
+
+      if (chatPopover.classList.contains('hidden')) {
+        openChat();
+      }
+    };
+    reader.onerror = () => {
+      alert('Không thể đọc file này.');
+    };
+    reader.readAsDataURL(file);
   });
 }
 
@@ -766,8 +831,9 @@ chatForm.onsubmit = async e => {
   const image = selectedImageBase64;
   const video = selectedVideoBase64;
   const audio = selectedAudioBase64;
+  const file = selectedFileData;
 
-  if (!text && !image && !video && !audio) {
+  if (!text && !image && !video && !audio && !file) {
     return;
   }
 
@@ -786,6 +852,7 @@ chatForm.onsubmit = async e => {
       image,
       video,
       audio,
+      file,
     });
     chatInput.value = '';
     if (removeImageBtn) removeImageBtn.click();
