@@ -271,11 +271,36 @@ function escapeHtml(value) {
 }
 
 /**
+ * Trả về icon emoji phù hợp với loại file dựa trên MIME type
+ */
+function getFileIcon(mimeType) {
+  if (!mimeType) return '📄';
+  if (mimeType.startsWith('application/pdf')) return '📕';
+  if (mimeType.includes('word') || mimeType.includes('document')) return '📘';
+  if (mimeType.includes('sheet') || mimeType.includes('excel') || mimeType.includes('csv')) return '📊';
+  if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '📙';
+  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z') || mimeType.includes('tar') || mimeType.includes('compress')) return '📦';
+  if (mimeType.startsWith('text/')) return '📝';
+  if (mimeType.includes('json') || mimeType.includes('xml') || mimeType.includes('javascript') || mimeType.includes('html') || mimeType.includes('css')) return '💻';
+  return '📄';
+}
+
+/**
+ * Chuyển đổi dung lượng file (bytes) sang dạng dễ đọc
+ */
+function formatFileSize(bytes) {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+/**
  * Hàm thêm một bong bóng tin nhắn vào giao diện chat
  * @param {Object} message - Đối tượng tin nhắn từ server
  */
 function appendChatMsg(message) {
-  if (!message?.text && !message?.image && !message?.video && !message?.audio) {
+  if (!message?.text && !message?.image && !message?.video && !message?.audio && !message?.file) {
     return;
   }
 
@@ -321,6 +346,16 @@ function appendChatMsg(message) {
     ${message.audio ? `
       <div class="audio-wrapper">
         <audio src="${message.audio}" class="chat-bubble-audio" controls></audio>
+      </div>
+    ` : ''}
+    ${message.file ? `
+      <div class="chat-file-attachment">
+        <div class="chat-file-icon">${getFileIcon(message.file.mimeType)}</div>
+        <div class="chat-file-info">
+          <span class="chat-file-name">${escapeHtml(message.file.name)}</span>
+          <span class="chat-file-size">${formatFileSize(message.file.size)}</span>
+        </div>
+        <a class="chat-file-download" href="${message.file.data}" download="${escapeHtml(message.file.name)}" title="Tải xuống">⬇</a>
       </div>
     ` : ''}
     ${message.text ? `

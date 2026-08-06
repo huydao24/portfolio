@@ -195,7 +195,7 @@ function normalizeDisplayName(value) {
   return String(value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
 }
 
-function buildMessage({ sessionId, role, user, text, image, video, audio, source }) {
+function buildMessage({ sessionId, role, user, text, image, video, audio, file, source }) {
   const createdAt = new Date();
   return {
     id: `${createdAt.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -206,6 +206,7 @@ function buildMessage({ sessionId, role, user, text, image, video, audio, source
     image,
     video,
     audio,
+    file,
     source,
     time: formatTime(createdAt),
     createdAt: createdAt.toISOString(),
@@ -399,6 +400,41 @@ async function sendTelegramMessage(message) {
       return;
     } catch (audioErr) {
       console.error('[telegram] sendVoice failed:', audioErr.message);
+    }
+  }
+
+  if (message.file && message.file.data) {
+    try {
+      const mimeType = message.file.mimeType || 'application/octet-stream';
+      const fileName = message.file.name || 'file';
+
+      const base64Data = message.file.data.split(',')[1];
+      const buffer = Buffer.from(base64Data, 'base64');
+      const blob = new Blob([buffer], { type: mimeType });
+
+      const formData = new FormData();
+      formData.append('chat_id', TELEGRAM_CHAT_ID);
+      formData.append('caption', buildTelegramOutgoingText(message));
+      formData.append('document', blob, fileName);
+
+      if (TELEGRAM_THREAD_ID) {
+        formData.append('message_thread_id', Number(TELEGRAM_THREAD_ID));
+      }
+
+      const response = await axios.post(`${TELEGRAM_API_URL}/sendDocument`, formData);
+
+      const telegramMessageId = response.data?.result?.message_id;
+      if (telegramMessageId) {
+        message.telegramMessageId = telegramMessageId;
+        state.telegramMessageMap[String(telegramMessageId)] = {
+          sessionId: message.sessionId,
+          createdAt: new Date().toISOString(),
+        };
+        await saveState();
+      }
+      return;
+    } catch (docErr) {
+      console.error('[telegram] sendDocument failed:', docErr.message);
     }
   }
 
@@ -606,7 +642,34 @@ async function handleTelegramUpdate(update) {
     }
   }
 
-  if (!text && !image && !video && !audio) {
+  // Handle document/file from Telegram
+  let file = null;
+  if (telegramMessage.document) {
+    const tgDoc = telegramMessage.document;
+    try {
+      const fileRes = await axios.get(`${TELEGRAM_API_URL}/getFile`, {
+        params: { file_id: tgDoc.file_id }
+      });
+      const filePath = fileRes.data?.result?.file_path;
+      if (filePath && TELEGRAM_BOT_TOKEN) {
+        const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`;
+        const docRes = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+        const buffer = Buffer.from(docRes.data, 'binary');
+        const mimeType = tgDoc.mime_type || 'application/octet-stream';
+        const base64Data = `data:${mimeType};base64,${buffer.toString('base64')}`;
+        file = {
+          name: tgDoc.file_name || 'file',
+          mimeType,
+          size: tgDoc.file_size || buffer.length,
+          data: base64Data,
+        };
+      }
+    } catch (err) {
+      console.error('[telegram] failed to download document:', err.message);
+    }
+  }
+
+  if (!text && !image && !video && !audio && !file) {
     return;
   }
 
@@ -636,6 +699,7 @@ async function handleTelegramUpdate(update) {
     image,
     video,
     audio,
+    file,
     source: 'telegram',
   });
 
@@ -699,6 +763,7 @@ app.post('/api/messages', async (req, res) => {
   const image = req.body?.image; // base64 string
   const video = req.body?.video; // base64 string
   const audio = req.body?.audio; // base64 string
+  const file = req.body?.file;   // { name, mimeType, size, data } object
   const sessionId = String(req.body?.sessionId || '').trim();
   const user = normalizeDisplayName(req.body?.user) || 'Ban';
 
@@ -706,7 +771,7 @@ app.post('/api/messages', async (req, res) => {
     return res.status(400).json({ error: 'Missing sessionId' });
   }
 
-  if (!text && !image && !video && !audio) {
+  if (!text && !image && !video && !audio && !file) {
     return res.status(400).json({ error: 'Missing message content' });
   }
 
@@ -718,6 +783,7 @@ app.post('/api/messages', async (req, res) => {
     image,
     video,
     audio,
+    file,
     source: 'web',
   });
 

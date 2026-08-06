@@ -1401,6 +1401,88 @@ footer span { color: var(--secondary); }
   height: 36px;
 }
 
+/* ── FILE ATTACHMENT CARD ── */
+.chat-file-attachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  min-width: 180px;
+}
+
+.chat-file-attachment:hover {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.chat-file-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.chat-file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chat-file-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-file-size {
+  font-size: 0.7rem;
+  opacity: 0.6;
+  color: inherit;
+}
+
+.chat-file-download {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.chat-file-download:hover {
+  background: rgba(0, 212, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.chat-bubble.mine .chat-file-attachment {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.chat-bubble.mine .chat-file-download {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.chat-bubble.mine .chat-file-download:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .chat-bubble-reactions {
   display: flex;
   gap: 4px;
